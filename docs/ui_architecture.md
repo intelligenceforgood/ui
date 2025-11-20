@@ -8,14 +8,15 @@ _Last updated: 2025-11-19_
 - Provide a predictable component system that supports theming, accessibility, and future internationalisation.
 
 ## Stack Overview
-- **App framework:** Next.js 14 (App Router) with React 18 + TypeScript. Provides SSR/ISR for fast first paint and SEO-ready routes for the public marketing site if needed.
-- **Styling and components:** Tailwind CSS + Radix UI primitives for accessible building blocks. Use design tokens (colors, spacing, typography) derived from assets in `dtp/Logos`.
-- **State management:** TanStack Query for server state + React Context/Zustand for client state (e.g., filters). Keeps fetch and caching logic consistent across web and mobile.
-- **Forms & validation:** React Hook Form + zod. Enables shared schema definitions between the TypeScript SDK and backend Pydantic models.
-- **i18n:** next-i18next (i18next under the hood). Locale resources stored alongside route segments to keep bundles small; future languages add JSON translation files.
-- **Charts & data viz:** Tremor or Recharts layered on Tailwind for fraud trend dashboards.
-- **Authentication:** Integrate with the existing FastAPI gateway (JWT or session cookies) through API routes in Next.js (`/app/api`).
-- **Testing:** Vitest + @testing-library/react for unit tests, Playwright for E2E smoke flows, Storybook for design-system review.
+- **App framework:** Next.js 15 (App Router) with React 19 RC + TypeScript. We lean on server components for data-fetching pages and client components for interactive shells.
+- **Styling and components:** Tailwind CSS + custom UI kit primitives (built with clsx and class-variance-authority). Design tokens live in `packages/tokens` and feed Tailwind configuration.
+- **Data layer:** `@i4g/sdk` (zod-validated REST client). The SDK can call the FastAPI backend or return rich mock data so the UI works offline.
+- **State management:** Lightweight React state + hooks within components for now. TanStack Query/Zustand integration is planned when live API latency warrants caching.
+- **Forms & validation:** Native React with zod schemas from the SDK. React Hook Form remains on the roadmap for complex form flows.
+- **Internationalisation:** Not yet enabled. The layout is locale-ready via App Router segments; add `next-intl` or `next-i18next` when translations arrive.
+- **Charts & data viz:** Recharts renders analytics views while respecting Tailwind theming tokens.
+- **Authentication:** Requests flow through Next.js API routes (`/app/api/*`). These routes hydrate the SDK with `I4G_API_URL`/`I4G_API_KEY`, keeping credentials on the server.
+- **Testing:** Vitest + Testing Library (already active) and Playwright smoke tests (scaffold pending).
 
 ## Monorepo Structure
 ```
@@ -32,15 +33,15 @@ ui/
 ```
 
 ### Why a Separate Repo?
-- Keeps the Python-centric `proto/` clean; Node dependencies (hundreds of MB) do not appear in the backend virtualenv or Docker images.
-- Allows independent CI/CD pipelines (e.g., Vercel build previews) without coupling to backend test failures.
-- Still colocated at the workspace root (`/i4g/ui`) for coordinated infrastructure and shared assets (fonts, logos).
+- Python services remain lean—Node modules stay out of `proto/` Docker builds.
+- UI changes can build/deploy independently (Vercel preview or Cloud Run container) while still sharing the workspace for design assets.
+- Shared packages (`ui-kit`, `tokens`, `sdk`) stay versioned together with the app.
 
 ## Deployment
-- **Build:** `pnpm install && pnpm turbo build` produces `.next` artifact for `apps/web`.
-- **Container:** Multi-stage Dockerfile (`node:20-alpine` builder → `node:20-alpine` runner). Copy only `.next`, `public`, and `package.json` to minimize size.
-- **Hosting:** Cloud Run (fully managed) or Vercel. Cloud Run is preferred for parity with backend deployment; container exposes port 8080.
-- **CI:** GitHub Actions pipeline triggered on PRs. Steps: lint, unit tests, Playwright smoke (against ephemeral deploy), build & push image to Artifact Registry.
+- **Build:** `pnpm install && pnpm --filter web build` outputs `.next` artifacts under `apps/web/.next`.
+- **Container:** Multi-stage Dockerfile (`apps/web/Dockerfile`) copies the built app plus `package.json`/lockfile and installs production dependencies.
+- **Hosting:** Cloud Run (recommended) or Vercel. Cloud Run aligns with the backend platform and supports private networking to internal APIs.
+- **CI:** GitHub Actions (pending) will execute lint, unit tests, Playwright smoke, and publish images to Artifact Registry.
 
 ## Navigation & Layout
 Top-level navigation uses a responsive side rail (collapsible on mobile) with tabs for:
@@ -50,7 +51,7 @@ Top-level navigation uses a responsive side rail (collapsible on mobile) with ta
 4. **Taxonomy** – Manage fraud types, variant metadata.
 5. **Analytics** – Trend charts, segmentation by taxonomy, competition leaderboards (future).
 
-Each page includes a floating help icon linking to the relevant doc (`docs/book/guides/...`). The icon can be swapped for branded assets later.
+Each page integrates contextual help (linking analysts to doc placeholders under `docs/user-guide.md`). Icons can be swapped for branded assets later.
 
 ### Layout Guidelines
 - Use responsive grid with consistent spacing (8px base).
@@ -59,9 +60,9 @@ Each page includes a floating help icon linking to the relevant doc (`docs/book/
 - Highlight actionable items with vibrant accent buttons (e.g., gradient backgrounds) while keeping text high-contrast for accessibility.
 
 ## Internationalisation
-- Default locale: `en`. Store translations under `apps/web/locales/<lang>/<namespace>.json`.
-- Wrap UI in `app/[locale]/layout.tsx` to support locale-aware routing (`/en/search`, `/es/search`).
-- Use `next-i18next` for server/client translation hooks. Ensure formatting utilities (numbers, dates) use `Intl` APIs for locale correctness.
+- Default locale remains `en`. When adding more locales, create `app/[locale]/layout.tsx` and move pages into the locale segment.
+- Candidate libraries: `next-intl` (simpler, App Router-first) or `next-i18next` (if we need deep i18n features).
+- Ensure metrics/dates rely on `Intl` helpers (already used in cases/search views) for future locale expansion.
 
 ## Mobile Strategy
 - Build UI primitives (buttons, cards, typography) in `packages/ui-kit` with platform-agnostic props.
@@ -73,13 +74,14 @@ Each page includes a floating help icon linking to the relevant doc (`docs/book/
 - Use Heroicons or Phosphor icons temporarily; replace with custom SVGs when branding assets are finalised.
 
 ## Next Steps Checklist
-- [ ] Derive design tokens (colors, typography) from existing logos.
-- [ ] Generate `turbo.json`, `tsconfig.base.json`, `.eslintrc.cjs` in `packages/config`.
-- [ ] Scaffold `apps/web` via `create-next-app` with App Router + Tailwind + ESLint + src directory.
-- [ ] Create `packages/ui-kit` with Tailwind setup, Radix primitives, Storybook config.
+- [x] Derive base tokens and configure Tailwind to consume them.
+- [x] Scaffold Next.js app and shared packages under Turborepo.
+- [x] Build initial Dashboard/Search/Cases/Taxonomy/Analytics pages with mock-backed data.
+- [x] Provide mock/live SDK client switching via environment variables.
+- [x] Add Vitest + Testing Library coverage for key interactions.
 - [ ] Implement authentication handshake with FastAPI (`/api/auth/session`).
-- [ ] Build Dashboard/Search/Cases skeleton pages with placeholder data.
-- [ ] Add `?` help buttons linking to doc placeholders.
-- [ ] Configure GitHub Actions pipeline (lint/test/build) and publish Docker image to Artifact Registry.
+- [ ] Add Storybook for `@i4g/ui-kit` components.
+- [ ] Wire TanStack Query (or equivalent) for shared caching once API endpoints stabilise.
+- [ ] Stand up CI pipeline (lint/test/build/containerise) and deploy preview environments.
 
 This document should evolve as UX research or product requirements expand (competitions, analytics, etc.).

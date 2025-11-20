@@ -10,6 +10,8 @@
     "format": "pnpm prettier --write ."
   },
   "devDependencies": {
+    "@types/react": "19",
+    "@types/react-dom": "19",
     "prettier": "3.2.5",
     "turbo": "2.1.2"
   }

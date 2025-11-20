@@ -1,0 +1,7 @@
+<svg width="1200" height="675" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dashboard screenshot placeholder">
+  <rect width="1200" height="675" fill="#0f172a" />
+  <rect x="40" y="40" width="1120" height="595" rx="24" ry="24" fill="#1e293b" stroke="#38bdf8" stroke-width="4" stroke-dasharray="16 12" />
+  <text x="50%" y="50%" fill="#e2e8f0" font-size="48" font-family="'Source Sans 3', Arial, sans-serif" text-anchor="middle" dominant-baseline="central">
+    Dashboard Screenshot Placeholder
+  </text>
+</svg>

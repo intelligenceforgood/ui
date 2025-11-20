@@ -1,0 +1,10 @@
+node_modules
+.pnpm-store
+.next
+out
+.DS_Store
+*.log
+coverage
+playwright-report
+apps/web/.next
+apps/web/out

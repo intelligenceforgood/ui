@@ -1,0 +1,332 @@
+import {
+  createMockClient,
+  I4GClientError,
+  searchRequestSchema,
+  type I4GClient,
+  type SearchRequest,
+  type SearchResponse,
+  type SearchResult,
+} from "@i4g/sdk";
+
+interface ProtoClientConfig {
+  baseUrl: string;
+  apiKey?: string;
+}
+
+interface ProtoStructuredRecord {
+  case_id?: string;
+  text?: string;
+  metadata?: {
+    title?: string;
+    tags?: unknown;
+    [key: string]: unknown;
+  };
+  entities?: Record<string, unknown> | null;
+  classification?: string;
+  confidence?: number;
+  created_at?: string;
+}
+
+interface ProtoVectorRecord {
+  label?: string;
+  text?: string;
+  document?: string;
+  similarity?: number;
+  score?: number;
+  distance?: number;
+}
+
+interface ProtoSearchEntry {
+  case_id?: string;
+  score?: number;
+  sources?: string[] | string;
+  record?: ProtoStructuredRecord | null;
+  vector?: ProtoVectorRecord | null;
+  distance?: number;
+  [key: string]: unknown;
+}
+
+function normaliseIsoDate(value: unknown): string {
+  if (typeof value === "string" && value) {
+    const parsed = Number.isNaN(Date.parse(value)) ? null : new Date(value);
+    if (parsed) {
+      return parsed.toISOString();
+    }
+  }
+  return new Date().toISOString();
+}
+
+function toNumber(value: unknown, fallback: number): number {
+  const parsed = typeof value === "number" ? value : Number(value);
+  if (Number.isFinite(parsed)) {
+    return parsed;
+  }
+  return fallback;
+}
+
+function buildScore(entry: ProtoSearchEntry): number {
+  const { score, vector } = entry ?? {};
+  const candidate = [score, vector?.similarity, vector?.score, vector?.distance]
+    .map((item) => (typeof item === "number" ? item : Number(item)))
+    .find((item) => Number.isFinite(item)) ?? 0;
+
+  // Distances decrease with similarity; invert if necessary.
+  if (candidate > 1.0) {
+    return Math.min(candidate / 100, 1);
+  }
+
+  if (candidate < 0) {
+    return Math.max(1 / (1 + Math.abs(candidate)), 0);
+  }
+
+  return candidate;
+}
+
+function extractTags(entry: ProtoSearchEntry): string[] {
+  const tags = new Set<string>();
+  const record = entry?.record ?? {};
+  const vector = entry?.vector ?? {};
+
+  if (typeof record?.classification === "string" && record.classification) {
+    tags.add(record.classification);
+  }
+
+  const metadataTags = record?.metadata?.tags;
+  if (Array.isArray(metadataTags)) {
+    metadataTags.forEach((tag) => {
+      if (typeof tag === "string" && tag) {
+        tags.add(tag);
+      }
+    });
+  }
+
+  const entities = record?.entities;
+  if (entities && typeof entities === "object") {
+    Object.values(entities).forEach((value) => {
+      if (Array.isArray(value)) {
+        value.forEach((entity) => {
+          if (typeof entity === "string" && entity) {
+            tags.add(entity);
+          }
+        });
+      }
+    });
+  }
+
+  if (typeof vector?.label === "string" && vector.label) {
+    tags.add(vector.label);
+  }
+
+  return Array.from(tags).slice(0, 8);
+}
+
+function extractSource(entry: ProtoSearchEntry): string {
+  const sources = entry?.sources;
+  if (Array.isArray(sources) && sources.length) {
+    const normalized = sources.map((item) => String(item)).filter(Boolean);
+    if (normalized.includes("structured") && normalized.includes("vector")) {
+      return "hybrid";
+    }
+    return normalized[0];
+  }
+
+  if (typeof sources === "string" && sources) {
+    return sources;
+  }
+
+  if (entry?.vector) {
+    return "vector";
+  }
+
+  if (entry?.record) {
+    return "structured";
+  }
+
+  return "unknown";
+}
+
+function extractTitle(entry: ProtoSearchEntry): string {
+  const record = entry?.record ?? {};
+  const vector = entry?.vector ?? {};
+
+  if (typeof record?.metadata?.title === "string" && record.metadata.title) {
+    return record.metadata.title;
+  }
+
+  if (typeof record?.case_id === "string" && record.case_id) {
+    return record.case_id;
+  }
+
+  if (typeof record?.text === "string" && record.text) {
+    return record.text.split("\n").slice(0, 1).join(" ").slice(0, 120) || "Result";
+  }
+
+  if (typeof vector?.text === "string" && vector.text) {
+    return vector.text.split("\n").slice(0, 1).join(" ").slice(0, 120) || "Result";
+  }
+
+  return "Result";
+}
+
+function extractSnippet(entry: ProtoSearchEntry): string {
+  const record = entry?.record ?? {};
+  const vector = entry?.vector ?? {};
+  const text =
+    (typeof record?.text === "string" && record.text) ||
+    (typeof vector?.text === "string" && vector.text) ||
+    (typeof vector?.document === "string" && vector.document) ||
+    "No excerpt available yet.";
+
+  return text.slice(0, 280);
+}
+
+function mapProtoSearchResult(entry: ProtoSearchEntry, fallbackIndex: number): SearchResult {
+  const record = entry?.record ?? {};
+  const id =
+    (typeof record?.case_id === "string" && record.case_id) ||
+    (typeof entry?.case_id === "string" && entry.case_id) ||
+    `proto-result-${fallbackIndex}`;
+
+  const tags = extractTags(entry);
+  const occurredAt = normaliseIsoDate(record?.created_at);
+  const confidence = typeof record?.confidence === "number" ? record.confidence : undefined;
+
+  return {
+    id,
+    title: extractTitle(entry),
+    snippet: extractSnippet(entry),
+    source: extractSource(entry),
+    tags,
+    score: Number(buildScore(entry).toFixed(2)),
+    occurredAt,
+    confidence,
+  } satisfies SearchResult;
+}
+
+function buildFacets(results: SearchResult[]) {
+  const sourceCounts = new Map<string, number>();
+  const taxonomyCounts = new Map<string, number>();
+
+  results.forEach((result) => {
+    sourceCounts.set(result.source, (sourceCounts.get(result.source) ?? 0) + 1);
+    result.tags.forEach((tag) => {
+      taxonomyCounts.set(tag, (taxonomyCounts.get(tag) ?? 0) + 1);
+    });
+  });
+
+  const toFacet = (field: string, label: string, counts: Map<string, number>) => ({
+    field,
+    label,
+    options: Array.from(counts.entries()).map(([value, count]) => ({ value, count })),
+  });
+
+  const facets = [] as SearchResponse["facets"];
+  if (sourceCounts.size) {
+    facets.push(toFacet("source", "Sources", sourceCounts));
+  }
+  if (taxonomyCounts.size) {
+    facets.push(toFacet("taxonomy", "Taxonomy", taxonomyCounts));
+  }
+  return facets;
+}
+
+function buildSuggestions(results: SearchResult[]): string[] {
+  const topTags = results.flatMap((result) => result.tags).slice(0, 5);
+  const unique = Array.from(new Set(topTags));
+  return unique.length ? unique : results.slice(0, 3).map((result) => result.title);
+}
+
+async function fetchProtoSearch(
+  config: ProtoClientConfig,
+  request: SearchRequest
+): Promise<SearchResponse> {
+  const payload = searchRequestSchema.parse(request);
+  const limit = payload.pageSize ?? 10;
+  const page = payload.page ?? 1;
+  const offset = Math.max(page - 1, 0) * limit;
+
+  const url = new URL("/reviews/search", config.baseUrl);
+  if (payload.query) {
+    url.searchParams.set("text", payload.query);
+  }
+  url.searchParams.set("limit", String(limit));
+  url.searchParams.set("offset", String(offset));
+  url.searchParams.set("page_size", String(limit));
+  url.searchParams.set("vector_limit", String(limit));
+  url.searchParams.set("structured_limit", String(limit));
+
+  const classification = payload.taxonomy?.[0] ?? payload.sources?.[0];
+  if (classification) {
+    url.searchParams.set("classification", classification);
+  }
+
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+  };
+  if (config.apiKey) {
+    headers.Authorization = `Bearer ${config.apiKey}`;
+  }
+
+  const response = await fetch(url, { headers });
+
+  if (!response.ok) {
+    let errorPayload: unknown = null;
+    try {
+      errorPayload = await response.json();
+    } catch (error) {
+      errorPayload = { message: "Failed to read error payload", error };
+    }
+
+    throw new I4GClientError(
+      `Proto search failed with status ${response.status}`,
+      response.status,
+      errorPayload
+    );
+  }
+
+  const data = (await response.json()) as unknown;
+  const objectPayload = (data && typeof data === "object") ? (data as Record<string, unknown>) : {};
+
+  const resultsPayload = objectPayload["results"];
+  const rawResults = Array.isArray(resultsPayload)
+    ? (resultsPayload as ProtoSearchEntry[])
+    : [];
+  const mapped = rawResults.map((entry, index) => mapProtoSearchResult(entry, index));
+
+  const total = toNumber(objectPayload["total"], mapped.length);
+  const took = toNumber(
+    (objectPayload["elapsed_ms"] as number | string | undefined) ??
+      (objectPayload["duration_ms"] as number | string | undefined),
+    Math.max(90, mapped.length * 42)
+  );
+
+  return {
+    results: mapped,
+    stats: {
+      query: payload.query,
+      total,
+      took,
+      page,
+      pageSize: limit,
+    },
+    facets: buildFacets(mapped),
+    suggestions: buildSuggestions(mapped),
+  } satisfies SearchResponse;
+}
+
+export function createProtoBackedClient(config: ProtoClientConfig): I4GClient {
+  const mock = createMockClient();
+
+  return {
+    ...mock,
+    async searchIntelligence(request) {
+      try {
+        const response = await fetchProtoSearch(config, request);
+        return response;
+      } catch (error) {
+        console.error("Falling back to mock search due to proto error", error);
+        return mock.searchIntelligence(request);
+      }
+    },
+  } satisfies I4GClient;
+}

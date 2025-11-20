@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "react": ["../../node_modules/@types/react/index"],
+      "react/jsx-runtime": ["../../node_modules/@types/react/jsx-runtime"],
+      "react/jsx-dev-runtime": ["../../node_modules/@types/react/jsx-dev-runtime"],
+      "react-dom": ["../../node_modules/@types/react-dom/index"],
+      "react-dom/*": ["../../node_modules/@types/react-dom/*"]
+    }
+  },
+  "include": ["src/**/*"]
+}
