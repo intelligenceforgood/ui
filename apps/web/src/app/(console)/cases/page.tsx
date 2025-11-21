@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Badge, Button, Card } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
 import type { CaseSummary } from "@i4g/sdk";
@@ -61,9 +62,12 @@ export default async function CasesPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button type="button" className="shadow-lg">
+          <Link
+            href="/cases/intake"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-transparent bg-gradient-to-r from-sky-500 to-teal-400 px-5 py-2.5 text-base font-semibold text-white shadow-lg transition hover:shadow-xl"
+          >
             New case intake
-          </Button>
+          </Link>
           <Button type="button" variant="secondary">
             Export status report
           </Button>

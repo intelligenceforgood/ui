@@ -263,8 +263,9 @@ async function fetchProtoSearch(
   const headers: Record<string, string> = {
     Accept: "application/json",
   };
+
   if (config.apiKey) {
-    headers.Authorization = `Bearer ${config.apiKey}`;
+    headers["X-API-KEY"] = config.apiKey;
   }
 
   const response = await fetch(url, { headers });

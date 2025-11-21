@@ -23,3 +23,6 @@ Apply the shared general coding guidelines in `../proto/.github/general-coding.i
 ## Docs+Snippets (UI)
 - When documenting Docker or build files (e.g. `ui/docker/ui-console.Dockerfile`), avoid copying the entire file into a doc; instead include a short, focused snippet and link to the file path in the repo.
 - Keep code examples minimal and focused on the relevant change — readers can open the full file from the repo link.
+
+## Execution Discipline
+- When the user asks for a change or bug fix, keep working through the full debugging cycle until the task is actually complete. Do not stop to ask for permission for the next step; proceed autonomously unless the user explicitly requests otherwise.

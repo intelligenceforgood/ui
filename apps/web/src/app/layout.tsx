@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins, Source_Sans_3 } from "next/font/google";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 const displayFont = Poppins({
@@ -29,11 +30,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${displayFont.variable} ${bodyFont.variable} font-sans antialiased bg-slate-50`}
       >
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

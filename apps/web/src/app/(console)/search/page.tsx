@@ -3,15 +3,54 @@ import { Sparkles } from "lucide-react";
 import { Badge, Card } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
 import SearchExperience from "./search-experience";
+import { getSearchHistory, listSavedSearches } from "@/lib/server/reviews-service";
+import { SearchHistoryList } from "./search-history-list";
+import { SavedSearchesList } from "./saved-searches-list";
 
 export const metadata: Metadata = {
   title: "Search",
   description: "Cross-intelligence search across filings, chatter, and partner data.",
 };
 
-export default async function SearchPage() {
+type SearchPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function toArrayParam(value: string | string[] | undefined): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .flatMap((entry) => entry.split(","))
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+  }
+  if (typeof value === "string" && value.length > 0) {
+    return value
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+export default async function SearchPage({ searchParams }: SearchPageProps) {
   const client = getI4GClient();
-  const initialResults = await client.searchIntelligence({ query: "", page: 1, pageSize: 10 });
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const initialQuery = typeof resolvedSearchParams.query === "string" ? resolvedSearchParams.query : "";
+  const initialSources = toArrayParam(resolvedSearchParams.sources);
+  const initialTaxonomy = toArrayParam(resolvedSearchParams.taxonomy);
+
+  const initialResults = await client.searchIntelligence({
+    query: initialQuery,
+    page: 1,
+    pageSize: 10,
+    sources: initialSources.length ? initialSources : undefined,
+    taxonomy: initialTaxonomy.length ? initialTaxonomy : undefined,
+  });
+
+  const [history, savedSearches] = await Promise.all([
+    getSearchHistory(6),
+    listSavedSearches({ limit: 6 }),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -41,7 +80,15 @@ export default async function SearchPage() {
         </div>
       </Card>
 
-      <SearchExperience initialResults={initialResults} />
+      <SearchExperience
+        initialResults={initialResults}
+        initialSelection={{ sources: initialSources, taxonomy: initialTaxonomy }}
+      />
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <SearchHistoryList events={history} />
+        <SavedSearchesList items={savedSearches} />
+      </section>
     </div>
   );
 }

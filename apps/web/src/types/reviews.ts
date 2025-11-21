@@ -1,0 +1,21 @@
+export type SearchHistoryEvent = {
+  id: string;
+  actor: string;
+  createdAt: string;
+  params: Record<string, unknown>;
+  query?: string;
+  classification?: string;
+  caseId?: string;
+  resultCount?: number;
+  total?: number;
+};
+
+export type SavedSearchRecord = {
+  id: string;
+  name: string;
+  owner?: string | null;
+  favorite: boolean;
+  tags: string[];
+  createdAt: string;
+  params: Record<string, unknown>;
+};

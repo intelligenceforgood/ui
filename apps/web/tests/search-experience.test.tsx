@@ -12,6 +12,21 @@ import {
   type Mock,
 } from "vitest";
 
+vi.mock("next/navigation", () => {
+  const mockRouter = {
+    refresh: vi.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+  };
+
+  return {
+    useRouter: () => mockRouter,
+  };
+});
+
 let initialResults: SearchResponse;
 const originalFetch = global.fetch;
 let fetchMock: Mock;
@@ -49,7 +64,7 @@ describe("SearchExperience", () => {
     const input = screen.getByPlaceholderText(/search by entity/i);
     fireEvent.change(input, { target: { value: "group-7" } });
 
-    const submit = screen.getByRole("button", { name: /search/i });
+    const submit = screen.getByRole("button", { name: /^search$/i });
     fireEvent.click(submit);
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));

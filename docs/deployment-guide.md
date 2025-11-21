@@ -71,7 +71,6 @@ gcloud run deploy i4g-console \
     --image us-central1-docker.pkg.dev/i4g-dev/applications/analyst-console:dev \
     --region us-central1 \
     --platform managed \
-    --allow-unauthenticated \
     --set-env-vars NEXT_PUBLIC_USE_MOCK_DATA=false \
     --set-env-vars I4G_API_URL=https://fastapi-gateway-y5jge5w2cq-uc.a.run.app/ \
     --set-env-vars I4G_API_KIND=proto \
