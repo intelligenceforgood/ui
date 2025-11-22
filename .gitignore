@@ -8,3 +8,9 @@ coverage
 playwright-report
 apps/web/.next
 apps/web/out
+
+# Turbo cache and daemon files
+.turbo/
+.turbo/cache/
+.turbo/cookies/
+.turbo/daemon/

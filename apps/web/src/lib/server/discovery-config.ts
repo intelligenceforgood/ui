@@ -13,10 +13,32 @@ function normalize(value: string | undefined | null, fallback = "") {
   return trimmed.length ? trimmed : fallback;
 }
 
+function resolveEnvName() {
+  const raw = process.env.I4G_ENV ?? process.env.NODE_ENV ?? "";
+  return raw.trim().toLowerCase();
+}
+
+function isProdEnv(value: string) {
+  if (!value) {
+    return false;
+  }
+  return value === "prod" || value === "production" || value.includes("prod");
+}
+
+function fallbackProject() {
+  const env = resolveEnvName();
+  return isProdEnv(env) ? "i4g-prod" : "i4g-dev";
+}
+
+function fallbackDataStore() {
+  const env = resolveEnvName();
+  return isProdEnv(env) ? "retrieval-prod" : "retrieval-poc";
+}
+
 const FALLBACKS: DiscoveryDefaults = {
-  project: "",
+  project: fallbackProject(),
   location: "global",
-  dataStoreId: "",
+  dataStoreId: fallbackDataStore(),
   servingConfigId: "default_search",
 };
 

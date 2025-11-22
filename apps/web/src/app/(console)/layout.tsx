@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
@@ -71,7 +72,14 @@ function Navigation() {
       >
         <div className="h-20 flex items-center px-8 border-b border-slate-100 dark:border-slate-900">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-sky-500 to-teal-400 shadow-lg" />
+            <Image
+              src="/ifg-logomark.svg"
+              alt="Intelligence for Good logomark"
+              width={40}
+              height={40}
+              priority
+              className="h-10 w-10 rounded-2xl border border-slate-100 bg-white p-1.5 shadow-lg dark:border-slate-800 dark:bg-slate-900"
+            />
             <div>
               <p className="text-sm text-slate-500 dark:text-slate-400">Intelligence for Good</p>
               <p className="text-lg font-semibold text-slate-900 dark:text-white">Analyst Console</p>

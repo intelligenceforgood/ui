@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge, Button, Card, Input } from "@i4g/ui-kit";
 import {
   AlertCircle,
@@ -33,6 +33,63 @@ type DiscoveryPanelDefaults = Partial<Pick<DiscoverySearchRequest, "project" | "
 type DiscoveryPanelProps = {
   defaults?: DiscoveryPanelDefaults;
 };
+
+function extractDocumentSegment(value: string) {
+  const withDocuments = value.split("/documents/").pop() ?? value;
+  return withDocuments.includes("/") ? withDocuments.split("/").pop() ?? withDocuments : withDocuments;
+}
+
+function formatDocumentName(name?: string | null) {
+  if (!name) {
+    return "Unknown document";
+  }
+  const segment = extractDocumentSegment(name);
+  if (segment.length <= 24) {
+    return segment;
+  }
+  if (segment.startsWith("hash_")) {
+    return `${segment.slice(0, 12)}…${segment.slice(-6)}`;
+  }
+  return `${segment.slice(0, 12)}…${segment.slice(-4)}`;
+}
+
+function formatDocumentId(documentId?: string | null) {
+  if (!documentId) {
+    return "Unknown";
+  }
+  const segment = extractDocumentSegment(documentId);
+  if (segment.length <= 20) {
+    return segment;
+  }
+  return `${segment.slice(0, 10)}…${segment.slice(-6)}`;
+}
+
+const EMAIL_REGEX = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
+const FULL_NAME_REGEX = /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/g;
+const ADDRESS_REGEX = /\b\d{1,5}\s+[A-Z0-9][A-Z0-9\s]+\b/g;
+
+function maskWithBlocks(match: string) {
+  return "█".repeat(match.length);
+}
+
+function redactSensitiveText(value?: string | null) {
+  if (!value) {
+    return value ?? "";
+  }
+
+  return value
+    .replace(EMAIL_REGEX, maskWithBlocks)
+    .replace(FULL_NAME_REGEX, maskWithBlocks)
+    .replace(ADDRESS_REGEX, maskWithBlocks);
+}
+
+function redactJsonForDisplay(payload: unknown) {
+  try {
+    return redactSensitiveText(JSON.stringify(payload, null, 2));
+  } catch {
+    return "[unavailable]";
+  }
+}
 
 export type DiscoveryResult = {
   rank: number;
@@ -94,8 +151,9 @@ export default function DiscoveryPanel({ defaults }: DiscoveryPanelProps) {
   const [showRaw, setShowRaw] = useState(false);
   const [lastPayload, setLastPayload] = useState<Record<string, unknown> | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isSearching, setIsSearching] = useState(false);
   const nextPageToken = metadata?.nextPageToken;
+  const showProgress = isSearching || isLoadingMore;
 
   const handleFieldChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -111,46 +169,49 @@ export default function DiscoveryPanel({ defaults }: DiscoveryPanelProps) {
   const executeSearch = useCallback(
     (payload: Record<string, unknown>, options?: { append?: boolean; cachePayload?: boolean }) => {
       setError(null);
-      startTransition(() => {
-        if (options?.append) {
-          setIsLoadingMore(true);
-        }
-        fetch("/api/discovery/search", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
+      if (options?.append) {
+        setIsLoadingMore(true);
+      } else {
+        setIsSearching(true);
+      }
+
+      fetch("/api/discovery/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            const details = await response.json().catch(() => ({}));
+            const message = typeof details.error === "string" ? details.error : "Discovery search failed.";
+            throw new Error(message);
+          }
+          return (await response.json()) as DiscoverySearchResponse;
         })
-          .then(async (response) => {
-            if (!response.ok) {
-              const details = await response.json().catch(() => ({}));
-              const message = typeof details.error === "string" ? details.error : "Discovery search failed.";
-              throw new Error(message);
-            }
-            return (await response.json()) as DiscoverySearchResponse;
-          })
-          .then((data) => {
-            setResults((current) => (options?.append ? [...current, ...data.results] : data.results));
-            setMetadata({ totalSize: data.totalSize, nextPageToken: data.nextPageToken });
-            if (options?.cachePayload) {
-              const basePayload = { ...payload };
-              delete basePayload.pageToken;
-              setLastPayload(basePayload);
-            }
-          })
-          .catch((fetchError: Error) => {
-            setResults([]);
-            setMetadata(null);
-            setLastPayload(null);
-            setError(fetchError.message || "Discovery search failed.");
-          })
-          .finally(() => {
-            if (options?.append) {
-              setIsLoadingMore(false);
-            }
-          });
-      });
+        .then((data) => {
+          setResults((current) => (options?.append ? [...current, ...data.results] : data.results));
+          setMetadata({ totalSize: data.totalSize, nextPageToken: data.nextPageToken });
+          if (options?.cachePayload) {
+            const basePayload = { ...payload };
+            delete basePayload.pageToken;
+            setLastPayload(basePayload);
+          }
+        })
+        .catch((fetchError: Error) => {
+          setResults([]);
+          setMetadata(null);
+          setLastPayload(null);
+          setError(fetchError.message || "Discovery search failed.");
+        })
+        .finally(() => {
+          if (options?.append) {
+            setIsLoadingMore(false);
+          } else {
+            setIsSearching(false);
+          }
+        });
     },
     []
   );
@@ -158,6 +219,9 @@ export default function DiscoveryPanel({ defaults }: DiscoveryPanelProps) {
   const handleSubmit = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
+      if (isSearching) {
+        return;
+      }
       const trimmedQuery = form.query.trim();
       if (!trimmedQuery) {
         setError("Enter a search query to begin.");
@@ -167,7 +231,7 @@ export default function DiscoveryPanel({ defaults }: DiscoveryPanelProps) {
       const payload = buildPayload({ ...form, query: trimmedQuery });
       executeSearch(payload, { cachePayload: true });
     },
-    [executeSearch, form]
+    [executeSearch, form, isSearching]
   );
 
   const handleLoadMore = useCallback(() => {
@@ -188,6 +252,7 @@ export default function DiscoveryPanel({ defaults }: DiscoveryPanelProps) {
     setMetadata(null);
     setLastPayload(null);
     setError(null);
+    setIsSearching(false);
     setIsLoadingMore(false);
   }, [baseFormState]);
 
@@ -216,16 +281,22 @@ export default function DiscoveryPanel({ defaults }: DiscoveryPanelProps) {
   }, [lastPayload]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-base">
       <Card className="space-y-6">
         <header className="space-y-2">
-          <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+          <div className="flex flex-wrap items-center gap-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
             <Sparkles className="h-3.5 w-3.5 text-teal-500" />
             Discovery Engine Controls
           </div>
-          <p className="text-sm text-slate-500">
+          <p className="text-base text-slate-600">
             Submit queries directly through the shared FastAPI endpoint. Provide optional overrides for cross-project testing.
           </p>
+          {showProgress ? (
+            <div className="flex items-center gap-2 rounded-full border border-teal-200 bg-white/90 px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-teal-600 shadow-sm">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {isLoadingMore ? "Loading more…" : "Running search…"}
+            </div>
+          ) : null}
         </header>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -330,11 +401,11 @@ export default function DiscoveryPanel({ defaults }: DiscoveryPanelProps) {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit" disabled={isPending}>
-              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            <Button type="submit" disabled={isSearching}>
+              {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               Run search
             </Button>
-            <Button type="button" variant="secondary" onClick={handleReset} disabled={isPending}>
+            <Button type="button" variant="secondary" onClick={handleReset} disabled={showProgress}>
               <RefreshCcw className="h-4 w-4" />
               Reset
             </Button>
@@ -350,7 +421,7 @@ export default function DiscoveryPanel({ defaults }: DiscoveryPanelProps) {
         </form>
 
         {error ? (
-          <Card className="border-rose-200 bg-rose-50 text-sm text-rose-700">
+          <Card className="border-rose-200 bg-rose-50 text-base text-rose-700">
             <div className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
               {error}
@@ -359,15 +430,8 @@ export default function DiscoveryPanel({ defaults }: DiscoveryPanelProps) {
         ) : null}
       </Card>
 
-      {isPending ? (
-        <Card className="flex items-center gap-3 border-slate-100 bg-slate-50 text-sm text-slate-500">
-          <Loader2 className="h-4 w-4 animate-spin text-teal-500" />
-          Querying Discovery Engine…
-        </Card>
-      ) : null}
-
       {metadata && (
-        <Card className="flex flex-wrap items-center gap-3 border-slate-100 bg-slate-50/70 text-sm text-slate-500">
+        <Card className="flex flex-wrap items-center gap-3 border-slate-100 bg-slate-50/70 text-base text-slate-500">
           <Badge variant="info">{metadata.totalSize} total results</Badge>
           {nextPageToken ? <Badge variant="default">Next page token: {nextPageToken}</Badge> : null}
           {lastQuerySummary ? (
@@ -392,39 +456,52 @@ export default function DiscoveryPanel({ defaults }: DiscoveryPanelProps) {
 
       {hasResults ? (
         <div className="space-y-4">
-          {results.map((result) => (
-            <Card key={`${result.rank}-${result.documentId}`} className="space-y-3">
+          {results.map((result) => {
+            const friendlyDocumentName = redactSensitiveText(formatDocumentName(result.documentName));
+            const hasSummary = Boolean(result.summary && result.summary.trim());
+            const redactedSummary = hasSummary ? redactSensitiveText(result.summary) : null;
+            const displayTitle = redactedSummary ?? friendlyDocumentName;
+            const redactedDocumentTitle = redactSensitiveText(result.documentName);
+            const redactedSource = result.source ? redactSensitiveText(result.source) : null;
+            const redactedIndexType = result.indexType ? redactSensitiveText(result.indexType) : null;
+            const redactedLabel = result.label ? redactSensitiveText(result.label) : null;
+            const redactedStruct = redactJsonForDisplay(result.struct);
+            const redactedRawPayload = redactJsonForDisplay(result.raw);
+            return (
+              <Card key={`${result.rank}-${result.documentId}`} className="space-y-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">#{result.rank}</span>
-                    {result.source ? (
+                      {redactedSource ? (
                       <span className="rounded-full bg-sky-50 px-3 py-1 text-sky-600">
-                        {result.source}
+                        {redactedSource}
                       </span>
                     ) : null}
-                    {result.indexType && result.indexType !== result.source ? (
+                      {redactedIndexType && redactedIndexType !== redactedSource ? (
                       <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-500">
-                        {result.indexType}
+                        {redactedIndexType}
                       </span>
                     ) : null}
                   </div>
-                  <h3 className="mt-2 text-lg font-semibold text-slate-900">
-                    {result.summary || result.documentName}
+                  <h3 className="mt-2 text-lg font-semibold text-slate-900" title={redactedDocumentTitle}>
+                    {displayTitle}
                   </h3>
-                  <p className="text-xs text-slate-500">Document: {result.documentName}</p>
+                  <p className="text-sm text-slate-500" title={redactedDocumentTitle}>
+                    Case: {friendlyDocumentName}
+                  </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {result.label ? <Badge variant="info">Label: {result.label}</Badge> : null}
-                  <Badge variant="default">ID {result.documentId}</Badge>
+                  {redactedLabel ? <Badge variant="info">Label: {redactedLabel}</Badge> : null}
+                  <Badge variant="default">ID {formatDocumentId(result.documentId)}</Badge>
                 </div>
               </div>
-              {result.summary ? <p className="text-sm text-slate-600">{result.summary}</p> : null}
+              {redactedSummary ? <p className="text-sm text-slate-600">{redactedSummary}</p> : null}
               {result.tags.length ? (
                 <div className="flex flex-wrap gap-2 text-xs text-slate-500">
                   {result.tags.map((tag) => (
                     <Badge key={`${result.documentId}-${tag}`} variant="default">
-                      #{tag}
+                      #{redactSensitiveText(tag)}
                     </Badge>
                   ))}
                 </div>
@@ -446,7 +523,7 @@ export default function DiscoveryPanel({ defaults }: DiscoveryPanelProps) {
                 <details className="rounded-xl border border-slate-100 bg-white/60 p-4 text-xs text-slate-500">
                   <summary className="cursor-pointer font-semibold text-slate-600">Structured fields</summary>
                   <pre className="mt-3 whitespace-pre-wrap break-all text-[11px] text-slate-500">
-                    {JSON.stringify(result.struct, null, 2)}
+                    {redactedStruct}
                   </pre>
                 </details>
               ) : null}
@@ -454,22 +531,23 @@ export default function DiscoveryPanel({ defaults }: DiscoveryPanelProps) {
                 <details className="rounded-xl border border-slate-100 bg-white/40 p-4 text-xs text-slate-500">
                   <summary className="cursor-pointer font-semibold text-slate-600">Raw payload</summary>
                   <pre className="mt-3 whitespace-pre-wrap break-all text-[11px] text-slate-500">
-                    {JSON.stringify(result.raw, null, 2)}
+                    {redactedRawPayload}
                   </pre>
                 </details>
               ) : null}
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
           {nextPageToken ? (
             <div className="flex justify-center pt-2">
-              <Button onClick={handleLoadMore} disabled={isPending || isLoadingMore} variant="secondary">
+              <Button onClick={handleLoadMore} disabled={isLoadingMore} variant="secondary">
                 {isLoadingMore ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 Load more results
               </Button>
             </div>
           ) : null}
         </div>
-      ) : metadata && metadata.totalSize === 0 && !isPending ? (
+      ) : metadata && metadata.totalSize === 0 && !showProgress ? (
         <Card className="border-slate-100 bg-slate-50 text-sm text-slate-500">No results returned. Try adjusting the query or filters.</Card>
       ) : null}
     </div>
