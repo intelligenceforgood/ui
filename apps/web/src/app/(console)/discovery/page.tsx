@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Sparkles } from "lucide-react";
 import DiscoveryPanel from "./discovery-panel";
+import { getDiscoveryDefaults } from "@/lib/server/discovery-config";
 
 export const metadata: Metadata = {
   title: "Discovery Engine",
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default function DiscoveryPage() {
+  const defaults = getDiscoveryDefaults();
   return (
     <div className="space-y-8">
       <header className="space-y-4">
@@ -27,7 +29,7 @@ export default function DiscoveryPage() {
         </div>
       </header>
 
-      <DiscoveryPanel />
+      <DiscoveryPanel defaults={defaults} />
     </div>
   );
 }

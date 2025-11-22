@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { Badge, Button, Card, Input } from "@i4g/ui-kit";
 import {
   AlertCircle,
@@ -27,6 +27,12 @@ const initialFormState = {
 };
 
 export type DiscoverySearchRequest = typeof initialFormState;
+
+type DiscoveryPanelDefaults = Partial<Pick<DiscoverySearchRequest, "project" | "location" | "dataStoreId" | "servingConfigId">>;
+
+type DiscoveryPanelProps = {
+  defaults?: DiscoveryPanelDefaults;
+};
 
 export type DiscoveryResult = {
   rank: number;
@@ -74,8 +80,13 @@ function buildPayload(form: DiscoverySearchRequest) {
   return payload;
 }
 
-export default function DiscoveryPanel() {
-  const [form, setForm] = useState(initialFormState);
+export default function DiscoveryPanel({ defaults }: DiscoveryPanelProps) {
+  const baseFormState = useMemo(() => ({
+    ...initialFormState,
+    ...defaults,
+  }), [defaults]);
+
+  const [form, setForm] = useState<DiscoverySearchRequest>(baseFormState);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [results, setResults] = useState<DiscoveryResult[]>([]);
   const [metadata, setMetadata] = useState<{ totalSize: number; nextPageToken?: string } | null>(null);
@@ -167,14 +178,18 @@ export default function DiscoveryPanel() {
     executeSearch(payload, { append: true });
   }, [executeSearch, lastPayload, nextPageToken]);
 
+  useEffect(() => {
+    setForm(baseFormState);
+  }, [baseFormState]);
+
   const handleReset = useCallback(() => {
-    setForm(initialFormState);
+    setForm(baseFormState);
     setResults([]);
     setMetadata(null);
     setLastPayload(null);
     setError(null);
     setIsLoadingMore(false);
-  }, []);
+  }, [baseFormState]);
 
   const handleDownloadRaw = useCallback(() => {
     if (!results.length || typeof window === "undefined" || typeof window.URL?.createObjectURL !== "function") {
