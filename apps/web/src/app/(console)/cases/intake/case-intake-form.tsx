@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useState } from "react";
 import { Badge, Button, Card, Input } from "@i4g/ui-kit";
 import { AlertCircle, CheckCircle2, Loader2, UploadCloud } from "lucide-react";
 
@@ -42,7 +42,7 @@ export default function CaseIntakeForm() {
   const [attachments, setAttachments] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<IntakeReceipt | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = useCallback((event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = event.target;
@@ -57,15 +57,16 @@ export default function CaseIntakeForm() {
     setAttachments(nextFiles);
   }, []);
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setForm(initialForm);
     setAttachments([]);
-  };
+  }, []);
 
   const handleSubmit = useCallback(
-    (event: React.FormEvent<HTMLFormElement>) => {
+    async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       setError(null);
+      setReceipt(null);
 
       const payload = {
         reporter_name: form.reporterName,
@@ -89,31 +90,31 @@ export default function CaseIntakeForm() {
         body.append("files", file, file.name);
       });
 
-      startTransition(() => {
-        fetch("/api/intakes", {
+      setIsSubmitting(true);
+
+      try {
+        const response = await fetch("/api/intakes", {
           method: "POST",
           body,
-        })
-          .then(async (response) => {
-            if (!response.ok) {
-              const data = await response.json().catch(() => ({ error: "Intake submission failed" }));
-              const message = typeof data.error === "string" ? data.error : "Intake submission failed";
-              setError(message);
-              setReceipt(null);
-              return;
-            }
+        });
 
-            const result = (await response.json()) as IntakeReceipt;
-            setReceipt(result);
-            resetForm();
-          })
-          .catch(() => {
-            setError("Unable to submit intake. Please try again.");
-            setReceipt(null);
-          });
-      });
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({ error: "Intake submission failed" }));
+          const message = typeof data.error === "string" ? data.error : "Intake submission failed";
+          setError(message);
+          return;
+        }
+
+        const result = (await response.json()) as IntakeReceipt;
+        setReceipt(result);
+        resetForm();
+      } catch {
+        setError("Unable to submit intake. Please try again.");
+      } finally {
+        setIsSubmitting(false);
+      }
     },
-    [attachments, form]
+    [attachments, form, resetForm]
   );
 
   return (
@@ -281,11 +282,11 @@ export default function CaseIntakeForm() {
         ) : null}
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" disabled={isPending || !form.reporterName || !form.summary || !form.details}>
-            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Submit intake
+          <Button type="submit" disabled={isSubmitting || !form.reporterName || !form.summary || !form.details}>
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isSubmitting ? "Submitting" : "Submit"}
           </Button>
-          <Button type="button" variant="secondary" onClick={resetForm} disabled={isPending}>
+          <Button type="button" variant="secondary" onClick={resetForm} disabled={isSubmitting}>
             Clear form
           </Button>
         </div>
