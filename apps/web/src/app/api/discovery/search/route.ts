@@ -14,7 +14,7 @@ const requestSchema = z.object({
 });
 
 const mockResult = {
-  summary: "Mock Discovery Engine result",
+  summary: "Mock Discovery result",
   label: "sample",
   tags: ["demo", "vertex"],
   source: "mock",
@@ -212,7 +212,7 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json(
         {
-          error: "Invalid Discovery Engine request",
+          error: "Invalid Discovery request",
           issues: parsed.error.flatten(),
         },
         { status: 400 }

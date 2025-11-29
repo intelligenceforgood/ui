@@ -286,7 +286,7 @@ export default function DiscoveryPanel({ defaults }: DiscoveryPanelProps) {
         <header className="space-y-2">
           <div className="flex flex-wrap items-center gap-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
             <Sparkles className="h-3.5 w-3.5 text-teal-500" />
-            Discovery Engine Controls
+            Discovery Controls
           </div>
           <p className="text-base text-slate-600">
             Submit queries directly through the shared FastAPI endpoint. Provide optional overrides for cross-project testing.

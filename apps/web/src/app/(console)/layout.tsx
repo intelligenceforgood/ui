@@ -14,6 +14,7 @@ import {
   LineChart,
   Menu,
   Globe,
+  ListChecks,
 } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -22,7 +23,8 @@ import "../globals.css";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/search", label: "Search", icon: Search },
-  { href: "/discovery", label: "Discovery Engine", icon: Globe },
+  { href: "/accounts", label: "Account list", icon: ListChecks },
+  { href: "/discovery", label: "Discovery", icon: Globe },
   { href: "/cases", label: "Cases & Tasks", icon: CaseSensitive },
   { href: "/taxonomy", label: "Taxonomy", icon: Layers },
   { href: "/analytics", label: "Analytics", icon: LineChart },

@@ -44,10 +44,10 @@ Key variables:
 
 - `NEXT_PUBLIC_USE_MOCK_DATA`: leave `true` to use built-in mock data (no backend required).
 - `NEXT_PUBLIC_API_BASE_URL`: set to the FastAPI URL (e.g., `http://localhost:8000`) to proxy calls through Next.js API routes.
-- `I4G_API_URL` / `I4G_API_KEY`: server-side credentials for production deployments. These must be present for Discovery Engine calls so the `apps/web/src/app/api/discovery/search` route can talk to FastAPI.
+- `I4G_API_URL` / `I4G_API_KEY`: server-side credentials for production deployments. These must be present for Discovery calls so the `apps/web/src/app/api/discovery/search` route can talk to FastAPI.
 - `I4G_API_KIND`: set to `proto` to call the existing FastAPI `/reviews` endpoints. Leave unset to use the SDK-native API.
 
-### Verifying live Discovery Engine traffic
+### Verifying live Discovery traffic
 
 1. Ensure the FastAPI service is running (local `uvicorn i4g.api.app:app --reload` or the shared Cloud Run URL) and that it exposes `/discovery/search`.
 2. Set the following variables in `.env.local` for the web app:
