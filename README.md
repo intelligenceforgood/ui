@@ -63,8 +63,11 @@ Key variables:
 pnpm --filter web dev     # Run Next.js with hot reload (uses mock data by default)
 pnpm --filter web lint    # ESLint (App Router + TypeScript rules)
 pnpm --filter web test    # Vitest unit tests (jsdom + Testing Library)
+pnpm --filter web test:smoke  # Playwright smoke (boots next dev, opens /search)
 pnpm --filter web build   # Production build for the analyst console
 ```
+
+Run Playwright after touching routing, server actions, or the hybrid-search experience (filters, schema rendering, saved-search flows), and always before releasing or merging work that changes data contracts. Unit-only runs are fine for copy or style-only tweaks.
 
 To run tasks for every workspace via Turborepo:
 
@@ -73,6 +76,16 @@ pnpm dev   # turbo dev (all apps)
 pnpm lint  # turbo lint across workspaces
 pnpm test  # turbo test (currently runs Vitest suite)
 ```
+
+### Git hook (format + unit tests)
+
+Link the shared hook to enforce Prettier, ESLint, and Vitest before every commit:
+
+```bash
+ln -sf ../scripts/git-hooks/pre-commit .git/hooks/pre-commit
+```
+
+The hook runs `pnpm prettier --check .`, `pnpm --filter web lint`, and `pnpm --filter web test`. Run `pnpm format` manually if the formatting check fails. Need a faster loop while iterating? Export `I4G_UI_PRECOMMIT_QUICK=1` to skip the Vitest step (format + lint still run). Remember to unset the variable—or run `pnpm --filter web test` manually—before pushing, and pair major changes with the Playwright smoke noted above.
 
 ### Production Preview & Deployment
 
@@ -85,9 +98,9 @@ The SDK (`@i4g/sdk`) provides a typed client and an in-memory mock dataset. By d
 
 ## Testing Strategy
 
-- **Unit/UI tests:** Vitest + Testing Library (see `apps/web/tests`).
+- **Unit/UI tests:** Vitest + Testing Library (see `apps/web/tests`). Run `pnpm --filter web test` frequently and let the git hook enforce coverage before each commit (unless quick mode is explicitly enabled).
 - **Integration mocks:** `/app/api/*` routes marshal requests through the SDK so we can swap between mock and live backends.
-- **E2E (planned):** Playwright config lives beside the web app; smoke scenarios will assert navigation, search flows, and data visualisation once CI runners are ready.
+- **Smoke/E2E:** `pnpm --filter web test:smoke` launches Playwright against the running dev server. Execute it when hybrid-search UI or API contracts change, before tagging releases, and any time saved-search/history flows are touched. Install browsers once per machine with `pnpm --filter web exec playwright install --with-deps`.
 
 ## Documentation
 

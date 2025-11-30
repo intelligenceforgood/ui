@@ -1,19 +1,28 @@
-import { defineConfig } from "vitest/config";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
-import path from "node:path";
+import { defineConfig } from "vitest/config";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export default defineConfig({
   plugins: [react()],
-  test: {
-    environment: "jsdom",
-    setupFiles: ["./vitest.setup.ts"],
-    globals: true,
-    include: ["src/**/*.{test,spec}.{ts,tsx}", "tests/**/*.{test,spec}.{ts,tsx}"],
-    css: true,
-  },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": resolve(__dirname, "./src"),
+    },
+  },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    css: true,
+    setupFiles: ["./src/test/setup.ts"],
+    include: ["src/**/*.{test,spec}.{ts,tsx}", "tests/unit/**/*.{test,spec}.{ts,tsx}"],
+    coverage: {
+      reporter: ["text", "lcov"],
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: ["src/test/**", "src/**/*.d.ts", "tests/**"],
     },
   },
 });

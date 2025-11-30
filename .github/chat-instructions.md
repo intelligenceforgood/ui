@@ -20,6 +20,10 @@ Apply the shared general coding guidelines in `../proto/.github/general-coding.i
 - UI uses Node.js + PNPM workspaces; run `pnpm install` at repo root, then `pnpm --filter web dev` for local dev.
 - Respect `NEXT_PUBLIC_*` vs server-only env-var scoping; server-only values must not be exposed to the client.
 
+## Testing expectations
+- Ship Vitest coverage (or extend existing suites) whenever you add or substantially modify a module/hook/component. Tests live under `apps/web/src/**` or `apps/web/tests/unit/**` and run via `pnpm --filter web test`.
+- Expand the Playwright smoke suite (`apps/web/tests/smoke/**`, `pnpm --filter web test:smoke`) whenever new flows or routes are introduced so deploys retain basic end-to-end coverage.
+
 ## Docs+Snippets (UI)
 - When documenting Docker or build files (e.g. `ui/docker/ui-console.Dockerfile`), avoid copying the entire file into a doc; instead include a short, focused snippet and link to the file path in the repo.
 - Keep code examples minimal and focused on the relevant change — readers can open the full file from the repo link.

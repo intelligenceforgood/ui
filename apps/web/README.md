@@ -1,36 +1,18 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Web Console (apps/web)
 
-## Getting Started
+Next.js 15 console for the hybrid search milestone. Everything runs inside the repo root using `pnpm@9`.
 
-First, run the development server:
+### Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm --filter web dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+By default the app bootstraps against the mock API client unless `I4G_API_URL` is set. Use `pnpm --filter web build` followed by `pnpm --filter web start` for a production-like run.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Testing
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `pnpm --filter web test` — Vitest + Testing Library unit suite (jsdom environment, coverage ready)
+- `pnpm --filter web test:smoke` — Playwright smoke check that boots the Next dev server and verifies the search console renders. Run `pnpm --filter web exec playwright install --with-deps` once per machine to install browsers.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Both commands respect the same environment variables as the Next.js app, so you can point them at a live API by exporting `I4G_API_URL`/`I4G_API_KEY` first.

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+cd "$REPO_ROOT"
+
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo "[ui pre-commit] pnpm is not available on PATH. Install PNPM 9+ before committing." >&2
+  exit 1
+fi
+
+echo "[ui pre-commit] checking formatting with Prettier..."
+pnpm prettier --check .
+
+echo "[ui pre-commit] running ESLint on apps/web..."
+pnpm --filter web lint
+
+if [[ "${I4G_UI_PRECOMMIT_QUICK:-0}" == "1" ]]; then
+  echo "[ui pre-commit] quick mode enabled; skipping Vitest (set I4G_UI_PRECOMMIT_QUICK=0 to re-enable)."
+else
+  echo "[ui pre-commit] running Vitest unit suite..."
+  pnpm --filter web test
+fi
+
+echo "[ui pre-commit] all checks passed."

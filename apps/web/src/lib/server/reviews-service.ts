@@ -1,6 +1,13 @@
 'use server';
 
 import type { HybridSearchSchema, SavedSearchRecord, SearchHistoryEvent } from '@/types/reviews';
+import {
+  isPlainObject,
+  mapHistoryEvent,
+  mapHybridSearchSchemaPayload,
+  mapSavedSearch,
+  toStringArray,
+} from './reviews-service.helpers';
 
 function resolveApiBase() {
   return process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null;
@@ -8,20 +15,6 @@ function resolveApiBase() {
 
 function resolveApiKey() {
   return process.env.I4G_API_KEY ?? process.env.NEXT_PUBLIC_API_KEY ?? null;
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function toStringArray(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value.filter((item): item is string => typeof item === 'string' && item.length > 0);
-  }
-  if (typeof value === 'string' && value.length > 0) {
-    return value.split(',').map((entry) => entry.trim()).filter(Boolean);
-  }
-  return [];
 }
 
 async function fetchJson(path: string, params?: Record<string, string>) {
@@ -51,51 +44,6 @@ async function fetchJson(path: string, params?: Record<string, string>) {
     throw new Error(`Review service request failed with status ${response.status}`);
   }
   return (await response.json()) as unknown;
-}
-
-function mapHistoryEvent(payload: Record<string, unknown>): SearchHistoryEvent {
-  const rawPayload = isPlainObject(payload.payload) ? payload.payload : {};
-  const createdAt = typeof payload.created_at === 'string' ? payload.created_at : new Date().toISOString();
-  const actor = typeof payload.actor === 'string' && payload.actor.length ? payload.actor : 'analyst';
-
-  const fallbackId = `history-${Date.now()}-${Math.round(Math.random() * 1000)}`;
-  return {
-    id: typeof payload.action_id === 'string' ? payload.action_id : fallbackId,
-    actor,
-    createdAt,
-    params: rawPayload,
-    query:
-      typeof rawPayload.query === 'string'
-        ? rawPayload.query
-        : typeof rawPayload.text === 'string'
-          ? rawPayload.text
-          : undefined,
-    classification:
-      typeof rawPayload.classification === 'string'
-        ? rawPayload.classification
-        : typeof rawPayload.taxonomy === 'string'
-          ? rawPayload.taxonomy
-          : undefined,
-    caseId: typeof rawPayload.case_id === 'string' ? rawPayload.case_id : undefined,
-    resultCount: typeof rawPayload.results_count === 'number' ? rawPayload.results_count : undefined,
-    total: typeof rawPayload.total === 'number' ? rawPayload.total : undefined,
-  } satisfies SearchHistoryEvent;
-}
-
-function mapSavedSearch(payload: Record<string, unknown>): SavedSearchRecord {
-  const params = isPlainObject(payload.params) ? payload.params : {};
-  const tags = toStringArray(payload.tags);
-
-  const fallbackId = `saved-${Date.now()}-${Math.round(Math.random() * 1000)}`;
-  return {
-    id: typeof payload.search_id === 'string' ? payload.search_id : fallbackId,
-    name: typeof payload.name === 'string' ? payload.name : 'Saved search',
-    owner: typeof payload.owner === 'string' ? payload.owner : null,
-    favorite: Boolean(payload.favorite),
-    tags,
-    createdAt: typeof payload.created_at === 'string' ? payload.created_at : new Date().toISOString(),
-    params,
-  } satisfies SavedSearchRecord;
 }
 
 const DEFAULT_SCHEMA: HybridSearchSchema = {
@@ -178,16 +126,6 @@ export async function getSearchHistory(limit = 10): Promise<SearchHistoryEvent[]
     console.warn('Falling back to mock search history', error);
     return MOCK_HISTORY.slice(0, limit);
   }
-}
-
-function mapHybridSearchSchemaPayload(value: Record<string, unknown>): HybridSearchSchema {
-  return {
-    indicatorTypes: toStringArray(value.indicator_types ?? value.indicatorTypes),
-    datasets: toStringArray(value.datasets),
-    classifications: toStringArray(value.classifications),
-    lossBuckets: toStringArray(value.loss_buckets ?? value.lossBuckets),
-    timePresets: toStringArray(value.time_presets ?? value.timePresets),
-  } satisfies HybridSearchSchema;
 }
 
 export async function getHybridSearchSchema(): Promise<HybridSearchSchema> {
