@@ -58,17 +58,54 @@ const dashboardOverviewSchema = z.object({
 
 export type DashboardOverview = z.infer<typeof dashboardOverviewSchema>;
 
-const searchRequestSchema = z.object({
-  query: z.string().default(""),
-  page: z.number().int().min(1).default(1),
-  pageSize: z.number().int().min(1).max(100).default(10),
-  sources: z.array(z.string()).optional(),
-  taxonomy: z.array(z.string()).optional(),
-  fromDate: z.string().optional(),
-  toDate: z.string().optional(),
+const searchTimeRangeSchema = z.object({
+  start: z.string(),
+  end: z.string(),
 });
 
+const searchEntityFilterSchema = z.object({
+  type: z.string().min(1, "Entity type is required"),
+  value: z.string().min(1, "Entity value is required"),
+  matchMode: z.enum(["exact", "prefix", "contains"]).default("exact"),
+});
+
+const searchRequestSchema = z
+  .object({
+    query: z.string().default(""),
+    page: z.number().int().min(1).default(1),
+    pageSize: z.number().int().min(1).max(100).default(10),
+    sources: z.array(z.string()).optional(),
+    taxonomy: z.array(z.string()).optional(),
+    fromDate: z.string().optional(),
+    toDate: z.string().optional(),
+    classifications: z.array(z.string()).optional(),
+    datasets: z.array(z.string()).optional(),
+    indicatorTypes: z.array(z.string()).optional(),
+    lossBuckets: z.array(z.string()).optional(),
+    timePreset: z.string().optional(),
+    timeRange: searchTimeRangeSchema.optional(),
+    entities: z.array(searchEntityFilterSchema).optional(),
+    caseIds: z.array(z.string()).optional(),
+  })
+  .refine(
+    (payload) => {
+      if (!payload.fromDate && !payload.toDate) {
+        return true;
+      }
+      if (payload.fromDate && payload.toDate) {
+        return new Date(payload.fromDate).getTime() <= new Date(payload.toDate).getTime();
+      }
+      return false;
+    },
+    {
+      message: "fromDate and toDate must both be provided and fromDate must be before toDate",
+      path: ["fromDate"],
+    }
+  );
+
 export type SearchRequest = z.infer<typeof searchRequestSchema>;
+export type SearchEntityFilter = z.infer<typeof searchEntityFilterSchema>;
+export type SearchTimeRange = z.infer<typeof searchTimeRangeSchema>;
 
 const searchResultSchema = z.object({
   id: z.string(),

@@ -3,7 +3,7 @@ import { Sparkles } from "lucide-react";
 import { Badge, Card } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
 import SearchExperience from "./search-experience";
-import { getSearchHistory, listSavedSearches } from "@/lib/server/reviews-service";
+import { getHybridSearchSchema, getSearchHistory, listSavedSearches } from "@/lib/server/reviews-service";
 import { SearchHistoryList } from "./search-history-list";
 import { SavedSearchesList } from "./saved-searches-list";
 
@@ -47,7 +47,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     taxonomy: initialTaxonomy.length ? initialTaxonomy : undefined,
   });
 
-  const [history, savedSearches] = await Promise.all([
+  const [schema, history, savedSearches] = await Promise.all([
+    getHybridSearchSchema(),
     getSearchHistory(6),
     listSavedSearches({ limit: 6 }),
   ]);
@@ -83,6 +84,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <SearchExperience
         initialResults={initialResults}
         initialSelection={{ sources: initialSources, taxonomy: initialTaxonomy }}
+        schema={schema}
       />
 
       <section className="grid gap-4 lg:grid-cols-2">

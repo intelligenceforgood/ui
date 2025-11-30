@@ -1,6 +1,6 @@
 'use server';
 
-import type { SavedSearchRecord, SearchHistoryEvent } from '@/types/reviews';
+import type { HybridSearchSchema, SavedSearchRecord, SearchHistoryEvent } from '@/types/reviews';
 
 function resolveApiBase() {
   return process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null;
@@ -98,6 +98,24 @@ function mapSavedSearch(payload: Record<string, unknown>): SavedSearchRecord {
   } satisfies SavedSearchRecord;
 }
 
+const DEFAULT_SCHEMA: HybridSearchSchema = {
+  indicatorTypes: [
+    'bank_account',
+    'crypto_wallet',
+    'email',
+    'phone',
+    'ip_address',
+    'asn',
+    'browser_agent',
+    'url',
+    'merchant',
+  ],
+  datasets: ['retrieval_poc_dev', 'account_list'],
+  classifications: ['romance', 'pig_butcher', 'tech_support'],
+  lossBuckets: ['<10k', '10k-50k', '>50k'],
+  timePresets: ['7d', '30d', '90d'],
+};
+
 const MOCK_HISTORY: SearchHistoryEvent[] = [
   {
     id: 'mock-history-1',
@@ -159,6 +177,29 @@ export async function getSearchHistory(limit = 10): Promise<SearchHistoryEvent[]
   } catch (error) {
     console.warn('Falling back to mock search history', error);
     return MOCK_HISTORY.slice(0, limit);
+  }
+}
+
+function mapHybridSearchSchemaPayload(value: Record<string, unknown>): HybridSearchSchema {
+  return {
+    indicatorTypes: toStringArray(value.indicator_types ?? value.indicatorTypes),
+    datasets: toStringArray(value.datasets),
+    classifications: toStringArray(value.classifications),
+    lossBuckets: toStringArray(value.loss_buckets ?? value.lossBuckets),
+    timePresets: toStringArray(value.time_presets ?? value.timePresets),
+  } satisfies HybridSearchSchema;
+}
+
+export async function getHybridSearchSchema(): Promise<HybridSearchSchema> {
+  try {
+    const payload = await fetchJson('/reviews/search/schema');
+    if (!payload || !isPlainObject(payload)) {
+      return DEFAULT_SCHEMA;
+    }
+    return mapHybridSearchSchemaPayload(payload);
+  } catch (error) {
+    console.warn('Falling back to default hybrid search schema', error);
+    return DEFAULT_SCHEMA;
   }
 }
 

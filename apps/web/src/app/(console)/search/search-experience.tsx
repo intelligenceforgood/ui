@@ -4,33 +4,66 @@ import { type ChangeEvent, useCallback, useMemo, useState, useTransition } from 
 import { useRouter } from "next/navigation";
 import { Badge, Button, Card, Input } from "@i4g/ui-kit";
 import type { SearchResponse } from "@i4g/sdk";
+import type { HybridSearchSchema } from "@/types/reviews";
 import {
   ArrowUpRight,
   BookmarkPlus,
   Filter,
   Loader2,
+  Plus,
   RefreshCcw,
   Search,
   Sparkles,
+  X,
 } from "lucide-react";
 
-type SearchExperienceProps = {
-  initialResults: SearchResponse;
-  initialSelection?: FacetSelection;
+type MatchMode = "exact" | "prefix" | "contains";
+
+type EntityFilterRow = {
+  id: string;
+  type: string;
+  value: string;
+  matchMode: MatchMode;
 };
+
+type InitialEntityFilter = Omit<EntityFilterRow, "id"> & { id?: string };
+
+type InitialSelection = Partial<{
+  sources: string[];
+  taxonomy: string[];
+  indicatorTypes: string[];
+  datasets: string[];
+  timePreset: string | null;
+  entities: InitialEntityFilter[];
+}>;
 
 type FacetSelection = {
   sources: string[];
   taxonomy: string[];
+  indicatorTypes: string[];
+  datasets: string[];
+  timePreset: string | null;
 };
+
+type FacetField = "sources" | "taxonomy";
 
 type SearchOverrides = Partial<{
   query: string;
   sources: string[];
   taxonomy: string[];
+  indicatorTypes: string[];
+  datasets: string[];
+  timePreset: string | null;
+  entities: EntityFilterRow[];
 }>;
 
-const facetFieldMap: Record<string, keyof FacetSelection> = {
+type SearchExperienceProps = {
+  initialResults: SearchResponse;
+  initialSelection?: InitialSelection;
+  schema: HybridSearchSchema;
+};
+
+const facetFieldMap: Record<string, FacetField> = {
   source: "sources",
   taxonomy: "taxonomy",
 };
@@ -66,11 +99,62 @@ const sourceColors: Record<string, string> = {
   financial: "text-purple-600 bg-purple-50",
 };
 
-export default function SearchExperience({ initialResults, initialSelection }: SearchExperienceProps) {
+const DEFAULT_ENTITY_TYPE = "bank_account";
+const MATCH_MODE_OPTIONS: MatchMode[] = ["exact", "prefix", "contains"];
+
+const generateEntityFilterId = (): string => {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `entity-${Date.now()}-${Math.round(Math.random() * 1_000_000)}`;
+};
+
+const deriveTimeRangeFromPreset = (preset?: string | null): { start: string; end: string } | undefined => {
+  if (!preset) {
+    return undefined;
+  }
+  const match = /^\s*(\d+)([dhm])\s*$/i.exec(preset);
+  if (!match) {
+    return undefined;
+  }
+  const amount = Number(match[1]);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return undefined;
+  }
+  const unit = match[2].toLowerCase();
+  const end = new Date();
+  const start = new Date(end);
+  if (unit === "d") {
+    start.setUTCDate(start.getUTCDate() - amount);
+  } else if (unit === "h") {
+    start.setUTCHours(start.getUTCHours() - amount);
+  } else if (unit === "m") {
+    start.setUTCMinutes(start.getUTCMinutes() - amount);
+  } else {
+    return undefined;
+  }
+  return { start: start.toISOString(), end: end.toISOString() };
+};
+
+export default function SearchExperience({ initialResults, initialSelection, schema }: SearchExperienceProps) {
+  const indicatorOptions = schema.indicatorTypes.length ? schema.indicatorTypes : [DEFAULT_ENTITY_TYPE];
+  const defaultIndicatorType = indicatorOptions[0] ?? DEFAULT_ENTITY_TYPE;
   const [query, setQuery] = useState(initialResults.stats.query ?? "");
   const [results, setResults] = useState<SearchResponse>(initialResults);
-  const [selection, setSelection] = useState<FacetSelection>(
-    initialSelection ?? { sources: [], taxonomy: [] }
+  const [selection, setSelection] = useState<FacetSelection>((): FacetSelection => ({
+    sources: initialSelection?.sources ?? [],
+    taxonomy: initialSelection?.taxonomy ?? [],
+    indicatorTypes: initialSelection?.indicatorTypes ?? [],
+    datasets: initialSelection?.datasets ?? [],
+    timePreset: initialSelection?.timePreset ?? null,
+  }));
+  const [entityFilters, setEntityFilters] = useState<EntityFilterRow[]>(() =>
+    (initialSelection?.entities ?? []).map((filter) => ({
+      id: filter.id ?? generateEntityFilterId(),
+      type: filter.type || defaultIndicatorType,
+      value: filter.value ?? "",
+      matchMode: filter.matchMode ?? "exact",
+    }))
   );
   const [error, setError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -79,13 +163,54 @@ export default function SearchExperience({ initialResults, initialSelection }: S
   const [isPending, startTransition] = useTransition();
   const [expandedResultId, setExpandedResultId] = useState<string | null>(null);
   const router = useRouter();
+  const schemaSummary = useMemo(
+    () => ({
+      indicatorTypes: schema.indicatorTypes.length,
+      datasets: schema.datasets.length,
+      timePresets: schema.timePresets.length,
+    }),
+    [schema.indicatorTypes.length, schema.datasets.length, schema.timePresets.length]
+  );
 
   const triggerSearch = useCallback(
-    (overrides?: SearchOverrides, appliedSelection?: FacetSelection) => {
+    (
+      overrides?: SearchOverrides,
+      appliedSelection?: FacetSelection,
+      appliedEntities?: EntityFilterRow[]
+    ) => {
       const effectiveSelection = appliedSelection ?? selection;
+      const effectiveEntities = appliedEntities ?? entityFilters;
       const nextQuery = overrides?.query ?? query;
       const nextSources = overrides?.sources ?? effectiveSelection.sources;
       const nextTaxonomy = overrides?.taxonomy ?? effectiveSelection.taxonomy;
+      const nextIndicatorTypes = overrides?.indicatorTypes ?? effectiveSelection.indicatorTypes;
+      const nextDatasets = overrides?.datasets ?? effectiveSelection.datasets;
+      const nextTimePreset =
+        overrides && Object.prototype.hasOwnProperty.call(overrides, "timePreset")
+          ? overrides.timePreset ?? null
+          : effectiveSelection.timePreset;
+      const nextEntities = overrides?.entities ?? effectiveEntities;
+      const timeRange = deriveTimeRangeFromPreset(nextTimePreset);
+      const entityPayload = nextEntities
+        .filter((filter) => filter.value.trim().length > 0)
+        .map((filter) => ({
+          type: filter.type,
+          value: filter.value.trim(),
+          matchMode: filter.matchMode,
+        }));
+      const requestBody = {
+        query: nextQuery,
+        sources: nextSources.length ? nextSources : undefined,
+        taxonomy: nextTaxonomy.length ? nextTaxonomy : undefined,
+        classifications: nextTaxonomy.length ? nextTaxonomy : undefined,
+        indicatorTypes: nextIndicatorTypes.length ? nextIndicatorTypes : undefined,
+        datasets: nextDatasets.length ? nextDatasets : undefined,
+        timePreset: nextTimePreset ?? undefined,
+        timeRange,
+        entities: entityPayload.length ? entityPayload : undefined,
+        page: 1,
+        pageSize: results.stats.pageSize,
+      } satisfies Record<string, unknown>;
 
       startTransition(() => {
         setError(null);
@@ -94,13 +219,7 @@ export default function SearchExperience({ initialResults, initialSelection }: S
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            query: nextQuery,
-            sources: nextSources.length ? nextSources : undefined,
-            taxonomy: nextTaxonomy.length ? nextTaxonomy : undefined,
-            page: 1,
-            pageSize: results.stats.pageSize,
-          }),
+          body: JSON.stringify(requestBody),
         })
           .then(async (response) => {
             if (!response.ok) {
@@ -118,7 +237,7 @@ export default function SearchExperience({ initialResults, initialSelection }: S
           });
       });
     },
-    [query, results.stats.pageSize, selection]
+    [entityFilters, query, results.stats.pageSize, selection]
   );
 
   const handleSubmit = useCallback(
@@ -130,7 +249,7 @@ export default function SearchExperience({ initialResults, initialSelection }: S
   );
 
   const toggleFacet = useCallback(
-    (field: keyof FacetSelection, value: string) => {
+    (field: FacetField, value: string) => {
       setSelection((current) => {
         const alreadySelected = current[field].includes(value);
         const nextValues = alreadySelected
@@ -150,10 +269,99 @@ export default function SearchExperience({ initialResults, initialSelection }: S
     [triggerSearch]
   );
 
+  const toggleIndicatorType = useCallback(
+    (value: string) => {
+      setSelection((current) => {
+        const alreadySelected = current.indicatorTypes.includes(value);
+        const nextValues = alreadySelected
+          ? current.indicatorTypes.filter((item) => item !== value)
+          : [...current.indicatorTypes, value];
+        const nextSelection: FacetSelection = { ...current, indicatorTypes: nextValues };
+        triggerSearch({ indicatorTypes: nextValues }, nextSelection);
+        return nextSelection;
+      });
+    },
+    [triggerSearch]
+  );
+
+  const toggleDataset = useCallback(
+    (value: string) => {
+      setSelection((current) => {
+        const alreadySelected = current.datasets.includes(value);
+        const nextValues = alreadySelected
+          ? current.datasets.filter((item) => item !== value)
+          : [...current.datasets, value];
+        const nextSelection: FacetSelection = { ...current, datasets: nextValues };
+        triggerSearch({ datasets: nextValues }, nextSelection);
+        return nextSelection;
+      });
+    },
+    [triggerSearch]
+  );
+
+  const toggleTimePreset = useCallback(
+    (value: string) => {
+      setSelection((current) => {
+        const nextPreset = current.timePreset === value ? null : value;
+        const nextSelection: FacetSelection = { ...current, timePreset: nextPreset };
+        triggerSearch({ timePreset: nextPreset }, nextSelection);
+        return nextSelection;
+      });
+    },
+    [triggerSearch]
+  );
+
+  const addEntityFilter = useCallback(() => {
+    setEntityFilters((current) => [
+      ...current,
+      {
+        id: generateEntityFilterId(),
+        type: defaultIndicatorType,
+        value: "",
+        matchMode: "exact",
+      },
+    ]);
+  }, [defaultIndicatorType]);
+
+  const updateEntityFilter = useCallback((id: string, patch: Partial<EntityFilterRow>) => {
+    setEntityFilters((current) => current.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry)));
+  }, []);
+
+  const removeEntityFilter = useCallback((id: string) => {
+    setEntityFilters((current) => current.filter((entry) => entry.id !== id));
+  }, []);
+
+  const resetEntityFilters = useCallback(() => {
+    setEntityFilters([]);
+    triggerSearch({ entities: [] }, undefined, []);
+  }, [triggerSearch]);
+
+  const applyEntityFilters = useCallback(() => {
+    triggerSearch({ entities: entityFilters }, undefined, entityFilters);
+  }, [entityFilters, triggerSearch]);
+
   const clearFilters = useCallback(() => {
-    const cleared = { sources: [], taxonomy: [] } satisfies FacetSelection;
+    const cleared: FacetSelection = {
+      sources: [],
+      taxonomy: [],
+      indicatorTypes: [],
+      datasets: [],
+      timePreset: null,
+    };
     setSelection(cleared);
-    triggerSearch({ sources: [], taxonomy: [] }, cleared);
+    setEntityFilters([]);
+    triggerSearch(
+      {
+        sources: [],
+        taxonomy: [],
+        indicatorTypes: [],
+        datasets: [],
+        timePreset: null,
+        entities: [],
+      },
+      cleared,
+      []
+    );
   }, [triggerSearch]);
 
   const toggleDetails = useCallback((id: string) => {
@@ -164,7 +372,22 @@ export default function SearchExperience({ initialResults, initialSelection }: S
     setSaveError(null);
     setSaveMessage(null);
     const trimmedQuery = query.trim();
-    if (!trimmedQuery && selection.sources.length === 0 && selection.taxonomy.length === 0) {
+    const entityParams = entityFilters
+      .filter((filter) => filter.value.trim().length > 0)
+      .map((filter) => ({
+        type: filter.type,
+        value: filter.value.trim(),
+        matchMode: filter.matchMode,
+      }));
+    const hasFilters =
+      Boolean(trimmedQuery) ||
+      selection.sources.length > 0 ||
+      selection.taxonomy.length > 0 ||
+      selection.indicatorTypes.length > 0 ||
+      selection.datasets.length > 0 ||
+      Boolean(selection.timePreset) ||
+      entityParams.length > 0;
+    if (!hasFilters) {
       setSaveError("Provide a query or filters before saving.");
       return;
     }
@@ -187,6 +410,10 @@ export default function SearchExperience({ initialResults, initialSelection }: S
           query: trimmedQuery,
           sources: selection.sources,
           taxonomy: selection.taxonomy,
+            indicatorTypes: selection.indicatorTypes,
+            datasets: selection.datasets,
+            timePreset: selection.timePreset ?? undefined,
+            entities: entityParams,
         },
       }),
     })
@@ -206,12 +433,30 @@ export default function SearchExperience({ initialResults, initialSelection }: S
       .finally(() => {
         setIsSavingSearch(false);
       });
-  }, [query, router, selection.sources, selection.taxonomy]);
+  }, [entityFilters, query, router, selection.datasets, selection.indicatorTypes, selection.sources, selection.taxonomy, selection.timePreset]);
 
-  const hasActiveFilters = useMemo(() => selection.sources.length > 0 || selection.taxonomy.length > 0, [
-    selection.sources.length,
-    selection.taxonomy.length,
-  ]);
+  const activeEntityCount = useMemo(
+    () => entityFilters.filter((filter) => filter.value.trim().length > 0).length,
+    [entityFilters]
+  );
+
+  const hasActiveFilters = useMemo(
+    () =>
+      selection.sources.length > 0 ||
+      selection.taxonomy.length > 0 ||
+      selection.indicatorTypes.length > 0 ||
+      selection.datasets.length > 0 ||
+      Boolean(selection.timePreset) ||
+      activeEntityCount > 0,
+    [
+      selection.sources.length,
+      selection.taxonomy.length,
+      selection.indicatorTypes.length,
+      selection.datasets.length,
+      selection.timePreset,
+      activeEntityCount,
+    ]
+  );
 
   return (
     <div className="space-y-6">
@@ -250,6 +495,9 @@ export default function SearchExperience({ initialResults, initialSelection }: S
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
                 <Filter className="h-3.5 w-3.5" /> Filters
               </div>
+              <p className="text-[11px] text-slate-400">
+                {schemaSummary.indicatorTypes} indicator types - {schemaSummary.datasets} datasets - {schemaSummary.timePresets} time presets available
+              </p>
               <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
                 <p className="text-xs font-semibold text-slate-500">Fraud patterns</p>
                 <p className="mt-1 text-xs text-slate-500">
@@ -280,6 +528,89 @@ export default function SearchExperience({ initialResults, initialSelection }: S
                   Mirrors `proto/src/i4g/classification/classifier.py` heuristics for analyst parity.
                 </p>
               </div>
+                {indicatorOptions.length ? (
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold text-slate-500">Indicator types</p>
+                    <div className="flex flex-wrap gap-2">
+                      {indicatorOptions.map((indicator) => {
+                        const isSelected = selection.indicatorTypes.includes(indicator);
+                        return (
+                          <button
+                            key={indicator}
+                            type="button"
+                            onClick={() => toggleIndicatorType(indicator)}
+                            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition ${
+                              isSelected
+                                ? "border-teal-400 bg-teal-50 text-teal-600"
+                                : "border-slate-200 bg-white text-slate-500 hover:border-teal-200 hover:text-teal-600"
+                            }`}
+                          >
+                            {indicator}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+                {schema.datasets.length ? (
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold text-slate-500">Datasets</p>
+                    <div className="flex flex-wrap gap-2">
+                      {schema.datasets.map((dataset) => {
+                        const isSelected = selection.datasets.includes(dataset);
+                        return (
+                          <button
+                            key={dataset}
+                            type="button"
+                            onClick={() => toggleDataset(dataset)}
+                            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition ${
+                              isSelected
+                                ? "border-teal-400 bg-teal-50 text-teal-600"
+                                : "border-slate-200 bg-white text-slate-500 hover:border-teal-200 hover:text-teal-600"
+                            }`}
+                          >
+                            {dataset}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+                {schema.timePresets.length ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold text-slate-500">Time range</p>
+                      {selection.timePreset ? (
+                        <button
+                          type="button"
+                          className="text-[11px] text-slate-500 hover:text-teal-600"
+                          onClick={() => toggleTimePreset(selection.timePreset!)}
+                        >
+                          Clear
+                        </button>
+                      ) : null}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {schema.timePresets.map((preset) => {
+                        const isSelected = selection.timePreset === preset;
+                        return (
+                          <button
+                            key={preset}
+                            type="button"
+                            onClick={() => toggleTimePreset(preset)}
+                            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition ${
+                              isSelected
+                                ? "border-teal-400 bg-teal-50 text-teal-600"
+                                : "border-slate-200 bg-white text-slate-500 hover:border-teal-200 hover:text-teal-600"
+                            }`}
+                          >
+                            Last {preset}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
               {results.facets.map((facet) => {
                 const selectionKey = facetFieldMap[facet.field];
                 if (!selectionKey) {
@@ -314,6 +645,94 @@ export default function SearchExperience({ initialResults, initialSelection }: S
                   </div>
                 );
               })}
+              <div className="space-y-3 rounded-2xl border border-slate-100 bg-white p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500">Entity filters</p>
+                    <p className="text-[11px] text-slate-400">Match exact values or prefixes across structured stores.</p>
+                  </div>
+                  {entityFilters.length ? (
+                    <button
+                      type="button"
+                      className="text-[11px] text-slate-500 hover:text-rose-600"
+                      onClick={resetEntityFilters}
+                    >
+                      Clear
+                    </button>
+                  ) : null}
+                </div>
+                {entityFilters.length === 0 ? (
+                  <p className="text-xs text-slate-400">Add an entity filter to constrain bank accounts, wallets, or other indicators.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {entityFilters.map((filter) => (
+                      <div key={filter.id} className="space-y-2 rounded-xl border border-slate-200 p-3">
+                        <div className="flex flex-wrap gap-2">
+                          <select
+                            value={filter.type}
+                            onChange={(event: ChangeEvent<HTMLSelectElement>) =>
+                              updateEntityFilter(filter.id, { type: event.target.value })
+                            }
+                            className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 focus:border-teal-400 focus:outline-none"
+                          >
+                            {indicatorOptions.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                          <select
+                            value={filter.matchMode}
+                            onChange={(event: ChangeEvent<HTMLSelectElement>) =>
+                              updateEntityFilter(filter.id, { matchMode: event.target.value as MatchMode })
+                            }
+                            className="w-32 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 focus:border-teal-400 focus:outline-none"
+                          >
+                            {MATCH_MODE_OPTIONS.map((mode) => (
+                              <option key={mode} value={mode}>
+                                {mode}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex gap-2">
+                          <Input
+                            value={filter.value}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                              updateEntityFilter(filter.id, { value: event.target.value })
+                            }
+                            placeholder="Value or prefix"
+                            className="flex-1"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="text-slate-500 hover:text-rose-600"
+                            onClick={() => removeEntityFilter(filter.id)}
+                            aria-label="Remove entity filter"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex flex-col gap-2">
+                  <Button type="button" variant="secondary" onClick={addEntityFilter} className="justify-center">
+                    <Plus className="mr-2 h-4 w-4" /> Add entity filter
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="justify-center text-slate-500"
+                    disabled={activeEntityCount === 0 || isPending}
+                    onClick={applyEntityFilters}
+                  >
+                    Apply entity filters
+                  </Button>
+                </div>
+              </div>
             </div>
           </aside>
 
@@ -346,6 +765,24 @@ export default function SearchExperience({ initialResults, initialSelection }: S
                   Tag: {tag}
                 </Badge>
               ))}
+              {selection.indicatorTypes.map((indicator) => (
+                <Badge key={`indicator-${indicator}`} variant="info">
+                  Indicator: {indicator}
+                </Badge>
+              ))}
+              {selection.datasets.map((dataset) => (
+                <Badge key={`dataset-${dataset}`} variant="info">
+                  Dataset: {dataset}
+                </Badge>
+              ))}
+              {selection.timePreset ? (
+                <Badge variant="warning">Time: last {selection.timePreset}</Badge>
+              ) : null}
+              {activeEntityCount ? (
+                <Badge variant="default">
+                  {activeEntityCount} entity filter{activeEntityCount === 1 ? "" : "s"}
+                </Badge>
+              ) : null}
               {!hasActiveFilters && !isPending ? (
                 <span className="text-slate-400">No filters applied</span>
               ) : null}

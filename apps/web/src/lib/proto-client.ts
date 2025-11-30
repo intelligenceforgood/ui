@@ -236,6 +236,17 @@ function buildSuggestions(results: SearchResult[]): string[] {
   return unique.length ? unique : results.slice(0, 3).map((result) => result.title);
 }
 
+function toIsoOrUndefined(value?: string | null): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return undefined;
+  }
+  return parsed.toISOString();
+}
+
 async function fetchProtoSearch(
   config: ProtoClientConfig,
   request: SearchRequest
@@ -245,30 +256,61 @@ async function fetchProtoSearch(
   const page = payload.page ?? 1;
   const offset = Math.max(page - 1, 0) * limit;
 
-  const url = new URL("/reviews/search", config.baseUrl);
-  if (payload.query) {
-    url.searchParams.set("text", payload.query);
-  }
-  url.searchParams.set("limit", String(limit));
-  url.searchParams.set("offset", String(offset));
-  url.searchParams.set("page_size", String(limit));
-  url.searchParams.set("vector_limit", String(limit));
-  url.searchParams.set("structured_limit", String(limit));
+  const classifications = payload.classifications ?? payload.taxonomy ?? [];
+  const datasets = payload.datasets ?? payload.sources ?? [];
+  const entities = (payload.entities ?? []).map((entity) => ({
+    type: entity.type,
+    value: entity.value,
+    match_mode: entity.matchMode ?? "exact",
+  }));
 
-  const classification = payload.taxonomy?.[0] ?? payload.sources?.[0];
-  if (classification) {
-    url.searchParams.set("classification", classification);
-  }
+  const explicitRange = payload.timeRange
+    ? {
+        start: toIsoOrUndefined(payload.timeRange.start),
+        end: toIsoOrUndefined(payload.timeRange.end),
+      }
+    : undefined;
+
+  const derivedRange = !explicitRange && payload.fromDate && payload.toDate
+    ? {
+        start: toIsoOrUndefined(payload.fromDate),
+        end: toIsoOrUndefined(payload.toDate),
+      }
+    : undefined;
+
+  const timeRange = explicitRange || derivedRange;
+
+  const body = {
+    text: payload.query || undefined,
+    classifications: classifications.length ? classifications : undefined,
+    datasets: datasets.length ? datasets : undefined,
+    entities: entities.length ? entities : undefined,
+    limit,
+    vector_limit: limit,
+    structured_limit: limit,
+    offset,
+    time_range:
+      timeRange && timeRange.start && timeRange.end
+        ? { start: timeRange.start, end: timeRange.end }
+        : undefined,
+  } satisfies Record<string, unknown>;
+
+  const url = new URL("/reviews/search/query", config.baseUrl);
 
   const headers: Record<string, string> = {
     Accept: "application/json",
+    "Content-Type": "application/json",
   };
 
   if (config.apiKey) {
     headers["X-API-KEY"] = config.apiKey;
   }
 
-  const response = await fetch(url, { headers });
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
 
   if (!response.ok) {
     let errorPayload: unknown = null;

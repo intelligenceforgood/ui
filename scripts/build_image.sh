@@ -28,7 +28,7 @@ REPO_ROOT=$(cd -- "$SCRIPT_DIR/.." && pwd)
 
 DOCKERFILE=""
 IMAGE_TAG=""
-REGISTRY_PREFIX="us-central1-docker.pkg.dev/i4g-dev/ui"
+REGISTRY_PREFIX="us-central1-docker.pkg.dev/i4g-dev/applications"
 EXTRA_BUILD_ARGS=()
 PUSH_IMAGE=true
 POSITIONAL=()

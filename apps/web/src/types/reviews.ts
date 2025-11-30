@@ -19,3 +19,11 @@ export type SavedSearchRecord = {
   createdAt: string;
   params: Record<string, unknown>;
 };
+
+export type HybridSearchSchema = {
+  indicatorTypes: string[];
+  datasets: string[];
+  classifications: string[];
+  lossBuckets: string[];
+  timePresets: string[];
+};
