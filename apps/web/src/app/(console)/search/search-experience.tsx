@@ -138,6 +138,7 @@ const deriveTimeRangeFromPreset = (preset?: string | null): { start: string; end
 
 export default function SearchExperience({ initialResults, initialSelection, schema }: SearchExperienceProps) {
   const indicatorOptions = schema.indicatorTypes.length ? schema.indicatorTypes : [DEFAULT_ENTITY_TYPE];
+  const entityExampleMap = useMemo(() => schema.entityExamples ?? {}, [schema.entityExamples]);
   const defaultIndicatorType = indicatorOptions[0] ?? DEFAULT_ENTITY_TYPE;
   const [query, setQuery] = useState(initialResults.stats.query ?? "");
   const [results, setResults] = useState<SearchResponse>(initialResults);
@@ -250,65 +251,51 @@ export default function SearchExperience({ initialResults, initialSelection, sch
 
   const toggleFacet = useCallback(
     (field: FacetField, value: string) => {
-      setSelection((current) => {
-        const alreadySelected = current[field].includes(value);
-        const nextValues = alreadySelected
-          ? current[field].filter((item) => item !== value)
-          : [...current[field], value];
-
-        const nextSelection = {
-          ...current,
-          [field]: nextValues,
-        };
-
-        triggerSearch({ [field]: nextValues } as SearchOverrides, nextSelection);
-
-        return nextSelection;
-      });
+      const alreadySelected = selection[field].includes(value);
+      const nextValues = alreadySelected
+        ? selection[field].filter((item) => item !== value)
+        : [...selection[field], value];
+      const nextSelection: FacetSelection = { ...selection, [field]: nextValues };
+      setSelection(nextSelection);
+      triggerSearch({ [field]: nextValues } as SearchOverrides, nextSelection);
     },
-    [triggerSearch]
+    [selection, triggerSearch]
   );
 
   const toggleIndicatorType = useCallback(
     (value: string) => {
-      setSelection((current) => {
-        const alreadySelected = current.indicatorTypes.includes(value);
-        const nextValues = alreadySelected
-          ? current.indicatorTypes.filter((item) => item !== value)
-          : [...current.indicatorTypes, value];
-        const nextSelection: FacetSelection = { ...current, indicatorTypes: nextValues };
-        triggerSearch({ indicatorTypes: nextValues }, nextSelection);
-        return nextSelection;
-      });
+      const alreadySelected = selection.indicatorTypes.includes(value);
+      const nextValues = alreadySelected
+        ? selection.indicatorTypes.filter((item) => item !== value)
+        : [...selection.indicatorTypes, value];
+      const nextSelection: FacetSelection = { ...selection, indicatorTypes: nextValues };
+      setSelection(nextSelection);
+      triggerSearch({ indicatorTypes: nextValues }, nextSelection);
     },
-    [triggerSearch]
+    [selection, triggerSearch]
   );
 
   const toggleDataset = useCallback(
     (value: string) => {
-      setSelection((current) => {
-        const alreadySelected = current.datasets.includes(value);
-        const nextValues = alreadySelected
-          ? current.datasets.filter((item) => item !== value)
-          : [...current.datasets, value];
-        const nextSelection: FacetSelection = { ...current, datasets: nextValues };
-        triggerSearch({ datasets: nextValues }, nextSelection);
-        return nextSelection;
-      });
+      const alreadySelected = selection.datasets.includes(value);
+      const nextValues = alreadySelected
+        ? selection.datasets.filter((item) => item !== value)
+        : [...selection.datasets, value];
+      const nextSelection: FacetSelection = { ...selection, datasets: nextValues };
+      setSelection(nextSelection);
+      triggerSearch({ datasets: nextValues }, nextSelection);
     },
-    [triggerSearch]
+    [selection, triggerSearch]
   );
 
   const toggleTimePreset = useCallback(
     (value: string) => {
-      setSelection((current) => {
-        const nextPreset = current.timePreset === value ? null : value;
-        const nextSelection: FacetSelection = { ...current, timePreset: nextPreset };
-        triggerSearch({ timePreset: nextPreset }, nextSelection);
-        return nextSelection;
-      });
+      const nextPreset = selection.timePreset === value ? null : value;
+      const nextSelection: FacetSelection = { ...selection, timePreset: nextPreset };
+      setSelection(nextSelection);
+      triggerSearch({ timePreset: nextPreset }, nextSelection);
     },
-    [triggerSearch]
+    [selection, triggerSearch]
   );
 
   const addEntityFilter = useCallback(() => {
@@ -665,8 +652,11 @@ export default function SearchExperience({ initialResults, initialSelection, sch
                   <p className="text-xs text-slate-400">Add an entity filter to constrain bank accounts, wallets, or other indicators.</p>
                 ) : (
                   <div className="space-y-2">
-                    {entityFilters.map((filter) => (
-                      <div key={filter.id} className="space-y-2 rounded-xl border border-slate-200 p-3">
+                    {entityFilters.map((filter) => {
+                      const exampleValues = entityExampleMap[filter.type] ?? [];
+                      const placeholder = exampleValues.length ? `e.g., ${exampleValues[0]}` : "Value or prefix";
+                      return (
+                        <div key={filter.id} className="space-y-2 rounded-xl border border-slate-200 p-3">
                         <div className="flex flex-wrap gap-2">
                           <select
                             value={filter.type}
@@ -696,26 +686,42 @@ export default function SearchExperience({ initialResults, initialSelection, sch
                           </select>
                         </div>
                         <div className="flex gap-2">
-                          <Input
-                            value={filter.value}
-                            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                              updateEntityFilter(filter.id, { value: event.target.value })
-                            }
-                            placeholder="Value or prefix"
-                            className="flex-1"
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            className="text-slate-500 hover:text-rose-600"
-                            onClick={() => removeEntityFilter(filter.id)}
-                            aria-label="Remove entity filter"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                            <Input
+                              value={filter.value}
+                              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                                updateEntityFilter(filter.id, { value: event.target.value })
+                              }
+                              placeholder={placeholder}
+                              className="flex-1"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              className="text-slate-500 hover:text-rose-600"
+                              onClick={() => removeEntityFilter(filter.id)}
+                              aria-label="Remove entity filter"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
                         </div>
-                      </div>
-                    ))}
+                          {exampleValues.length ? (
+                            <div className="flex flex-wrap gap-2 text-[11px] text-slate-400">
+                              <span>Examples:</span>
+                              {exampleValues.map((example) => (
+                                <button
+                                  key={`${filter.id}-${example}`}
+                                  type="button"
+                                  onClick={() => updateEntityFilter(filter.id, { value: example })}
+                                  className="rounded-full border border-slate-200 px-2 py-0.5 text-[11px] text-slate-500 transition hover:border-teal-200 hover:text-teal-600"
+                                >
+                                  {example}
+                                </button>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
                 <div className="flex flex-col gap-2">

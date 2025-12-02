@@ -26,4 +26,5 @@ export type HybridSearchSchema = {
   classifications: string[];
   lossBuckets: string[];
   timePresets: string[];
+  entityExamples: Record<string, string[]>;
 };

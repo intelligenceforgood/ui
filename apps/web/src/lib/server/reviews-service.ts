@@ -1,13 +1,8 @@
 'use server';
 
+import { HYBRID_SEARCH_SCHEMA_SNAPSHOT } from '@/config/schema';
 import type { HybridSearchSchema, SavedSearchRecord, SearchHistoryEvent } from '@/types/reviews';
-import {
-  isPlainObject,
-  mapHistoryEvent,
-  mapHybridSearchSchemaPayload,
-  mapSavedSearch,
-  toStringArray,
-} from './reviews-service.helpers';
+import { isPlainObject, mapHistoryEvent, mapHybridSearchSchemaPayload, mapSavedSearch } from './reviews-service.helpers';
 
 function resolveApiBase() {
   return process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null;
@@ -46,23 +41,7 @@ async function fetchJson(path: string, params?: Record<string, string>) {
   return (await response.json()) as unknown;
 }
 
-const DEFAULT_SCHEMA: HybridSearchSchema = {
-  indicatorTypes: [
-    'bank_account',
-    'crypto_wallet',
-    'email',
-    'phone',
-    'ip_address',
-    'asn',
-    'browser_agent',
-    'url',
-    'merchant',
-  ],
-  datasets: ['retrieval_poc_dev', 'account_list'],
-  classifications: ['romance', 'pig_butcher', 'tech_support'],
-  lossBuckets: ['<10k', '10k-50k', '>50k'],
-  timePresets: ['7d', '30d', '90d'],
-};
+const DEFAULT_SCHEMA: HybridSearchSchema = HYBRID_SEARCH_SCHEMA_SNAPSHOT;
 
 const MOCK_HISTORY: SearchHistoryEvent[] = [
   {

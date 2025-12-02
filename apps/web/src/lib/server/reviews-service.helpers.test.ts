@@ -36,6 +36,33 @@ describe("mapHybridSearchSchemaPayload", () => {
       classifications: ["romance_scam"],
       lossBuckets: ["<10k", "10k-50k"],
       timePresets: ["7d", "30d"],
+      entityExamples: {},
+    });
+  });
+
+  it("maps entity example dictionaries", () => {
+    const payload = {
+      indicator_types: ["ip_address"],
+      datasets: [],
+      classifications: [],
+      lossBuckets: [],
+      time_presets: [],
+      entity_examples: {
+        ip_address: ["203.0.113.25", 42, ""],
+        email: "analyst@example.com",
+      },
+    };
+
+    expect(mapHybridSearchSchemaPayload(payload)).toEqual({
+      indicatorTypes: ["ip_address"],
+      datasets: [],
+      classifications: [],
+      lossBuckets: [],
+      timePresets: [],
+      entityExamples: {
+        ip_address: ["203.0.113.25"],
+        email: ["analyst@example.com"],
+      },
     });
   });
 });

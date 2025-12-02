@@ -62,6 +62,23 @@ export function mapSavedSearch(payload: Record<string, unknown>): SavedSearchRec
   } satisfies SavedSearchRecord;
 }
 
+export function mapEntityExamples(value: unknown): Record<string, string[]> {
+  if (!isPlainObject(value)) {
+    return {};
+  }
+
+  return Object.entries(value).reduce<Record<string, string[]>>((acc, [key, entry]) => {
+    if (typeof key !== "string") {
+      return acc;
+    }
+    const examples = toStringArray(entry);
+    if (examples.length) {
+      acc[key] = examples;
+    }
+    return acc;
+  }, {});
+}
+
 export function mapHybridSearchSchemaPayload(value: Record<string, unknown>): HybridSearchSchema {
   return {
     indicatorTypes: toStringArray(value.indicator_types ?? value.indicatorTypes),
@@ -69,5 +86,6 @@ export function mapHybridSearchSchemaPayload(value: Record<string, unknown>): Hy
     classifications: toStringArray(value.classifications),
     lossBuckets: toStringArray(value.loss_buckets ?? value.lossBuckets),
     timePresets: toStringArray(value.time_presets ?? value.timePresets),
+    entityExamples: mapEntityExamples(value.entity_examples ?? value.entityExamples),
   } satisfies HybridSearchSchema;
 }
