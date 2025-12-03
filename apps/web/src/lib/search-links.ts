@@ -1,29 +1,48 @@
-function toArray(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value.filter((item): item is string => typeof item === "string" && item.length > 0);
-  }
-  if (typeof value === "string" && value.length > 0) {
-    return [value];
-  }
-  return [];
-}
+import { isPlainObject, normalizeTimeRange, serializeSearchPayloadParam, toStringArray } from "@/lib/search/filters";
 
 export type SearchParamPayload = Record<string, unknown>;
 
-export function buildSearchHref(params: SearchParamPayload | null | undefined): string {
-  if (!params) {
-    return "/search";
+type BuildSearchHrefOptions = {
+  label?: string | null;
+};
+
+function extractSearchPayload(params: SearchParamPayload | null | undefined): SearchParamPayload {
+  if (params && typeof params === "object") {
+    const record = params as Record<string, unknown>;
+    if (isPlainObject(record.request)) {
+      return record.request;
+    }
+    return params;
   }
+  return {};
+}
+
+export function buildSearchHref(
+  params: SearchParamPayload | null | undefined,
+  options?: BuildSearchHrefOptions
+): string {
+  const payload = extractSearchPayload(params);
 
   const query =
-    typeof params.query === "string"
-      ? params.query
-      : typeof params.text === "string"
-        ? params.text
+    typeof payload.query === "string"
+      ? payload.query
+      : typeof payload.text === "string"
+        ? payload.text
         : "";
 
-  const sources = toArray(params.sources ?? params.source);
-  const taxonomy = toArray(params.taxonomy ?? params.classification);
+  const sources = toStringArray(payload.sources ?? payload.source);
+  const taxonomy = toStringArray(payload.taxonomy ?? payload.classification);
+  const indicatorTypes = toStringArray(payload.indicatorTypes ?? payload.indicator_types);
+  const datasets = toStringArray(payload.datasets);
+
+  const timePreset =
+    typeof payload.timePreset === "string"
+      ? payload.timePreset
+      : typeof payload.time_preset === "string"
+        ? payload.time_preset
+        : "";
+
+  const timeRange = normalizeTimeRange(payload.timeRange ?? payload.time_range);
 
   const searchParams = new URLSearchParams();
   if (query) {
@@ -34,6 +53,27 @@ export function buildSearchHref(params: SearchParamPayload | null | undefined): 
   }
   if (taxonomy.length) {
     searchParams.set("taxonomy", taxonomy.join(","));
+  }
+  if (indicatorTypes.length) {
+    searchParams.set("indicatorTypes", indicatorTypes.join(","));
+  }
+  if (datasets.length) {
+    searchParams.set("datasets", datasets.join(","));
+  }
+  if (timePreset) {
+    searchParams.set("timePreset", timePreset);
+  }
+  if (timeRange && typeof timeRange.start === "string" && typeof timeRange.end === "string") {
+    searchParams.set("timeStart", timeRange.start);
+    searchParams.set("timeEnd", timeRange.end);
+  }
+  if (options?.label) {
+    searchParams.set("savedSearchLabel", options.label);
+  }
+
+  const payloadParam = serializeSearchPayloadParam(payload);
+  if (payloadParam) {
+    searchParams.set("payload", payloadParam);
   }
 
   const qs = searchParams.toString();

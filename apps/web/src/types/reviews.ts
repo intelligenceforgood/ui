@@ -1,3 +1,10 @@
+export type SavedSearchDescriptor = {
+  id?: string;
+  name?: string;
+  owner?: string | null;
+  tags: string[];
+};
+
 export type SearchHistoryEvent = {
   id: string;
   actor: string;
@@ -8,6 +15,7 @@ export type SearchHistoryEvent = {
   caseId?: string;
   resultCount?: number;
   total?: number;
+  savedSearch?: SavedSearchDescriptor | null;
 };
 
 export type SavedSearchRecord = {

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Badge, Card } from "@i4g/ui-kit";
 import { Bookmark, Star, StarOff, Trash2 } from "lucide-react";
 import { buildSearchHref } from "@/lib/search-links";
+import { toStringArray } from "@/lib/search/filters";
 import type { SavedSearchRecord } from "@/types/reviews";
 
 function formatDate(value: string) {
@@ -22,6 +23,48 @@ function formatDate(value: string) {
 type SavedSearchesListProps = {
   items: SavedSearchRecord[];
 };
+
+function buildSavedSearchRunParams(item: SavedSearchRecord): Record<string, unknown> {
+  const payload: Record<string, unknown> = { ...item.params };
+
+  const idCandidate =
+    typeof payload["saved_search_id"] === "string"
+      ? (payload["saved_search_id"] as string)
+      : typeof payload["savedSearchId"] === "string"
+        ? (payload["savedSearchId"] as string)
+        : typeof payload["search_id"] === "string"
+          ? (payload["search_id"] as string)
+          : item.id;
+  payload["saved_search_id"] = idCandidate;
+
+  const nameCandidate =
+    typeof payload["saved_search_name"] === "string"
+      ? (payload["saved_search_name"] as string)
+      : typeof payload["savedSearchName"] === "string"
+        ? (payload["savedSearchName"] as string)
+        : item.name;
+  payload["saved_search_name"] = nameCandidate;
+
+  const ownerCandidate =
+    typeof payload["saved_search_owner"] === "string"
+      ? (payload["saved_search_owner"] as string)
+      : typeof payload["savedSearchOwner"] === "string"
+        ? (payload["savedSearchOwner"] as string)
+        : item.owner ?? null;
+  if (ownerCandidate) {
+    payload["saved_search_owner"] = ownerCandidate;
+  }
+
+  const existingTags = toStringArray(
+    (payload["saved_search_tags"] as unknown) ?? (payload["savedSearchTags"] as unknown)
+  );
+  const tags = existingTags.length ? existingTags : item.tags;
+  if (tags.length) {
+    payload["saved_search_tags"] = tags;
+  }
+
+  return payload;
+}
 
 export function SavedSearchesList({ items: initialItems }: SavedSearchesListProps) {
   const [items, setItems] = useState(initialItems);
@@ -145,7 +188,7 @@ export function SavedSearchesList({ items: initialItems }: SavedSearchesListProp
                     <Trash2 className="h-3 w-3" /> Delete
                   </button>
                   <Link
-                    href={buildSearchHref(item.params)}
+                    href={buildSearchHref(buildSavedSearchRunParams(item), { label: item.name })}
                     className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-600 transition hover:text-teal-700"
                   >
                     Run search

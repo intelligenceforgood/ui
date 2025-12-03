@@ -126,4 +126,73 @@ describe("SearchExperience", () => {
 
     expect(screen.getByDisplayValue(entityExampleValue)).toBeInTheDocument();
   });
+
+  it("updates query and filters when initial props change", async () => {
+    const { rerender } = render(<SearchExperience initialResults={initialResults} schema={mockSchema} />);
+
+    const updatedResults: SearchResponse = {
+      ...initialResults,
+      stats: {
+        ...initialResults.stats,
+        query: "romance",
+      },
+    };
+
+    rerender(
+      <SearchExperience
+        initialResults={updatedResults}
+        initialSelection={{
+          sources: ["intake"],
+          taxonomy: ["romance_scam"],
+          indicatorTypes: [],
+          datasets: [],
+          timePreset: null,
+          entities: [],
+        }}
+        schema={mockSchema}
+      />
+    );
+
+    await waitFor(() => expect(screen.getByDisplayValue("romance")).toBeInTheDocument());
+    expect(screen.getByText(/Tag: romance_scam/i)).toBeInTheDocument();
+  });
+
+  it("forwards saved search metadata until filters change", async () => {
+    render(
+      <SearchExperience
+        initialResults={initialResults}
+        schema={mockSchema}
+        initialSavedSearch={{
+          id: "saved-123",
+          name: "Tagged search",
+          owner: "analyst@example.com",
+          tags: ["priority"],
+        }}
+      />
+    );
+
+    const submit = screen.getByRole("button", { name: /^search$/i });
+    fireEvent.click(submit);
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    let requestInit = fetchMock.mock.calls[0][1] as RequestInit;
+    let requestBody = JSON.parse(requestInit.body as string);
+    expect(requestBody.savedSearchId).toBe("saved-123");
+    expect(requestBody.savedSearchName).toBe("Tagged search");
+    expect(requestBody.savedSearchOwner).toBe("analyst@example.com");
+    expect(requestBody.savedSearchTags).toEqual(["priority"]);
+
+    fetchMock.mockClear();
+
+    const datasetButton = screen.getByRole("button", { name: /retrieval_poc_dev/i });
+    fireEvent.click(datasetButton);
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    requestInit = fetchMock.mock.calls[0][1] as RequestInit;
+    requestBody = JSON.parse(requestInit.body as string);
+    expect(requestBody.savedSearchId).toBeUndefined();
+    expect(requestBody.savedSearchName).toBeUndefined();
+    expect(requestBody.savedSearchOwner).toBeUndefined();
+    expect(requestBody.savedSearchTags).toBeUndefined();
+  });
 });

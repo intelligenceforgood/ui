@@ -280,7 +280,7 @@ async function fetchProtoSearch(
 
   const timeRange = explicitRange || derivedRange;
 
-  const body = {
+  const body: Record<string, unknown> = {
     text: payload.query || undefined,
     classifications: classifications.length ? classifications : undefined,
     datasets: datasets.length ? datasets : undefined,
@@ -293,7 +293,20 @@ async function fetchProtoSearch(
       timeRange && timeRange.start && timeRange.end
         ? { start: timeRange.start, end: timeRange.end }
         : undefined,
-  } satisfies Record<string, unknown>;
+  };
+
+  if (payload.savedSearchId) {
+    body.saved_search_id = payload.savedSearchId;
+  }
+  if (payload.savedSearchName) {
+    body.saved_search_name = payload.savedSearchName;
+  }
+  if (payload.savedSearchOwner) {
+    body.saved_search_owner = payload.savedSearchOwner;
+  }
+  if (Array.isArray(payload.savedSearchTags) && payload.savedSearchTags.length) {
+    body.saved_search_tags = payload.savedSearchTags;
+  }
 
   const url = new URL("/reviews/search/query", config.baseUrl);
 

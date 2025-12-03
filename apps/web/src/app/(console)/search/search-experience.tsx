@@ -1,10 +1,12 @@
 "use client";
 
-import { type ChangeEvent, useCallback, useMemo, useState, useTransition } from "react";
+import { type ChangeEvent, useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Button, Card, Input } from "@i4g/ui-kit";
-import type { SearchResponse } from "@i4g/sdk";
-import type { HybridSearchSchema } from "@/types/reviews";
+import type { SearchRequest, SearchResponse } from "@i4g/sdk";
+import type { HybridSearchSchema, SavedSearchDescriptor } from "@/types/reviews";
+import { deriveTimeRangeFromPreset } from "@/lib/search/filters";
+import { buildSearchHref } from "@/lib/search-links";
 import {
   ArrowUpRight,
   BookmarkPlus,
@@ -57,9 +59,14 @@ type SearchOverrides = Partial<{
   entities: EntityFilterRow[];
 }>;
 
+type BuildSearchRequestOptions = {
+  includeSavedSearchContext?: boolean;
+};
+
 type SearchExperienceProps = {
   initialResults: SearchResponse;
   initialSelection?: InitialSelection;
+  initialSavedSearch?: SavedSearchDescriptor | null;
   schema: HybridSearchSchema;
 };
 
@@ -109,54 +116,67 @@ const generateEntityFilterId = (): string => {
   return `entity-${Date.now()}-${Math.round(Math.random() * 1_000_000)}`;
 };
 
-const deriveTimeRangeFromPreset = (preset?: string | null): { start: string; end: string } | undefined => {
-  if (!preset) {
-    return undefined;
-  }
-  const match = /^\s*(\d+)([dhm])\s*$/i.exec(preset);
-  if (!match) {
-    return undefined;
-  }
-  const amount = Number(match[1]);
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return undefined;
-  }
-  const unit = match[2].toLowerCase();
-  const end = new Date();
-  const start = new Date(end);
-  if (unit === "d") {
-    start.setUTCDate(start.getUTCDate() - amount);
-  } else if (unit === "h") {
-    start.setUTCHours(start.getUTCHours() - amount);
-  } else if (unit === "m") {
-    start.setUTCMinutes(start.getUTCMinutes() - amount);
-  } else {
-    return undefined;
-  }
-  return { start: start.toISOString(), end: end.toISOString() };
-};
+const buildEntityFilterRows = (entries: InitialEntityFilter[] | undefined, fallbackType: string): EntityFilterRow[] =>
+  (entries ?? []).map((filter) => ({
+    id: filter.id ?? generateEntityFilterId(),
+    type: filter.type || fallbackType,
+    value: filter.value ?? "",
+    matchMode: filter.matchMode ?? "exact",
+  }));
 
-export default function SearchExperience({ initialResults, initialSelection, schema }: SearchExperienceProps) {
+export default function SearchExperience({ initialResults, initialSelection, initialSavedSearch, schema }: SearchExperienceProps) {
   const indicatorOptions = schema.indicatorTypes.length ? schema.indicatorTypes : [DEFAULT_ENTITY_TYPE];
   const entityExampleMap = useMemo(() => schema.entityExamples ?? {}, [schema.entityExamples]);
   const defaultIndicatorType = indicatorOptions[0] ?? DEFAULT_ENTITY_TYPE;
+  const normalizedInitialSelection = useMemo<FacetSelection>(() => ({
+    sources: [...(initialSelection?.sources ?? [])],
+    taxonomy: [...(initialSelection?.taxonomy ?? [])],
+    indicatorTypes: [...(initialSelection?.indicatorTypes ?? [])],
+    datasets: [...(initialSelection?.datasets ?? [])],
+    timePreset: initialSelection?.timePreset ?? null,
+  }), [initialSelection]);
+  const normalizedInitialEntityFilters = useMemo(
+    () => buildEntityFilterRows(initialSelection?.entities, defaultIndicatorType),
+    [initialSelection, defaultIndicatorType]
+  );
+  const normalizedInitialSavedSearch = useMemo<SavedSearchDescriptor | null>(() => {
+    if (!initialSavedSearch) {
+      return null;
+    }
+    const tags = Array.isArray(initialSavedSearch.tags) ? initialSavedSearch.tags : [];
+    if (
+      (initialSavedSearch.id && initialSavedSearch.id.length > 0) ||
+      (initialSavedSearch.name && initialSavedSearch.name.length > 0) ||
+      tags.length > 0 ||
+      typeof initialSavedSearch.owner === "string"
+    ) {
+      return {
+        id: initialSavedSearch.id,
+        name: initialSavedSearch.name,
+        owner: initialSavedSearch.owner ?? null,
+        tags,
+      } satisfies SavedSearchDescriptor;
+    }
+    return null;
+  }, [initialSavedSearch]);
   const [query, setQuery] = useState(initialResults.stats.query ?? "");
   const [results, setResults] = useState<SearchResponse>(initialResults);
-  const [selection, setSelection] = useState<FacetSelection>((): FacetSelection => ({
-    sources: initialSelection?.sources ?? [],
-    taxonomy: initialSelection?.taxonomy ?? [],
-    indicatorTypes: initialSelection?.indicatorTypes ?? [],
-    datasets: initialSelection?.datasets ?? [],
-    timePreset: initialSelection?.timePreset ?? null,
-  }));
-  const [entityFilters, setEntityFilters] = useState<EntityFilterRow[]>(() =>
-    (initialSelection?.entities ?? []).map((filter) => ({
-      id: filter.id ?? generateEntityFilterId(),
-      type: filter.type || defaultIndicatorType,
-      value: filter.value ?? "",
-      matchMode: filter.matchMode ?? "exact",
-    }))
+  const [selection, setSelection] = useState<FacetSelection>(normalizedInitialSelection);
+  const [entityFilters, setEntityFilters] = useState<EntityFilterRow[]>(normalizedInitialEntityFilters);
+  const [savedSearchContext, setSavedSearchContext] = useState<SavedSearchDescriptor | null>(
+    normalizedInitialSavedSearch
   );
+  const clearSavedSearchContext = useCallback(() => {
+    let wasCleared = false;
+    setSavedSearchContext((current) => {
+      if (current) {
+        wasCleared = true;
+        return null;
+      }
+      return current;
+    });
+    return wasCleared;
+  }, []);
   const [error, setError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -173,15 +193,17 @@ export default function SearchExperience({ initialResults, initialSelection, sch
     [schema.indicatorTypes.length, schema.datasets.length, schema.timePresets.length]
   );
 
-  const triggerSearch = useCallback(
+  const buildSearchRequestPayload = useCallback(
     (
       overrides?: SearchOverrides,
       appliedSelection?: FacetSelection,
-      appliedEntities?: EntityFilterRow[]
-    ) => {
+      appliedEntities?: EntityFilterRow[],
+      options?: BuildSearchRequestOptions
+    ): SearchRequest => {
       const effectiveSelection = appliedSelection ?? selection;
       const effectiveEntities = appliedEntities ?? entityFilters;
       const nextQuery = overrides?.query ?? query;
+      const trimmedQuery = typeof nextQuery === "string" ? nextQuery.trim() : "";
       const nextSources = overrides?.sources ?? effectiveSelection.sources;
       const nextTaxonomy = overrides?.taxonomy ?? effectiveSelection.taxonomy;
       const nextIndicatorTypes = overrides?.indicatorTypes ?? effectiveSelection.indicatorTypes;
@@ -191,7 +213,7 @@ export default function SearchExperience({ initialResults, initialSelection, sch
           ? overrides.timePreset ?? null
           : effectiveSelection.timePreset;
       const nextEntities = overrides?.entities ?? effectiveEntities;
-      const timeRange = deriveTimeRangeFromPreset(nextTimePreset);
+      const timeRange = deriveTimeRangeFromPreset(nextTimePreset ?? undefined);
       const entityPayload = nextEntities
         .filter((filter) => filter.value.trim().length > 0)
         .map((filter) => ({
@@ -199,19 +221,90 @@ export default function SearchExperience({ initialResults, initialSelection, sch
           value: filter.value.trim(),
           matchMode: filter.matchMode,
         }));
-      const requestBody = {
-        query: nextQuery,
-        sources: nextSources.length ? nextSources : undefined,
-        taxonomy: nextTaxonomy.length ? nextTaxonomy : undefined,
-        classifications: nextTaxonomy.length ? nextTaxonomy : undefined,
-        indicatorTypes: nextIndicatorTypes.length ? nextIndicatorTypes : undefined,
-        datasets: nextDatasets.length ? nextDatasets : undefined,
-        timePreset: nextTimePreset ?? undefined,
-        timeRange,
-        entities: entityPayload.length ? entityPayload : undefined,
+
+      const requestBody: SearchRequest = {
+        query: trimmedQuery,
         page: 1,
         pageSize: results.stats.pageSize,
-      } satisfies Record<string, unknown>;
+      } satisfies SearchRequest;
+
+      if (nextSources.length) {
+        requestBody.sources = nextSources;
+      }
+      if (nextTaxonomy.length) {
+        requestBody.taxonomy = nextTaxonomy;
+        requestBody.classifications = nextTaxonomy;
+      }
+      if (nextIndicatorTypes.length) {
+        requestBody.indicatorTypes = nextIndicatorTypes;
+      }
+      if (nextDatasets.length) {
+        requestBody.datasets = nextDatasets;
+      }
+      if (nextTimePreset) {
+        requestBody.timePreset = nextTimePreset;
+      }
+      if (timeRange) {
+        requestBody.timeRange = timeRange;
+      }
+      if (entityPayload.length) {
+        requestBody.entities = entityPayload;
+      }
+
+      if (options?.includeSavedSearchContext !== false && savedSearchContext) {
+        if (savedSearchContext.id) {
+          requestBody.savedSearchId = savedSearchContext.id;
+        }
+        if (savedSearchContext.name) {
+          requestBody.savedSearchName = savedSearchContext.name;
+        }
+        if (savedSearchContext.owner) {
+          requestBody.savedSearchOwner = savedSearchContext.owner;
+        }
+        if (savedSearchContext.tags?.length) {
+          requestBody.savedSearchTags = savedSearchContext.tags;
+        }
+      }
+
+      return requestBody;
+    },
+    [entityFilters, query, results.stats.pageSize, savedSearchContext, selection]
+  );
+
+  useEffect(() => {
+    setResults(initialResults);
+    setQuery(initialResults.stats.query ?? "");
+    setExpandedResultId(null);
+  }, [initialResults]);
+
+  useEffect(() => {
+    setSelection(normalizedInitialSelection);
+  }, [normalizedInitialSelection]);
+
+  useEffect(() => {
+    setEntityFilters(normalizedInitialEntityFilters);
+  }, [normalizedInitialEntityFilters]);
+
+  useEffect(() => {
+    setSavedSearchContext(normalizedInitialSavedSearch);
+  }, [normalizedInitialSavedSearch]);
+
+  const triggerSearch = useCallback(
+    (
+      overrides?: SearchOverrides,
+      appliedSelection?: FacetSelection,
+      appliedEntities?: EntityFilterRow[],
+      options?: BuildSearchRequestOptions
+    ) => {
+      const requestBody = buildSearchRequestPayload(overrides, appliedSelection, appliedEntities, options);
+      const savedSearchLabel =
+        typeof requestBody.savedSearchName === "string" && requestBody.savedSearchName.length
+          ? requestBody.savedSearchName
+          : typeof requestBody.savedSearchId === "string" && requestBody.savedSearchId.length
+            ? requestBody.savedSearchId
+            : null;
+      const nextHref = buildSearchHref(requestBody, savedSearchLabel ? { label: savedSearchLabel } : undefined);
+      router.replace(nextHref, { scroll: false });
 
       startTransition(() => {
         setError(null);
@@ -238,7 +331,7 @@ export default function SearchExperience({ initialResults, initialSelection, sch
           });
       });
     },
-    [entityFilters, query, results.stats.pageSize, selection]
+    [buildSearchRequestPayload, router]
   );
 
   const handleSubmit = useCallback(
@@ -249,56 +342,77 @@ export default function SearchExperience({ initialResults, initialSelection, sch
     [triggerSearch]
   );
 
+  const handleQueryChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      clearSavedSearchContext();
+      setQuery(event.target.value);
+    },
+    [clearSavedSearchContext]
+  );
+
   const toggleFacet = useCallback(
     (field: FacetField, value: string) => {
+      const includeSavedSearchContext = !clearSavedSearchContext();
       const alreadySelected = selection[field].includes(value);
       const nextValues = alreadySelected
         ? selection[field].filter((item) => item !== value)
         : [...selection[field], value];
       const nextSelection: FacetSelection = { ...selection, [field]: nextValues };
       setSelection(nextSelection);
-      triggerSearch({ [field]: nextValues } as SearchOverrides, nextSelection);
+      triggerSearch({ [field]: nextValues } as SearchOverrides, nextSelection, undefined, {
+        includeSavedSearchContext,
+      });
     },
-    [selection, triggerSearch]
+    [clearSavedSearchContext, selection, triggerSearch]
   );
 
   const toggleIndicatorType = useCallback(
     (value: string) => {
+      const includeSavedSearchContext = !clearSavedSearchContext();
       const alreadySelected = selection.indicatorTypes.includes(value);
       const nextValues = alreadySelected
         ? selection.indicatorTypes.filter((item) => item !== value)
         : [...selection.indicatorTypes, value];
       const nextSelection: FacetSelection = { ...selection, indicatorTypes: nextValues };
       setSelection(nextSelection);
-      triggerSearch({ indicatorTypes: nextValues }, nextSelection);
+      triggerSearch({ indicatorTypes: nextValues }, nextSelection, undefined, {
+        includeSavedSearchContext,
+      });
     },
-    [selection, triggerSearch]
+    [clearSavedSearchContext, selection, triggerSearch]
   );
 
   const toggleDataset = useCallback(
     (value: string) => {
+      const includeSavedSearchContext = !clearSavedSearchContext();
       const alreadySelected = selection.datasets.includes(value);
       const nextValues = alreadySelected
         ? selection.datasets.filter((item) => item !== value)
         : [...selection.datasets, value];
       const nextSelection: FacetSelection = { ...selection, datasets: nextValues };
       setSelection(nextSelection);
-      triggerSearch({ datasets: nextValues }, nextSelection);
+      triggerSearch({ datasets: nextValues }, nextSelection, undefined, {
+        includeSavedSearchContext,
+      });
     },
-    [selection, triggerSearch]
+    [clearSavedSearchContext, selection, triggerSearch]
   );
 
   const toggleTimePreset = useCallback(
     (value: string) => {
+      const includeSavedSearchContext = !clearSavedSearchContext();
       const nextPreset = selection.timePreset === value ? null : value;
       const nextSelection: FacetSelection = { ...selection, timePreset: nextPreset };
       setSelection(nextSelection);
-      triggerSearch({ timePreset: nextPreset }, nextSelection);
+      triggerSearch({ timePreset: nextPreset }, nextSelection, undefined, {
+        includeSavedSearchContext,
+      });
     },
-    [selection, triggerSearch]
+    [clearSavedSearchContext, selection, triggerSearch]
   );
 
   const addEntityFilter = useCallback(() => {
+    clearSavedSearchContext();
     setEntityFilters((current) => [
       ...current,
       {
@@ -308,26 +422,30 @@ export default function SearchExperience({ initialResults, initialSelection, sch
         matchMode: "exact",
       },
     ]);
-  }, [defaultIndicatorType]);
+  }, [clearSavedSearchContext, defaultIndicatorType]);
 
   const updateEntityFilter = useCallback((id: string, patch: Partial<EntityFilterRow>) => {
+    clearSavedSearchContext();
     setEntityFilters((current) => current.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry)));
-  }, []);
+  }, [clearSavedSearchContext]);
 
   const removeEntityFilter = useCallback((id: string) => {
+    clearSavedSearchContext();
     setEntityFilters((current) => current.filter((entry) => entry.id !== id));
-  }, []);
+  }, [clearSavedSearchContext]);
 
   const resetEntityFilters = useCallback(() => {
+    const includeSavedSearchContext = !clearSavedSearchContext();
     setEntityFilters([]);
-    triggerSearch({ entities: [] }, undefined, []);
-  }, [triggerSearch]);
+    triggerSearch({ entities: [] }, undefined, [], { includeSavedSearchContext });
+  }, [clearSavedSearchContext, triggerSearch]);
 
   const applyEntityFilters = useCallback(() => {
     triggerSearch({ entities: entityFilters }, undefined, entityFilters);
   }, [entityFilters, triggerSearch]);
 
   const clearFilters = useCallback(() => {
+    const includeSavedSearchContext = !clearSavedSearchContext();
     const cleared: FacetSelection = {
       sources: [],
       taxonomy: [],
@@ -347,9 +465,10 @@ export default function SearchExperience({ initialResults, initialSelection, sch
         entities: [],
       },
       cleared,
-      []
+      [],
+      { includeSavedSearchContext }
     );
-  }, [triggerSearch]);
+  }, [clearSavedSearchContext, triggerSearch]);
 
   const toggleDetails = useCallback((id: string) => {
     setExpandedResultId((current) => (current === id ? null : id));
@@ -358,22 +477,19 @@ export default function SearchExperience({ initialResults, initialSelection, sch
   const handleSaveSearch = useCallback(() => {
     setSaveError(null);
     setSaveMessage(null);
-    const trimmedQuery = query.trim();
-    const entityParams = entityFilters
-      .filter((filter) => filter.value.trim().length > 0)
-      .map((filter) => ({
-        type: filter.type,
-        value: filter.value.trim(),
-        matchMode: filter.matchMode,
-      }));
+    const requestPayload = buildSearchRequestPayload(undefined, undefined, undefined, {
+      includeSavedSearchContext: false,
+    });
+    const trimmedQuery = typeof requestPayload.query === "string" ? requestPayload.query.trim() : "";
     const hasFilters =
       Boolean(trimmedQuery) ||
-      selection.sources.length > 0 ||
-      selection.taxonomy.length > 0 ||
-      selection.indicatorTypes.length > 0 ||
-      selection.datasets.length > 0 ||
-      Boolean(selection.timePreset) ||
-      entityParams.length > 0;
+      Boolean(requestPayload.sources && requestPayload.sources.length) ||
+      Boolean(requestPayload.taxonomy && requestPayload.taxonomy.length) ||
+      Boolean(requestPayload.indicatorTypes && requestPayload.indicatorTypes.length) ||
+      Boolean(requestPayload.datasets && requestPayload.datasets.length) ||
+      Boolean(requestPayload.timePreset) ||
+      Boolean(requestPayload.timeRange) ||
+      Boolean(requestPayload.entities && requestPayload.entities.length);
     if (!hasFilters) {
       setSaveError("Provide a query or filters before saving.");
       return;
@@ -393,15 +509,7 @@ export default function SearchExperience({ initialResults, initialSelection, sch
       },
       body: JSON.stringify({
         name,
-        params: {
-          query: trimmedQuery,
-          sources: selection.sources,
-          taxonomy: selection.taxonomy,
-            indicatorTypes: selection.indicatorTypes,
-            datasets: selection.datasets,
-            timePreset: selection.timePreset ?? undefined,
-            entities: entityParams,
-        },
+        params: requestPayload,
       }),
     })
       .then(async (response) => {
@@ -420,7 +528,7 @@ export default function SearchExperience({ initialResults, initialSelection, sch
       .finally(() => {
         setIsSavingSearch(false);
       });
-  }, [entityFilters, query, router, selection.datasets, selection.indicatorTypes, selection.sources, selection.taxonomy, selection.timePreset]);
+  }, [buildSearchRequestPayload, router]);
 
   const activeEntityCount = useMemo(
     () => entityFilters.filter((filter) => filter.value.trim().length > 0).length,
@@ -454,7 +562,7 @@ export default function SearchExperience({ initialResults, initialSelection, sch
             <Input
               name="query"
               value={query}
-              onChange={(event: ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)}
+              onChange={handleQueryChange}
               placeholder="Search by entity, behaviour, or case ID"
               className="pl-9"
               autoComplete="off"

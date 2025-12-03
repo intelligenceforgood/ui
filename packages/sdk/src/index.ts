@@ -86,6 +86,10 @@ const searchRequestSchema = z
     timeRange: searchTimeRangeSchema.optional(),
     entities: z.array(searchEntityFilterSchema).optional(),
     caseIds: z.array(z.string()).optional(),
+    savedSearchId: z.string().optional(),
+    savedSearchName: z.string().optional(),
+    savedSearchOwner: z.string().optional(),
+    savedSearchTags: z.array(z.string()).optional(),
   })
   .refine(
     (payload) => {
