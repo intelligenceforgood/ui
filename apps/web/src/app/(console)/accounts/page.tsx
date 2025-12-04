@@ -7,6 +7,8 @@ export const metadata: Metadata = {
   description: "Generate and review financial account extraction runs.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function AccountListPage() {
   const runs = await getAccountListRuns(8);
 

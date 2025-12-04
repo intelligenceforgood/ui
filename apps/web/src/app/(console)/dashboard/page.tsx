@@ -6,6 +6,7 @@ import {
   AlertOctagon,
   ArrowUpRight,
   Bell,
+  FileCheck2,
   FileSearch,
   Map,
   ShieldCheck,
@@ -26,6 +27,12 @@ const quickActions = [
     label: "Run an intelligence search",
     description: "Search across filings, chatter, and partner feeds.",
     icon: FileSearch,
+  },
+  {
+    href: "/reports/dossiers",
+    label: "Verify evidence dossiers",
+    description: "Inspect manifest signatures before distribution.",
+    icon: FileCheck2,
   },
   {
     href: "/cases",
@@ -184,7 +191,7 @@ export default async function DashboardPage() {
             View all
           </Link>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {quickActions.map((action) => (
             <Card key={action.href} padded={false} className="hover:border-teal-300">
               <Link href={action.href} className="flex h-full flex-col p-6">

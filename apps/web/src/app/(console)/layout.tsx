@@ -15,6 +15,7 @@ import {
   Menu,
   Globe,
   ListChecks,
+  FileCheck2,
 } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -26,6 +27,7 @@ const navItems = [
   { href: "/accounts", label: "Account list", icon: ListChecks },
   { href: "/discovery", label: "Discovery", icon: Globe },
   { href: "/cases", label: "Cases & Tasks", icon: CaseSensitive },
+  { href: "/reports/dossiers", label: "Evidence dossiers", icon: FileCheck2 },
   { href: "/taxonomy", label: "Taxonomy", icon: Layers },
   { href: "/analytics", label: "Analytics", icon: LineChart },
 ];

@@ -251,6 +251,146 @@ const analyticsOverviewSchema = z.object({
 
 export type AnalyticsOverview = z.infer<typeof analyticsOverviewSchema>;
 
+const dossierRecordWireSchema = z.object({
+  plan_id: z.string(),
+  status: z.string(),
+  queued_at: z.string().nullable().optional(),
+  updated_at: z.string().nullable().optional(),
+  warnings: z.array(z.string()).optional(),
+  error: z.string().nullable().optional(),
+  payload: z.record(z.unknown()).nullable().optional(),
+  manifest_path: z.string().nullable().optional(),
+  manifest: z.record(z.unknown()).nullable().optional(),
+  signature_manifest_path: z.string().nullable().optional(),
+  signature_manifest: z.record(z.unknown()).nullable().optional(),
+  artifact_warnings: z.array(z.string()).optional(),
+});
+
+type DossierRecordWire = z.infer<typeof dossierRecordWireSchema>;
+
+export type DossierRecord = {
+  planId: string;
+  status: string;
+  queuedAt: string | null;
+  updatedAt: string | null;
+  warnings: string[];
+  error: string | null;
+  payload: Record<string, unknown> | null;
+  manifestPath: string | null;
+  manifest: Record<string, unknown> | null;
+  signatureManifestPath: string | null;
+  signatureManifest: Record<string, unknown> | null;
+  artifactWarnings: string[];
+};
+
+export type DossierListResponse = {
+  count: number;
+  items: DossierRecord[];
+};
+
+function normalizeDossierRecord(record: DossierRecordWire): DossierRecord {
+  return {
+    planId: record.plan_id,
+    status: record.status,
+    queuedAt: record.queued_at ?? null,
+    updatedAt: record.updated_at ?? null,
+    warnings: record.warnings ?? [],
+    error: record.error ?? null,
+    payload: record.payload ?? null,
+    manifestPath: record.manifest_path ?? null,
+    manifest: record.manifest ?? null,
+    signatureManifestPath: record.signature_manifest_path ?? null,
+    signatureManifest: record.signature_manifest ?? null,
+    artifactWarnings: record.artifact_warnings ?? [],
+  } satisfies DossierRecord;
+}
+
+const dossierListWireResponseSchema = z.object({
+  count: z.number(),
+  items: z.array(dossierRecordWireSchema),
+});
+
+const dossierListRequestSchema = z.object({
+  status: z.string().default("completed"),
+  limit: z.number().int().min(1).max(200).default(20),
+  includeManifest: z.boolean().default(false),
+});
+
+export type DossierListOptions = z.input<typeof dossierListRequestSchema>;
+
+const dossierVerificationArtifactWireSchema = z.object({
+  label: z.string(),
+  path: z.string().nullable().optional(),
+  expected_hash: z.string().nullable().optional(),
+  actual_hash: z.string().nullable().optional(),
+  exists: z.boolean().optional(),
+  matches: z.boolean().optional(),
+  size_bytes: z.number().nullable().optional(),
+  error: z.string().nullable().optional(),
+});
+
+type DossierVerificationArtifactWire = z.infer<typeof dossierVerificationArtifactWireSchema>;
+
+export type DossierVerificationArtifact = {
+  label: string;
+  path: string | null;
+  expectedHash: string | null;
+  actualHash: string | null;
+  exists: boolean;
+  matches: boolean;
+  sizeBytes: number | null;
+  error: string | null;
+};
+
+function normalizeVerificationArtifact(artifact: DossierVerificationArtifactWire): DossierVerificationArtifact {
+  return {
+    label: artifact.label,
+    path: artifact.path ?? null,
+    expectedHash: artifact.expected_hash ?? null,
+    actualHash: artifact.actual_hash ?? null,
+    exists: Boolean(artifact.exists),
+    matches: Boolean(artifact.matches),
+    sizeBytes: artifact.size_bytes ?? null,
+    error: artifact.error ?? null,
+  } satisfies DossierVerificationArtifact;
+}
+
+const dossierVerificationWireSchema = z.object({
+  plan_id: z.string(),
+  algorithm: z.string(),
+  warnings: z.array(z.string()).optional(),
+  missing_count: z.number().int(),
+  mismatch_count: z.number().int(),
+  all_verified: z.boolean(),
+  artifacts: z.array(dossierVerificationArtifactWireSchema),
+});
+
+type DossierVerificationWire = z.infer<typeof dossierVerificationWireSchema>;
+
+export type DossierVerificationReport = {
+  planId: string;
+  algorithm: string;
+  warnings: string[];
+  missingCount: number;
+  mismatchCount: number;
+  allVerified: boolean;
+  artifacts: DossierVerificationArtifact[];
+};
+
+function normalizeDossierVerification(payload: DossierVerificationWire): DossierVerificationReport {
+  return {
+    planId: payload.plan_id,
+    algorithm: payload.algorithm,
+    warnings: payload.warnings ?? [],
+    missingCount: payload.missing_count,
+    mismatchCount: payload.mismatch_count,
+    allVerified: payload.all_verified,
+    artifacts: payload.artifacts.map(normalizeVerificationArtifact),
+  } satisfies DossierVerificationReport;
+}
+
+const planIdSchema = z.string().min(1, "planId is required");
+
 export class I4GClientError extends Error {
   status: number;
   details?: unknown;
@@ -278,6 +418,8 @@ export interface I4GClient {
   listCases(): Promise<CasesResponse>;
   getTaxonomy(): Promise<TaxonomyResponse>;
   getAnalyticsOverview(): Promise<AnalyticsOverview>;
+  listDossiers(options?: DossierListOptions): Promise<DossierListResponse>;
+  verifyDossier(planId: string): Promise<DossierVerificationReport>;
 }
 
 function buildUrl(baseUrl: string, path: string) {
@@ -363,6 +505,27 @@ export function createClient(config: ClientConfig): I4GClient {
     },
     getAnalyticsOverview() {
       return request("/analytics/overview", analyticsOverviewSchema);
+    },
+    async listDossiers(options) {
+      const payload = dossierListRequestSchema.parse(options ?? {});
+      const query = new URLSearchParams({
+        status: payload.status,
+        limit: String(payload.limit),
+        include_manifest: String(payload.includeManifest),
+      });
+      const path = `/reports/dossiers?${query.toString()}`;
+      const response = await request(path, dossierListWireResponseSchema);
+      return {
+        count: response.count,
+        items: response.items.map(normalizeDossierRecord),
+      } satisfies DossierListResponse;
+    },
+    verifyDossier(planId) {
+      const value = planIdSchema.parse(planId);
+      const encoded = encodeURIComponent(value);
+      return request(`/reports/dossiers/${encoded}/verify`, dossierVerificationWireSchema, {
+        method: "POST",
+      }).then(normalizeDossierVerification);
     },
   };
 }
@@ -768,6 +931,131 @@ const mockAnalyticsResponse: AnalyticsOverview = {
   ],
 };
 
+const mockDossiers: DossierRecord[] = [
+  {
+    planId: "dossier-nyc-20251115-001",
+    status: "completed",
+    queuedAt: "2025-11-15T08:05:00Z",
+    updatedAt: "2025-11-15T12:40:00Z",
+    warnings: [],
+    error: null,
+    payload: {
+      jurisdiction: "NYC-DOJ",
+      jurisdiction_key: "nyc",
+      total_loss_usd: 245000,
+      cases: ["case-482", "case-417"],
+    },
+    manifestPath: "/data/reports/dossiers/dossier-nyc-20251115-001.json",
+    manifest: {
+      plan_id: "dossier-nyc-20251115-001",
+      bundles: [
+        {
+          label: "Investigative bundle",
+          path: "/drive/nyc/dossier-nyc-20251115-001.pdf",
+        },
+      ],
+      signature_manifest: {
+        path: "/data/reports/dossiers/dossier-nyc-20251115-001.signatures.json",
+      },
+    },
+    signatureManifestPath: "/data/reports/dossiers/dossier-nyc-20251115-001.signatures.json",
+    signatureManifest: {
+      algorithm: "sha256",
+      generated_at: "2025-11-15T12:00:00Z",
+      warnings: [],
+      artifacts: [
+        {
+          label: "Summary PDF",
+          path: "/drive/nyc/dossier-nyc-20251115-001.pdf",
+          hash: "6f50b2c5",
+          size_bytes: 245760,
+        },
+        {
+          label: "Manifest JSON",
+          path: "/data/reports/dossiers/dossier-nyc-20251115-001.json",
+          hash: "92ad3c10",
+          size_bytes: 4096,
+        },
+      ],
+    },
+    artifactWarnings: [],
+  },
+  {
+    planId: "dossier-la-20251116-002",
+    status: "pending",
+    queuedAt: "2025-11-16T09:10:00Z",
+    updatedAt: "2025-11-16T09:10:00Z",
+    warnings: ["Awaiting signature manifest"],
+    error: null,
+    payload: {
+      jurisdiction: "CA-AGO",
+      jurisdiction_key: "california",
+      total_loss_usd: 145000,
+      cases: ["case-399"],
+    },
+    manifestPath: null,
+    manifest: null,
+    signatureManifestPath: null,
+    signatureManifest: null,
+    artifactWarnings: [
+      "Manifest missing for plan dossier-la-20251116-002 at /data/reports/dossiers/dossier-la-20251116-002.json",
+    ],
+  },
+];
+
+const mockVerificationReports: Record<string, DossierVerificationReport> = {
+  "dossier-nyc-20251115-001": {
+    planId: "dossier-nyc-20251115-001",
+    algorithm: "sha256",
+    warnings: [],
+    missingCount: 0,
+    mismatchCount: 0,
+    allVerified: true,
+    artifacts: [
+      {
+        label: "Summary PDF",
+        path: "/drive/nyc/dossier-nyc-20251115-001.pdf",
+        expectedHash: "6f50b2c5",
+        actualHash: "6f50b2c5",
+        exists: true,
+        matches: true,
+        sizeBytes: 245760,
+        error: null,
+      },
+      {
+        label: "Manifest JSON",
+        path: "/data/reports/dossiers/dossier-nyc-20251115-001.json",
+        expectedHash: "92ad3c10",
+        actualHash: "92ad3c10",
+        exists: true,
+        matches: true,
+        sizeBytes: 4096,
+        error: null,
+      },
+    ],
+  },
+  "dossier-la-20251116-002": {
+    planId: "dossier-la-20251116-002",
+    algorithm: "sha256",
+    warnings: ["Signature manifest unavailable"],
+    missingCount: 1,
+    mismatchCount: 0,
+    allVerified: false,
+    artifacts: [
+      {
+        label: "Summary PDF",
+        path: null,
+        expectedHash: null,
+        actualHash: null,
+        exists: false,
+        matches: false,
+        sizeBytes: null,
+        error: "Artifact not generated",
+      },
+    ],
+  },
+};
+
 export function createMockClient(): I4GClient {
   return {
     async getDashboardOverview() {
@@ -825,6 +1113,35 @@ export function createMockClient(): I4GClient {
     },
     async getAnalyticsOverview() {
       return mockAnalyticsResponse;
+    },
+    async listDossiers(options) {
+      const payload = dossierListRequestSchema.parse(options ?? {});
+      const normalizedStatus = payload.status.toLowerCase();
+      let items = mockDossiers;
+      if (normalizedStatus !== "all") {
+        items = items.filter((item) => item.status === normalizedStatus || item.status === payload.status);
+      }
+      const sliced = items.slice(0, payload.limit).map((item) =>
+        payload.includeManifest ? item : { ...item, manifest: null }
+      );
+      return {
+        count: sliced.length,
+        items: sliced,
+      } satisfies DossierListResponse;
+    },
+    async verifyDossier(planId) {
+      const key = planIdSchema.parse(planId);
+      return (
+        mockVerificationReports[key] ?? {
+          planId: key,
+          algorithm: "sha256",
+          warnings: ["Mock data does not include this plan"],
+          missingCount: 1,
+          mismatchCount: 0,
+          allVerified: false,
+          artifacts: [],
+        }
+      );
     },
   };
 }
