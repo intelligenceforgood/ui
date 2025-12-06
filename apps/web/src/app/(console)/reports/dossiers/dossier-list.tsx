@@ -2,7 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { Badge, Button, Card } from "@i4g/ui-kit";
-import type { DossierListResponse, DossierRecord, DossierVerificationReport } from "@i4g/sdk";
+import type {
+  DossierDownloads,
+  DossierListResponse,
+  DossierRecord,
+  DossierRemoteDownload,
+  DossierVerificationReport,
+} from "@i4g/sdk";
 import {
   AlertTriangle,
   Clock3,
@@ -66,6 +72,40 @@ function normalizePayload(payload: DossierRecord["payload"]): Record<string, unk
     return payload as Record<string, unknown>;
   }
   return {};
+}
+
+function isHttpUrl(value?: string | null) {
+  return typeof value === "string" && /^https?:\/\//i.test(value);
+}
+
+function formatPathPreview(value: string) {
+  if (value.length <= 48) {
+    return value;
+  }
+  return `${value.slice(0, 18)}…${value.slice(-20)}`;
+}
+
+function formatBytes(value?: number | null) {
+  if (typeof value !== "number") {
+    return "";
+  }
+  if (value < 1024) {
+    return `${value} B`;
+  }
+  if (value < 1024 * 1024) {
+    return `${(value / 1024).toFixed(1)} KB`;
+  }
+  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function buildDownloadHref(path: string) {
+  if (isHttpUrl(path)) {
+    return { href: path, external: true };
+  }
+  return {
+    href: `/api/dossiers/download?path=${encodeURIComponent(path)}`,
+    external: false,
+  };
 }
 
 function extractCaseIds(record: DossierRecord): string[] {
@@ -151,6 +191,114 @@ function SignaturePreview({ data }: { data: Record<string, unknown> | null }) {
         ))}
       </div>
     </details>
+  );
+}
+
+function DownloadChip({ label, path }: { label: string; path: string | null }) {
+  if (!path) {
+    return (
+      <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
+        <DownloadCloud className="h-3.5 w-3.5" />
+        {label} unavailable
+      </span>
+    );
+  }
+
+  const { href, external } = buildDownloadHref(path);
+  const preview = formatPathPreview(path);
+
+  return (
+    <a
+      href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noreferrer" : undefined}
+      className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-teal-400 hover:text-teal-700 dark:border-teal-400/30 dark:bg-slate-900/50 dark:text-teal-100"
+    >
+      <DownloadCloud className="h-3.5 w-3.5" />
+      {label}
+      <span className="text-[0.7rem] font-normal text-slate-500 dark:text-teal-100/70">{preview}</span>
+    </a>
+  );
+}
+
+function RemoteDownloadRow({ entry }: { entry: DossierRemoteDownload }) {
+  const hasLink = isHttpUrl(entry.remoteRef);
+  const preview = entry.remoteRef ? formatPathPreview(entry.remoteRef) : "Remote reference unavailable";
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 bg-white/80 px-3 py-2 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
+      <div>
+        <p className="text-sm font-semibold text-slate-900 dark:text-white">{entry.label}</p>
+        <p className="text-[0.7rem] text-slate-500 dark:text-teal-100/70">{preview}</p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {hasLink && (
+          <a
+            href={entry.remoteRef ?? "#"}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-white px-2 py-1 text-[0.7rem] font-semibold text-teal-700 transition hover:border-teal-400 hover:text-teal-800 dark:border-teal-400/30 dark:bg-slate-900/40 dark:text-teal-100"
+          >
+            Open
+          </a>
+        )}
+        {entry.hash && (
+          <span className="rounded-full bg-slate-100 px-2 py-1 text-[0.65rem] text-slate-600 dark:bg-slate-800 dark:text-teal-100/80">
+            {(entry.algorithm ?? "hash").toUpperCase()}: {entry.hash.slice(0, 10)}…
+          </span>
+        )}
+        {typeof entry.sizeBytes === "number" && (
+          <span className="rounded-full bg-slate-100 px-2 py-1 text-[0.65rem] text-slate-600 dark:bg-slate-800 dark:text-teal-100/80">
+            {formatBytes(entry.sizeBytes)}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DownloadsPanel({ downloads }: { downloads: DossierDownloads }) {
+  const localItems = [
+    { label: "Manifest", path: downloads.local.manifest },
+    { label: "Markdown", path: downloads.local.markdown },
+    { label: "PDF", path: downloads.local.pdf },
+    { label: "HTML", path: downloads.local.html },
+    { label: "Signature manifest", path: downloads.local.signatureManifest },
+  ];
+
+  const hasLocal = localItems.some((item) => Boolean(item.path));
+  const hasRemote = downloads.remote.length > 0;
+
+  if (!hasLocal && !hasRemote) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-200">
+      <div className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-white">
+        <DownloadCloud className="h-4 w-4" />
+        Downloads
+      </div>
+      {hasLocal && (
+        <div className="flex flex-wrap gap-2">
+          {localItems.map((item) => (
+            <DownloadChip key={item.label} label={item.label} path={item.path} />
+          ))}
+        </div>
+      )}
+      {hasRemote && (
+        <div className="space-y-2">
+          {downloads.remote.map((entry, index) => (
+            <RemoteDownloadRow key={`${entry.label}-${index}`} entry={entry} />
+          ))}
+        </div>
+      )}
+      {!hasLocal && hasRemote && (
+        <p className="text-xs text-slate-500 dark:text-teal-100/70">
+          Local artifacts unavailable from the API response; remote uploads shown instead.
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -346,6 +494,8 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
                 </span>
               )}
             </div>
+
+            <DownloadsPanel downloads={record.downloads} />
 
             {cases.length > 0 && (
               <div className="flex flex-wrap gap-2 text-xs">

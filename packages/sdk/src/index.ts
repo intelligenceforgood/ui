@@ -251,6 +251,29 @@ const analyticsOverviewSchema = z.object({
 
 export type AnalyticsOverview = z.infer<typeof analyticsOverviewSchema>;
 
+const dossierLocalDownloadsWireSchema = z.object({
+  manifest: z.string().nullable().optional(),
+  markdown: z.string().nullable().optional(),
+  pdf: z.string().nullable().optional(),
+  html: z.string().nullable().optional(),
+  signature_manifest: z.string().nullable().optional(),
+});
+
+const dossierRemoteDownloadWireSchema = z.object({
+  label: z.string(),
+  remote_ref: z.string().nullable().optional(),
+  hash: z.string().nullable().optional(),
+  algorithm: z.string().nullable().optional(),
+  size_bytes: z.number().nullable().optional(),
+});
+
+const dossierDownloadsWireSchema = z.object({
+  local: dossierLocalDownloadsWireSchema.optional(),
+  remote: z.array(dossierRemoteDownloadWireSchema).optional(),
+});
+
+type DossierDownloadsWire = z.infer<typeof dossierDownloadsWireSchema>;
+
 const dossierRecordWireSchema = z.object({
   plan_id: z.string(),
   status: z.string(),
@@ -264,6 +287,7 @@ const dossierRecordWireSchema = z.object({
   signature_manifest_path: z.string().nullable().optional(),
   signature_manifest: z.record(z.unknown()).nullable().optional(),
   artifact_warnings: z.array(z.string()).optional(),
+  downloads: dossierDownloadsWireSchema.optional(),
 });
 
 type DossierRecordWire = z.infer<typeof dossierRecordWireSchema>;
@@ -281,12 +305,54 @@ export type DossierRecord = {
   signatureManifestPath: string | null;
   signatureManifest: Record<string, unknown> | null;
   artifactWarnings: string[];
+  downloads: DossierDownloads;
 };
 
 export type DossierListResponse = {
   count: number;
   items: DossierRecord[];
 };
+
+export type DossierLocalDownloads = {
+  manifest: string | null;
+  markdown: string | null;
+  pdf: string | null;
+  html: string | null;
+  signatureManifest: string | null;
+};
+
+export type DossierRemoteDownload = {
+  label: string;
+  remoteRef: string | null;
+  hash: string | null;
+  algorithm: string | null;
+  sizeBytes: number | null;
+};
+
+export type DossierDownloads = {
+  local: DossierLocalDownloads;
+  remote: DossierRemoteDownload[];
+};
+
+function normalizeDownloads(downloads?: DossierDownloadsWire | null): DossierDownloads {
+  const local = downloads?.local;
+  return {
+    local: {
+      manifest: local?.manifest ?? null,
+      markdown: local?.markdown ?? null,
+      pdf: local?.pdf ?? null,
+      html: local?.html ?? null,
+      signatureManifest: local?.signature_manifest ?? null,
+    },
+    remote: (downloads?.remote ?? []).map((entry) => ({
+      label: entry.label,
+      remoteRef: entry.remote_ref ?? null,
+      hash: entry.hash ?? null,
+      algorithm: entry.algorithm ?? null,
+      sizeBytes: entry.size_bytes ?? null,
+    } satisfies DossierRemoteDownload)),
+  } satisfies DossierDownloads;
+}
 
 function normalizeDossierRecord(record: DossierRecordWire): DossierRecord {
   return {
@@ -302,6 +368,7 @@ function normalizeDossierRecord(record: DossierRecordWire): DossierRecord {
     signatureManifestPath: record.signature_manifest_path ?? null,
     signatureManifest: record.signature_manifest ?? null,
     artifactWarnings: record.artifact_warnings ?? [],
+    downloads: normalizeDownloads(record.downloads),
   } satisfies DossierRecord;
 }
 
@@ -979,6 +1046,24 @@ const mockDossiers: DossierRecord[] = [
       ],
     },
     artifactWarnings: [],
+    downloads: {
+      local: {
+        manifest: "/data/reports/dossiers/dossier-nyc-20251115-001.json",
+        markdown: "/data/reports/dossiers/dossier-nyc-20251115-001.md",
+        pdf: "/drive/nyc/dossier-nyc-20251115-001.pdf",
+        html: "/data/reports/dossiers/dossier-nyc-20251115-001.html",
+        signatureManifest: "/data/reports/dossiers/dossier-nyc-20251115-001.signatures.json",
+      },
+      remote: [
+        {
+          label: "Shared Drive bundle",
+          remoteRef: "https://drive.google.com/file/d/nyc-20251115-001/view",
+          hash: "6f50b2c5",
+          algorithm: "sha256",
+          sizeBytes: 245760,
+        },
+      ],
+    },
   },
   {
     planId: "dossier-la-20251116-002",
@@ -1000,6 +1085,16 @@ const mockDossiers: DossierRecord[] = [
     artifactWarnings: [
       "Manifest missing for plan dossier-la-20251116-002 at /data/reports/dossiers/dossier-la-20251116-002.json",
     ],
+    downloads: {
+      local: {
+        manifest: null,
+        markdown: null,
+        pdf: null,
+        html: null,
+        signatureManifest: null,
+      },
+      remote: [],
+    },
   },
 ];
 
