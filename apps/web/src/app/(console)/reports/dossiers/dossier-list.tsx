@@ -20,6 +20,9 @@ import {
   RefreshCcw,
   ShieldCheck,
   ShieldQuestion,
+  ClipboardCopy,
+  Link2,
+  ShieldHalf,
 } from "lucide-react";
 
 import clsx from "clsx";
@@ -27,6 +30,24 @@ import clsx from "clsx";
 type VerificationEntry = {
   status: "idle" | "loading" | "success" | "error";
   report?: DossierVerificationReport;
+  error?: string;
+};
+
+type ClientVerificationReport = {
+  algorithm: string;
+  artifacts: Array<{
+    label: string;
+    path: string | null;
+    expectedHash: string | null;
+    computedHash: string | null;
+    matches: boolean;
+    error?: string;
+  }>;
+};
+
+type ClientVerificationEntry = {
+  status: "idle" | "loading" | "success" | "error";
+  report?: ClientVerificationReport;
   error?: string;
 };
 
@@ -106,6 +127,50 @@ function buildDownloadHref(path: string) {
     href: `/api/dossiers/download?path=${encodeURIComponent(path)}`,
     external: false,
   };
+}
+
+function buildShareableLinks(downloads: DossierDownloads): string[] {
+  const links: string[] = [];
+  const localPaths = [
+    downloads.local.pdf,
+    downloads.local.html,
+    downloads.local.markdown,
+    downloads.local.manifest,
+    downloads.local.signatureManifest,
+  ].filter(Boolean) as string[];
+
+  for (const path of localPaths) {
+    links.push(buildDownloadHref(path).href);
+  }
+  for (const remote of downloads.remote) {
+    if (remote.remoteRef) {
+      links.push(remote.remoteRef);
+    }
+  }
+
+  return Array.from(new Set(links));
+}
+
+function toHex(buffer: ArrayBuffer) {
+  const bytes = new Uint8Array(buffer);
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function normalizeSignatureArtifacts(manifest: Record<string, unknown> | null | undefined) {
+  if (!manifest) {
+    return [] as Array<{ label: string; path: string | null; expectedHash: string | null }>;
+  }
+  const artifactsRaw = manifest["artifacts"] as unknown;
+  if (!Array.isArray(artifactsRaw)) {
+    return [] as Array<{ label: string; path: string | null; expectedHash: string | null }>;
+  }
+  return (artifactsRaw as Record<string, unknown>[]).map((entry) => ({
+    label: String(entry.label ?? entry.path ?? "Artifact"),
+    path: (entry.path as string) ?? null,
+    expectedHash: (entry.hash as string) ?? (entry.expected_hash as string) ?? null,
+  }));
 }
 
 function extractCaseIds(record: DossierRecord): string[] {
@@ -302,6 +367,52 @@ function DownloadsPanel({ downloads }: { downloads: DossierDownloads }) {
   );
 }
 
+function HandoffBanner({ downloads }: { downloads: DossierDownloads }) {
+  const [copied, setCopied] = useState(false);
+  const shareableLinks = buildShareableLinks(downloads);
+  const hasRemote = downloads.remote.length > 0;
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(shareableLinks.join("\n"));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.warn("Copy failed", error);
+      setCopied(false);
+    }
+  }
+
+  if (!shareableLinks.length) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-2xl border border-teal-200 bg-teal-50/60 p-4 text-sm text-teal-900 shadow-sm dark:border-teal-400/30 dark:bg-teal-500/10 dark:text-teal-50">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 font-semibold">
+          <Link2 className="h-4 w-4" />
+          LEA handoff
+        </div>
+        <Button type="button" size="sm" variant="secondary" className="gap-2" onClick={handleCopy}>
+          <ClipboardCopy className="h-4 w-4" />
+          {copied ? "Copied" : "Copy links"}
+        </Button>
+      </div>
+      <p className="mt-2 text-xs text-teal-900/80 dark:text-teal-100/80">
+        Includes manifest and artifact links for partner download. Remote refs {hasRemote ? "include Drive uploads." : "fall back to local paths via the proxy."}
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2 text-[0.75rem] text-teal-900/80 dark:text-teal-50/80">
+        {shareableLinks.map((link) => (
+          <span key={link} className="rounded-full bg-white/80 px-3 py-1 dark:bg-slate-900/40">
+            {formatPathPreview(link)}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function VerificationPanel({ entry }: { entry: VerificationEntry | undefined }) {
   if (!entry || entry.status === "idle") {
     return null;
@@ -378,8 +489,84 @@ function VerificationPanel({ entry }: { entry: VerificationEntry | undefined }) 
   );
 }
 
+function ClientVerificationPanel({ entry }: { entry: ClientVerificationEntry | undefined }) {
+  if (!entry || entry.status === "idle") {
+    return null;
+  }
+
+  if (entry.status === "loading") {
+    return (
+      <div className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-200">
+        <RefreshCcw className="h-4 w-4 animate-spin" />
+        Verifying locally…
+      </div>
+    );
+  }
+
+  if (entry.status === "error") {
+    return (
+      <div className="flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-400/40 dark:bg-rose-500/10 dark:text-rose-100">
+        <FileWarning className="h-4 w-4" />
+        {entry.error ?? "Client-side verification failed."}
+      </div>
+    );
+  }
+
+  if (!entry.report) {
+    return null;
+  }
+
+  const mismatches = entry.report.artifacts.filter((artifact) => !artifact.matches || artifact.error);
+
+  return (
+    <div className="space-y-3 rounded-3xl border border-indigo-200 bg-indigo-50/80 p-4 text-sm text-indigo-900 shadow-inner dark:border-indigo-400/30 dark:bg-indigo-500/10 dark:text-indigo-100">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <ShieldHalf className="h-4 w-4" />
+          Client-side hash check · {entry.report.algorithm}
+        </div>
+        <Badge variant={mismatches.length === 0 ? "success" : "warning"}>
+          {mismatches.length === 0 ? "Matched" : "Attention"}
+        </Badge>
+      </div>
+      <div className="grid gap-3 md:grid-cols-2">
+        {entry.report.artifacts.map((artifact) => (
+          <div
+            key={`${artifact.label}-${artifact.path ?? "unknown"}`}
+            className={clsx(
+              "rounded-2xl border bg-white/80 p-3 text-xs text-slate-600 shadow-sm dark:bg-slate-950/30",
+              artifact.matches && !artifact.error ? "border-white/50 dark:border-indigo-200/20" : "border-amber-200 dark:border-amber-300/40"
+            )}
+          >
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">{artifact.label}</p>
+            <p className="mt-1 text-[0.7rem] text-slate-500 dark:text-indigo-100/70">{artifact.path ?? "path unavailable"}</p>
+            <p className="mt-2 text-[0.7rem] text-slate-500">
+              Expected {artifact.expectedHash?.slice(0, 12) ?? "unknown"}…
+            </p>
+            <p className="text-[0.7rem] text-slate-500">
+              Computed {artifact.computedHash?.slice(0, 12) ?? "n/a"}…
+            </p>
+            {artifact.error && <p className="mt-1 text-[0.7rem] text-rose-500">{artifact.error}</p>}
+            {!artifact.error && (
+              <span
+                className={clsx(
+                  "mt-2 inline-flex rounded-full px-2 py-1",
+                  artifact.matches ? "bg-teal-100 text-teal-700" : "bg-amber-100 text-amber-700"
+                )}
+              >
+                {artifact.matches ? "Hash match" : "Mismatch"}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function DossierList({ response, includeManifest }: DossierListProps) {
   const [verifications, setVerifications] = useState<Record<string, VerificationEntry>>({});
+  const [clientVerifications, setClientVerifications] = useState<Record<string, ClientVerificationEntry>>({});
   const items: DossierRecord[] = response.items;
 
   async function handleVerify(planId: string) {
@@ -413,6 +600,82 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
         [planId]: {
           status: "error",
           error: error instanceof Error ? error.message : "Verification failed",
+        },
+      }));
+    }
+  }
+
+  async function handleClientVerify(record: DossierRecord) {
+    const signatureManifest = record.signatureManifest as Record<string, unknown> | null;
+    const artifacts = normalizeSignatureArtifacts(signatureManifest);
+    const algorithm = (signatureManifest?.["algorithm"] as string) ?? "sha256";
+
+    if (artifacts.length === 0) {
+      setClientVerifications((prev) => ({
+        ...prev,
+        [record.planId]: { status: "error", error: "Signature manifest missing artifacts" },
+      }));
+      return;
+    }
+
+    setClientVerifications((prev) => ({
+      ...prev,
+      [record.planId]: { status: "loading" },
+    }));
+
+    try {
+      const results: ClientVerificationReport["artifacts"] = [];
+      for (const artifact of artifacts) {
+        if (!artifact.path || !artifact.expectedHash) {
+          results.push({
+            label: artifact.label,
+            path: artifact.path,
+            expectedHash: artifact.expectedHash,
+            computedHash: null,
+            matches: false,
+            error: "Missing path or expected hash",
+          });
+          continue;
+        }
+
+        const url = buildDownloadHref(artifact.path).href;
+        try {
+          const resp = await fetch(url);
+          if (!resp.ok) {
+            throw new Error(`Fetch failed (${resp.status})`);
+          }
+          const buffer = await resp.arrayBuffer();
+          const digest = await crypto.subtle.digest("SHA-256", buffer);
+          const computedHash = toHex(digest);
+          results.push({
+            label: artifact.label,
+            path: artifact.path,
+            expectedHash: artifact.expectedHash,
+            computedHash,
+            matches: computedHash === artifact.expectedHash,
+          });
+        } catch (error) {
+          results.push({
+            label: artifact.label,
+            path: artifact.path,
+            expectedHash: artifact.expectedHash,
+            computedHash: null,
+            matches: false,
+            error: error instanceof Error ? error.message : "Hashing failed",
+          });
+        }
+      }
+
+      setClientVerifications((prev) => ({
+        ...prev,
+        [record.planId]: { status: "success", report: { algorithm, artifacts: results } },
+      }));
+    } catch (error) {
+      setClientVerifications((prev) => ({
+        ...prev,
+        [record.planId]: {
+          status: "error",
+          error: error instanceof Error ? error.message : "Client-side verification failed",
         },
       }));
     }
@@ -497,6 +760,8 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
 
             <DownloadsPanel downloads={record.downloads} />
 
+            <HandoffBanner downloads={record.downloads} />
+
             {cases.length > 0 && (
               <div className="flex flex-wrap gap-2 text-xs">
                 <p className="flex items-center gap-2 text-slate-500">
@@ -521,6 +786,16 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
                 <ShieldCheck className="h-4 w-4" />
                 {verificationEntry?.status === "loading" ? "Verifying…" : "Verify signatures"}
               </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="gap-2"
+                disabled={clientVerifications[record.planId]?.status === "loading"}
+                onClick={() => handleClientVerify(record)}
+              >
+                <ShieldHalf className="h-4 w-4" />
+                {clientVerifications[record.planId]?.status === "loading" ? "Verifying locally…" : "Verify client-side"}
+              </Button>
               <span className="text-xs text-slate-500">
                 {includeManifest
                   ? "Manifest payloads inline"
@@ -529,6 +804,8 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
             </div>
 
             <VerificationPanel entry={verificationEntry} />
+
+            <ClientVerificationPanel entry={clientVerifications[record.planId]} />
 
             {includeManifest && record.manifest ? (
               <ManifestPreview data={record.manifest as Record<string, unknown>} />
