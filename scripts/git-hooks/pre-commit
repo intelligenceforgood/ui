@@ -15,6 +15,9 @@ pnpm prettier --check .
 echo "[ui pre-commit] running ESLint on apps/web..."
 pnpm --filter web lint
 
+echo "[ui pre-commit] verifying schema snapshot (schema:check)..."
+pnpm --filter web run schema:check
+
 if [[ "${I4G_UI_PRECOMMIT_QUICK:-0}" == "1" ]]; then
   echo "[ui pre-commit] quick mode enabled; skipping Vitest (set I4G_UI_PRECOMMIT_QUICK=0 to re-enable)."
 else

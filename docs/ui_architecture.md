@@ -39,7 +39,7 @@ ui/
 
 ## Deployment
 - **Build:** `pnpm install && pnpm --filter web build` outputs `.next` artifacts under `apps/web/.next`.
-- **Container:** Multi-stage Dockerfile (`apps/web/Dockerfile`) copies the built app plus `package.json`/lockfile and installs production dependencies.
+- **Container:** Multi-stage Dockerfile (`docker/i4g-console.Dockerfile`) copies the built app plus `package.json`/lockfile and installs production dependencies. Schema is baked at build time via `prebuild` (runs `pnpm run schema:sync`); use `pnpm run schema:check` in CI or pre-commit to ensure the generated snapshot matches the source.
 - **Hosting:** Cloud Run (recommended) or Vercel. Cloud Run aligns with the backend platform and supports private networking to internal APIs.
 - **CI:** GitHub Actions (pending) will execute lint, unit tests, Playwright smoke, and publish images to Artifact Registry.
 

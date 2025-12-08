@@ -31,7 +31,8 @@ RUN pnpm install --filter web... --prod --frozen-lockfile --ignore-scripts
 COPY --from=build /app/apps/web/.next ./apps/web/.next
 COPY --from=build /app/apps/web/public ./apps/web/public
 COPY --from=build /app/apps/web/next.config.ts ./apps/web/next.config.ts
+COPY --from=build /app/scripts ./scripts
 
 WORKDIR /app/apps/web
-EXPOSE 3000
+EXPOSE 8080
 CMD ["pnpm", "start"]
