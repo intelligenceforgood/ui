@@ -8,11 +8,18 @@ import {
 
 describe("toStringArray", () => {
   it("returns trimmed array values when provided a string", () => {
-    expect(toStringArray("alpha, beta , gamma")).toEqual(["alpha", "beta", "gamma"]);
+    expect(toStringArray("alpha, beta , gamma")).toEqual([
+      "alpha",
+      "beta",
+      "gamma",
+    ]);
   });
 
   it("filters non-string entries when provided an array", () => {
-    expect(toStringArray(["primary", "", 42, "secondary"])).toEqual(["primary", "secondary"]);
+    expect(toStringArray(["primary", "", 42, "secondary"])).toEqual([
+      "primary",
+      "secondary",
+    ]);
   });
 
   it("returns an empty array for unsupported values", () => {

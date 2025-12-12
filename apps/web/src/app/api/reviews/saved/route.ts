@@ -10,7 +10,9 @@ const requestSchema = z.object({
 });
 
 function resolveApiBase() {
-  return process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null;
+  return (
+    process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null
+  );
 }
 
 function resolveApiKey() {
@@ -22,12 +24,21 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = requestSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid saved search payload", issues: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "Invalid saved search payload",
+          issues: parsed.error.flatten(),
+        },
+        { status: 400 },
+      );
     }
 
     const baseUrl = resolveApiBase();
     if (!baseUrl) {
-      return NextResponse.json({ search_id: `mock-saved-${Date.now()}` }, { status: 201 });
+      return NextResponse.json(
+        { search_id: `mock-saved-${Date.now()}` },
+        { status: 201 },
+      );
     }
 
     const url = new URL("/reviews/search/saved", baseUrl);
@@ -54,12 +65,21 @@ export async function POST(request: Request) {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const errorMessage = typeof payload.detail === "string" ? payload.detail : "Failed to save search";
-      return NextResponse.json({ error: errorMessage, details: payload }, { status: response.status });
+      const errorMessage =
+        typeof payload.detail === "string"
+          ? payload.detail
+          : "Failed to save search";
+      return NextResponse.json(
+        { error: errorMessage, details: payload },
+        { status: response.status },
+      );
     }
     return NextResponse.json(payload, { status: response.status });
   } catch (error) {
     console.error("Save search proxy error", error);
-    return NextResponse.json({ error: "Unable to save search" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Unable to save search" },
+      { status: 500 },
+    );
   }
 }

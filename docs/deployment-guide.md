@@ -57,6 +57,7 @@ docker buildx build \
 ```
 
 Optional local smoke
+
 ```bash
 docker run --rm -p 3000:3000 --env-file apps/web/.env.production \
     us-central1-docker.pkg.dev/i4g-dev/applications/analyst-console:dev
@@ -73,19 +74,19 @@ gcloud run deploy i4g-console \
     --platform managed \
     --set-env-vars NEXT_PUBLIC_USE_MOCK_DATA=false \
     --set-env-vars I4G_API_URL=https://fastapi-gateway-y5jge5w2cq-uc.a.run.app/ \
-    --set-env-vars I4G_API_KIND=proto \
+    --set-env-vars I4G_API_KIND=core \
     --set-env-vars I4G_API_KEY=dev-analyst-token
 ```
 
 ## 4. Environment Variables
 
-| Variable | Scope | Description |
-| --- | --- | --- |
-| `NEXT_PUBLIC_USE_MOCK_DATA` | Client | Toggle between mock SDK responses and live API calls. |
-| `NEXT_PUBLIC_API_BASE_URL` | Client | Base URL exposed to the browser when talking to the FastAPI gateway. |
-| `I4G_API_URL` | Server | Internal FastAPI origin used by Next.js API routes. |
-| `I4G_API_KEY` | Server | Service token injected only on the server. |
-| `I4G_API_KIND` | Server | Set to `proto` to call the existing FastAPI (`/reviews/...`) endpoints. Leave unset for the SDK-native API. |
+| Variable                    | Scope  | Description                                                                                       |
+| --------------------------- | ------ | ------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_USE_MOCK_DATA` | Client | Toggle between mock SDK responses and live API calls.                                             |
+| `NEXT_PUBLIC_API_BASE_URL`  | Client | Base URL exposed to the browser when talking to the FastAPI gateway.                              |
+| `I4G_API_URL`               | Server | Internal FastAPI origin used by Next.js API routes.                                               |
+| `I4G_API_KEY`               | Server | Service token injected only on the server.                                                        |
+| `I4G_API_KIND`              | Server | Set to `core` to call the FastAPI (`/reviews/...`) endpoints. Leave unset for the SDK-native API. |
 
 Store server-side secrets (those without `NEXT_PUBLIC_`) in the hosting platform’s secret manager (e.g., Cloud Run secrets, Vercel environment variables).
 

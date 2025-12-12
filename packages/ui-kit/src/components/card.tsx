@@ -11,7 +11,7 @@ export function Card({ className, padded = true, ...props }: CardProps) {
       className={clsx(
         "rounded-2xl border border-slate-100 bg-white/80 backdrop-blur shadow-sm transition hover:shadow-md",
         padded && "p-6",
-        className
+        className,
       )}
       {...props}
     />

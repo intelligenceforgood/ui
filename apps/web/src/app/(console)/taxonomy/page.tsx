@@ -9,17 +9,28 @@ export const metadata: Metadata = {
   description: "Manage shared vocabularies and case tagging standards.",
 };
 
-function TaxonomyTree({ nodes, depth = 0 }: { nodes: TaxonomyNode[]; depth?: number }) {
+function TaxonomyTree({
+  nodes,
+  depth = 0,
+}: {
+  nodes: TaxonomyNode[];
+  depth?: number;
+}) {
   return (
     <ul className="space-y-3">
       {nodes.map((node) => (
-        <li key={node.id} className="rounded-xl border border-slate-100 bg-white/70 p-4">
+        <li
+          key={node.id}
+          className="rounded-xl border border-slate-100 bg-white/70 p-4"
+        >
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
                 <span>Level {depth + 1}</span>
               </div>
-              <h3 className="text-base font-semibold text-slate-900">{node.label}</h3>
+              <h3 className="text-base font-semibold text-slate-900">
+                {node.label}
+              </h3>
               <p className="text-xs text-slate-500">{node.description}</p>
             </div>
             <Badge variant="info">{node.count} tagged items</Badge>
@@ -50,7 +61,8 @@ export default async function TaxonomyPage() {
             Govern shared taxonomy across teams
           </h1>
           <p className="mt-2 max-w-3xl text-sm text-slate-500">
-            Ensure consistent tagging for analytics, case attribution, and compliance controls across Intelligence for Good.
+            Ensure consistent tagging for analytics, case attribution, and
+            compliance controls across Intelligence for Good.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -68,10 +80,14 @@ export default async function TaxonomyPage() {
       <section className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
         <Card className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">Taxonomy tree</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Taxonomy tree
+            </h2>
             <Badge variant="default">Stewarded by {taxonomy.steward}</Badge>
           </div>
-          <p className="text-xs text-slate-500">Last updated {new Date(taxonomy.updatedAt).toLocaleString()}</p>
+          <p className="text-xs text-slate-500">
+            Last updated {new Date(taxonomy.updatedAt).toLocaleString()}
+          </p>
           <TaxonomyTree nodes={taxonomy.nodes} />
         </Card>
         <Card className="space-y-4">
@@ -85,7 +101,8 @@ export default async function TaxonomyPage() {
             </div>
           </div>
           <p className="text-sm text-slate-500">
-            Counts reflect current tagged items across investigations, ingestion pipelines, and partner escalations.
+            Counts reflect current tagged items across investigations, ingestion
+            pipelines, and partner escalations.
           </p>
         </Card>
       </section>

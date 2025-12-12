@@ -35,7 +35,9 @@ export function ThemeToggle() {
         Appearance
       </p>
       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-        {activeTheme === "system" ? `System (${resolvedSystemTheme})` : `Theme: ${activeTheme}`}
+        {activeTheme === "system"
+          ? `System (${resolvedSystemTheme})`
+          : `Theme: ${activeTheme}`}
       </p>
       <div className="mt-3 grid gap-2">
         {themeOptions.map((option) => {

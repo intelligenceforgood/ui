@@ -5,6 +5,6 @@ module.exports = {
   },
   rules: {
     "react/prop-types": "off",
-    "@next/next/no-img-element": "off"
-  }
+    "@next/next/no-img-element": "off",
+  },
 };

@@ -20,7 +20,7 @@ This guide captures day-to-day workflows for building, testing, and deploying th
    cp .env.example .env.local
    ```
    - Set `NEXT_PUBLIC_USE_MOCK_DATA=true` for the mock dataset.
-   - When calling a real backend, set `NEXT_PUBLIC_API_BASE_URL` (client-visible URL) and `I4G_API_URL`/`I4G_API_KEY` (server-only credentials). Use `I4G_API_KIND=proto` to target the existing FastAPI `/reviews` endpoints.
+   - When calling a real backend, set `NEXT_PUBLIC_API_BASE_URL` (client-visible URL) and `I4G_API_URL`/`I4G_API_KEY` (server-only credentials). Use `I4G_API_KIND=core` to target the FastAPI `/reviews` endpoints.
 4. **Start the dev server**
    ```bash
    pnpm --filter web dev
@@ -29,11 +29,11 @@ This guide captures day-to-day workflows for building, testing, and deploying th
 
 ## Mock vs Live Backend
 
-| Scenario | Configuration | Notes |
-| --- | --- | --- |
-| Rapid prototyping/demo | `NEXT_PUBLIC_USE_MOCK_DATA=true` | No other env needed. Mock dataset lives in `@i4g/sdk` and mirrors backend schemas. |
-| Local FastAPI dev | `NEXT_PUBLIC_USE_MOCK_DATA=false` + `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000` | The UI calls Next.js API routes (`/api/search`, etc.), which forward to FastAPI using `I4G_API_URL` / `I4G_API_KEY`. |
-| Production | `NEXT_PUBLIC_USE_MOCK_DATA=false` + `I4G_API_URL=https://api.intelligenceforgood.org` + `I4G_API_KIND=proto` | Set secrets in the hosting platform. Avoid exposing API keys with the `NEXT_PUBLIC_*` prefix. |
+| Scenario               | Configuration                                                                                               | Notes                                                                                                                |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Rapid prototyping/demo | `NEXT_PUBLIC_USE_MOCK_DATA=true`                                                                            | No other env needed. Mock dataset lives in `@i4g/sdk` and mirrors backend schemas.                                   |
+| Local FastAPI dev      | `NEXT_PUBLIC_USE_MOCK_DATA=false` + `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000`                        | The UI calls Next.js API routes (`/api/search`, etc.), which forward to FastAPI using `I4G_API_URL` / `I4G_API_KEY`. |
+| Production             | `NEXT_PUBLIC_USE_MOCK_DATA=false` + `I4G_API_URL=https://api.intelligenceforgood.org` + `I4G_API_KIND=core` | Set secrets in the hosting platform. Avoid exposing API keys with the `NEXT_PUBLIC_*` prefix.                        |
 
 ## Available Scripts
 
@@ -56,21 +56,25 @@ pnpm test   # turbo test
 ## Testing
 
 ### Unit/UI (Vitest)
+
 - Source files: `apps/web/tests/**/*.test.tsx`
 - Environment: jsdom, `@testing-library/react`
 - Setup file: `vitest.setup.ts`
 - Add new suites next to the feature (e.g., `tests/search/*`).
 
 Run with watch mode for TDD:
+
 ```bash
 pnpm --filter web test:watch
 ```
 
 ### Playwright (Planned)
+
 - `@playwright/test` is installed. Add `playwright.config.ts` and tests under `apps/web/e2e` when we have stable flows.
 - Install browsers: `npx playwright install --with-deps`
 
 ### Linting & Formatting
+
 - `pnpm --filter web lint`
 - `pnpm format` (Prettier at the repo root)
 

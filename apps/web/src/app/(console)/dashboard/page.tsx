@@ -57,7 +57,8 @@ const reminderIconMap: Record<DashboardReminder["category"], ReactNode> = {
 
 export default async function DashboardPage() {
   const client = getI4GClient();
-  const { metrics, alerts, activity, reminders } = await client.getDashboardOverview();
+  const { metrics, alerts, activity, reminders } =
+    await client.getDashboardOverview();
 
   return (
     <div className="space-y-8">
@@ -141,7 +142,9 @@ export default async function DashboardPage() {
         <div className="space-y-6">
           <Card className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">Activity feed</h2>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Activity feed
+              </h2>
               <Badge variant="default">Last hour</Badge>
             </div>
             <ul className="space-y-4">
@@ -164,7 +167,9 @@ export default async function DashboardPage() {
           </Card>
           <Card className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">Reminders</h2>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Reminders
+              </h2>
               <Badge variant="warning">Action needed</Badge>
             </div>
             <div className="space-y-3 text-sm text-slate-500">
@@ -183,7 +188,9 @@ export default async function DashboardPage() {
 
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">Quick actions</h2>
+          <h2 className="text-lg font-semibold text-slate-900">
+            Quick actions
+          </h2>
           <Link
             href="/cases"
             className="text-sm font-semibold text-teal-600 hover:text-teal-700"
@@ -193,7 +200,11 @@ export default async function DashboardPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {quickActions.map((action) => (
-            <Card key={action.href} padded={false} className="hover:border-teal-300">
+            <Card
+              key={action.href}
+              padded={false}
+              className="hover:border-teal-300"
+            >
               <Link href={action.href} className="flex h-full flex-col p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-50 text-teal-600">
@@ -204,7 +215,9 @@ export default async function DashboardPage() {
                 <p className="mt-6 text-sm font-semibold text-slate-900">
                   {action.label}
                 </p>
-                <p className="mt-2 text-sm text-slate-500">{action.description}</p>
+                <p className="mt-2 text-sm text-slate-500">
+                  {action.description}
+                </p>
                 <span className="mt-auto pt-6 text-xs font-semibold uppercase tracking-wide text-teal-600">
                   Open
                 </span>

@@ -13,7 +13,7 @@ export async function POST(request: Request) {
           error: "Invalid search request",
           issues: parsed.error.flatten(),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -23,6 +23,9 @@ export async function POST(request: Request) {
     return NextResponse.json(results);
   } catch (error) {
     console.error("Search API error", error);
-    return NextResponse.json({ error: "Unable to process search" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Unable to process search" },
+      { status: 500 },
+    );
   }
 }

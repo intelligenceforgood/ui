@@ -19,12 +19,13 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  webServer: process.env.PLAYWRIGHT_WEB_SERVER === "skip"
-    ? undefined
-    : {
-        command: `pnpm dev --hostname ${HOST} --port ${PORT}`,
-        url: BASE_URL,
-        timeout: 120_000,
-        reuseExistingServer: !process.env.CI,
-      },
+  webServer:
+    process.env.PLAYWRIGHT_WEB_SERVER === "skip"
+      ? undefined
+      : {
+          command: `pnpm dev --hostname ${HOST} --port ${PORT}`,
+          url: BASE_URL,
+          timeout: 120_000,
+          reuseExistingServer: !process.env.CI,
+        },
 });

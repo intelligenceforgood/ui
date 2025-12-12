@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { AlertCircle, CheckCircle2, Clock, Download, Loader2, RefreshCcw } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  Download,
+  Loader2,
+  RefreshCcw,
+} from "lucide-react";
 import { Badge, Button, Card } from "@i4g/ui-kit";
 import type { AccountListRun } from "@/lib/server/account-list-service";
 
@@ -89,73 +96,92 @@ export function AccountListConsole({ initialRuns }: Props) {
   const latestRun = runs.at(0);
 
   const refreshRuns = useCallback(async () => {
-    const response = await fetch("/api/account-list/runs?limit=8", { cache: "no-store" });
-    const body = (await response.json().catch(() => ({}))) as { runs?: AccountListRun[]; error?: string };
+    const response = await fetch("/api/account-list/runs?limit=8", {
+      cache: "no-store",
+    });
+    const body = (await response.json().catch(() => ({}))) as {
+      runs?: AccountListRun[];
+      error?: string;
+    };
     if (!response.ok) {
       throw new Error(body.error ?? "Failed to refresh runs");
     }
     setRuns(body.runs ?? []);
   }, []);
 
-  const onSubmit = useCallback(async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formElement = event.currentTarget;
-    setPending(true);
-    setStatus({ variant: "idle" });
+  const onSubmit = useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const formElement = event.currentTarget;
+      setPending(true);
+      setStatus({ variant: "idle" });
 
-    const form = new FormData(formElement);
-    const startDate = (form.get("startDate") as string) || undefined;
-    const endDate = (form.get("endDate") as string) || undefined;
-    const categories = form.getAll("categories").map((value) => String(value));
-    const outputFormats = form.getAll("outputs").map((value) => String(value));
-    const topKRaw = Number(form.get("topK"));
-    const topK = Number.isFinite(topKRaw) ? topKRaw : 100;
-    const includeSources = form.get("includeSources") === "on";
+      const form = new FormData(formElement);
+      const startDate = (form.get("startDate") as string) || undefined;
+      const endDate = (form.get("endDate") as string) || undefined;
+      const categories = form
+        .getAll("categories")
+        .map((value) => String(value));
+      const outputFormats = form
+        .getAll("outputs")
+        .map((value) => String(value));
+      const topKRaw = Number(form.get("topK"));
+      const topK = Number.isFinite(topKRaw) ? topKRaw : 100;
+      const includeSources = form.get("includeSources") === "on";
 
-    try {
-      const response = await fetch("/api/account-list/run", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          startDate: startDate || undefined,
-          endDate: endDate || undefined,
-          categories: categories.length ? categories : undefined,
-          topK,
-          includeSources,
-          outputFormats: outputFormats.length ? outputFormats : DEFAULT_FORMATS,
-        }),
-      });
+      try {
+        const response = await fetch("/api/account-list/run", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            startDate: startDate || undefined,
+            endDate: endDate || undefined,
+            categories: categories.length ? categories : undefined,
+            topK,
+            includeSources,
+            outputFormats: outputFormats.length
+              ? outputFormats
+              : DEFAULT_FORMATS,
+          }),
+        });
 
-      const payload = (await response.json().catch(() => ({}))) as {
-        result?: { request_id: string; indicators: unknown[]; warnings: string[] };
-        error?: string;
-      };
-      if (!response.ok) {
-        throw new Error(payload?.error ?? "Run failed");
+        const payload = (await response.json().catch(() => ({}))) as {
+          result?: {
+            request_id: string;
+            indicators: unknown[];
+            warnings: string[];
+          };
+          error?: string;
+        };
+        if (!response.ok) {
+          throw new Error(payload?.error ?? "Run failed");
+        }
+        if (!payload?.result) {
+          throw new Error("Missing run payload");
+        }
+
+        setStatus({
+          variant: "success",
+          message: `Run ${payload.result.request_id} completed with ${payload.result.indicators.length} indicators`,
+        });
+
+        await refreshRuns();
+        formElement.reset();
+      } catch (error) {
+        console.error("Account list run failed", error);
+        setStatus({
+          variant: "error",
+          message:
+            error instanceof Error ? error.message : "Unable to start run",
+        });
+      } finally {
+        setPending(false);
       }
-      if (!payload?.result) {
-        throw new Error("Missing run payload");
-      }
-
-      setStatus({
-        variant: "success",
-        message: `Run ${payload.result.request_id} completed with ${payload.result.indicators.length} indicators`,
-      });
-
-      await refreshRuns();
-      formElement.reset();
-    } catch (error) {
-      console.error("Account list run failed", error);
-      setStatus({
-        variant: "error",
-        message: error instanceof Error ? error.message : "Unable to start run",
-      });
-    } finally {
-      setPending(false);
-    }
-  }, [refreshRuns]);
+    },
+    [refreshRuns],
+  );
 
   const statusBadge = useMemo(() => {
     if (status.variant === "success") {
@@ -183,9 +209,12 @@ export function AccountListConsole({ initialRuns }: Props) {
         <Card className="p-6">
           <form className="space-y-6" onSubmit={onSubmit}>
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Launch manual run</h2>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Launch manual run
+              </h2>
               <p className="text-sm text-slate-500">
-                Choose date range, indicator categories, and artifact formats before running the extractor.
+                Choose date range, indicator categories, and artifact formats
+                before running the extractor.
               </p>
             </div>
 
@@ -209,10 +238,15 @@ export function AccountListConsole({ initialRuns }: Props) {
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-900">Indicator categories</p>
+              <p className="text-sm font-medium text-slate-900">
+                Indicator categories
+              </p>
               <div className="flex flex-wrap gap-3">
                 {DEFAULT_CATEGORIES.map((category) => (
-                  <label key={category} className="flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm text-slate-600">
+                  <label
+                    key={category}
+                    className="flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm text-slate-600"
+                  >
                     <input
                       type="checkbox"
                       name="categories"
@@ -228,7 +262,9 @@ export function AccountListConsole({ initialRuns }: Props) {
 
             <div className="grid gap-4 md:grid-cols-2">
               <label className="space-y-1 text-sm text-slate-600">
-                <span className="font-medium text-slate-900">Top K per category</span>
+                <span className="font-medium text-slate-900">
+                  Top K per category
+                </span>
                 <input
                   type="number"
                   name="topK"
@@ -239,7 +275,9 @@ export function AccountListConsole({ initialRuns }: Props) {
                 />
               </label>
               <label className="space-y-1 text-sm text-slate-600">
-                <span className="font-medium text-slate-900">Include sources</span>
+                <span className="font-medium text-slate-900">
+                  Include sources
+                </span>
                 <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2">
                   <input
                     type="checkbox"
@@ -247,16 +285,23 @@ export function AccountListConsole({ initialRuns }: Props) {
                     defaultChecked
                     className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                   />
-                  <span className="text-sm text-slate-600">Return supporting documents</span>
+                  <span className="text-sm text-slate-600">
+                    Return supporting documents
+                  </span>
                 </div>
               </label>
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-900">Artifact formats</p>
+              <p className="text-sm font-medium text-slate-900">
+                Artifact formats
+              </p>
               <div className="flex flex-wrap gap-3">
                 {DEFAULT_FORMATS.map((format) => (
-                  <label key={format} className="flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm text-slate-600">
+                  <label
+                    key={format}
+                    className="flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm text-slate-600"
+                  >
                     <input
                       type="checkbox"
                       name="outputs"
@@ -271,7 +316,11 @@ export function AccountListConsole({ initialRuns }: Props) {
             </div>
 
             <div className="flex flex-wrap items-center gap-4">
-              <Button type="submit" disabled={pending} className="inline-flex items-center gap-2">
+              <Button
+                type="submit"
+                disabled={pending}
+                className="inline-flex items-center gap-2"
+              >
                 {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Start extraction
               </Button>
@@ -283,7 +332,10 @@ export function AccountListConsole({ initialRuns }: Props) {
                   refreshRuns().catch((error) =>
                     setStatus({
                       variant: "error",
-                      message: error instanceof Error ? error.message : "Unable to refresh runs",
+                      message:
+                        error instanceof Error
+                          ? error.message
+                          : "Unable to refresh runs",
                     }),
                   );
                 }}
@@ -301,8 +353,12 @@ export function AccountListConsole({ initialRuns }: Props) {
             <div className="flex items-center gap-3">
               <Clock className="h-5 w-5 text-slate-400" />
               <div>
-                <p className="text-sm font-semibold text-slate-900">Latest run</p>
-                <p className="text-xs text-slate-500">Auto-refresh after each manual run</p>
+                <p className="text-sm font-semibold text-slate-900">
+                  Latest run
+                </p>
+                <p className="text-xs text-slate-500">
+                  Auto-refresh after each manual run
+                </p>
               </div>
             </div>
             {latestRun ? (
@@ -315,20 +371,32 @@ export function AccountListConsole({ initialRuns }: Props) {
                   ))}
                 </div>
                 <p>
-                  <span className="font-semibold text-slate-900">Run ID:</span> {latestRun.request_id}
+                  <span className="font-semibold text-slate-900">Run ID:</span>{" "}
+                  {latestRun.request_id}
                 </p>
                 <p>
-                  <span className="font-semibold text-slate-900">Generated:</span> {formatDate(latestRun.generated_at)}
+                  <span className="font-semibold text-slate-900">
+                    Generated:
+                  </span>{" "}
+                  {formatDate(latestRun.generated_at)}
                 </p>
                 <p>
-                  <span className="font-semibold text-slate-900">Indicators:</span> {latestRun.indicator_count} · Sources: {latestRun.source_count}
+                  <span className="font-semibold text-slate-900">
+                    Indicators:
+                  </span>{" "}
+                  {latestRun.indicator_count} · Sources:{" "}
+                  {latestRun.source_count}
                 </p>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Artifacts</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Artifacts
+                  </p>
                   <ArtifactList artifacts={latestRun.artifacts} />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Warnings</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Warnings
+                  </p>
                   <WarningList warnings={latestRun.warnings} />
                 </div>
               </div>
@@ -342,8 +410,12 @@ export function AccountListConsole({ initialRuns }: Props) {
       <Card className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Run history</h2>
-            <p className="text-sm text-slate-500">Recent account list executions across the analyst console and API.</p>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Run history
+            </h2>
+            <p className="text-sm text-slate-500">
+              Recent account list executions across the analyst console and API.
+            </p>
           </div>
           <Badge variant="default">{runs.length} tracked</Badge>
         </div>
@@ -361,21 +433,34 @@ export function AccountListConsole({ initialRuns }: Props) {
             </thead>
             <tbody>
               {runs.map((run) => (
-                <tr key={run.request_id} className="border-t border-slate-100 text-slate-700">
-                  <td className="px-3 py-3 font-mono text-xs text-slate-500">{run.request_id}</td>
+                <tr
+                  key={run.request_id}
+                  className="border-t border-slate-100 text-slate-700"
+                >
+                  <td className="px-3 py-3 font-mono text-xs text-slate-500">
+                    {run.request_id}
+                  </td>
                   <td className="px-3 py-3">{formatDate(run.generated_at)}</td>
                   <td className="px-3 py-3">
                     <div className="flex flex-wrap gap-2">
                       {run.categories.map((category) => (
-                        <Badge key={`${run.request_id}-${category}`} variant="info">
+                        <Badge
+                          key={`${run.request_id}-${category}`}
+                          variant="info"
+                        >
                           {categoryLabel(category)}
                         </Badge>
                       ))}
                     </div>
                   </td>
                   <td className="px-3 py-3">
-                    <span className="font-semibold text-slate-900">{run.indicator_count}</span>
-                    <span className="text-xs text-slate-400"> · {run.source_count} sources</span>
+                    <span className="font-semibold text-slate-900">
+                      {run.indicator_count}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      {" "}
+                      · {run.source_count} sources
+                    </span>
                   </td>
                   <td className="px-3 py-3">
                     <ArtifactList artifacts={run.artifacts} />
@@ -387,7 +472,10 @@ export function AccountListConsole({ initialRuns }: Props) {
               ))}
               {!runs.length && (
                 <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-sm text-slate-500">
+                  <td
+                    colSpan={6}
+                    className="px-3 py-6 text-center text-sm text-slate-500"
+                  >
                     No runs captured yet. Start one above to populate history.
                   </td>
                 </tr>

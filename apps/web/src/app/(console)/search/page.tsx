@@ -4,7 +4,11 @@ import { Badge, Card } from "@i4g/ui-kit";
 import type { SearchRequest, SearchTimeRange } from "@i4g/sdk";
 import { getI4GClient } from "@/lib/i4g-client";
 import SearchExperience from "./search-experience";
-import { getHybridSearchSchema, getSearchHistory, listSavedSearches } from "@/lib/server/reviews-service";
+import {
+  getHybridSearchSchema,
+  getSearchHistory,
+  listSavedSearches,
+} from "@/lib/server/reviews-service";
 import { SearchHistoryList } from "./search-history-list";
 import { SavedSearchesList } from "./saved-searches-list";
 import {
@@ -18,7 +22,8 @@ import type { SavedSearchDescriptor } from "@/types/reviews";
 
 export const metadata: Metadata = {
   title: "Search",
-  description: "Cross-intelligence search across filings, chatter, and partner data.",
+  description:
+    "Cross-intelligence search across filings, chatter, and partner data.",
 };
 
 type SearchPageProps = {
@@ -38,7 +43,7 @@ function toSingleParam(value: string | string[] | undefined): string | null {
 
 function parseTimeRangeParams(
   startValue: string | string[] | undefined,
-  endValue: string | string[] | undefined
+  endValue: string | string[] | undefined,
 ): SearchTimeRange | null {
   const start = toSingleParam(startValue);
   const end = toSingleParam(endValue);
@@ -54,10 +59,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const payload = parseSearchPayloadParam(resolvedSearchParams.payload);
   const payloadRecord = payload as Record<string, unknown> | null;
   const savedSearchLabel = toSingleParam(
-    resolvedSearchParams.savedSearchLabel ?? resolvedSearchParams.saved_search_label
+    resolvedSearchParams.savedSearchLabel ??
+      resolvedSearchParams.saved_search_label,
   );
   const savedSearchIdFromParam = toSingleParam(
-    resolvedSearchParams.savedSearchId ?? resolvedSearchParams.saved_search_id
+    resolvedSearchParams.savedSearchId ?? resolvedSearchParams.saved_search_id,
   );
   const savedSearchIdFromPayload =
     typeof payloadRecord?.["saved_search_id"] === "string"
@@ -74,7 +80,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       : typeof payloadRecord?.["savedSearchName"] === "string"
         ? (payloadRecord["savedSearchName"] as string)
         : null;
-  const savedSearchName = savedSearchLabel ?? savedSearchNameFromPayload ?? null;
+  const savedSearchName =
+    savedSearchLabel ?? savedSearchNameFromPayload ?? null;
   const savedSearchOwner =
     typeof payloadRecord?.["saved_search_owner"] === "string"
       ? (payloadRecord["saved_search_owner"] as string)
@@ -82,10 +89,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         ? (payloadRecord["savedSearchOwner"] as string)
         : null;
   const savedSearchTags = toStringArray(
-    (payloadRecord?.["saved_search_tags"] as unknown) ?? (payloadRecord?.["savedSearchTags"] as unknown)
+    (payloadRecord?.["saved_search_tags"] as unknown) ??
+      (payloadRecord?.["savedSearchTags"] as unknown),
   );
   const savedSearchDescriptor: SavedSearchDescriptor | null =
-    savedSearchId || savedSearchName || savedSearchOwner || savedSearchTags.length
+    savedSearchId ||
+    savedSearchName ||
+    savedSearchOwner ||
+    savedSearchTags.length
       ? {
           id: savedSearchId ?? undefined,
           name: savedSearchName ?? undefined,
@@ -94,7 +105,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         }
       : null;
 
-  const queryFromUrl = typeof resolvedSearchParams.query === "string" ? resolvedSearchParams.query : "";
+  const queryFromUrl =
+    typeof resolvedSearchParams.query === "string"
+      ? resolvedSearchParams.query
+      : "";
   const queryFromPayload =
     typeof payload?.query === "string"
       ? payload.query
@@ -106,41 +120,59 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const sourcesFromUrl = toArrayParam(resolvedSearchParams.sources);
   const taxonomyFromUrl = toArrayParam(resolvedSearchParams.taxonomy);
   const indicatorsFromUrl = toArrayParam(
-    resolvedSearchParams.indicatorTypes ?? resolvedSearchParams.indicators
+    resolvedSearchParams.indicatorTypes ?? resolvedSearchParams.indicators,
   );
   const datasetsFromUrl = toArrayParam(resolvedSearchParams.datasets);
   const timePresetFromUrl = toSingleParam(
-    resolvedSearchParams.timePreset ?? resolvedSearchParams.time_preset
+    resolvedSearchParams.timePreset ?? resolvedSearchParams.time_preset,
   );
   const timeRangeFromUrl = parseTimeRangeParams(
     resolvedSearchParams.timeStart,
-    resolvedSearchParams.timeEnd
+    resolvedSearchParams.timeEnd,
   );
 
   const sourcesFromPayload = toStringArray(payload?.sources);
-  const taxonomyFromPayload = toStringArray(payload?.taxonomy ?? payload?.classifications);
+  const taxonomyFromPayload = toStringArray(
+    payload?.taxonomy ?? payload?.classifications,
+  );
   const indicatorsFromPayload = toStringArray(
-    payload?.indicatorTypes ?? payloadRecord?.indicator_types
+    payload?.indicatorTypes ?? payloadRecord?.indicator_types,
   );
   const datasetsFromPayload = toStringArray(payload?.datasets);
   const timePresetFromPayload = toSingleParam(
-    payload?.timePreset ?? (payloadRecord?.time_preset as string | undefined)
+    payload?.timePreset ?? (payloadRecord?.time_preset as string | undefined),
   );
   const timeRangeFromPayload = normalizeTimeRange(
-    payload?.timeRange ?? payloadRecord?.time_range
+    payload?.timeRange ?? payloadRecord?.time_range,
   );
-  const entityFilters = normalizeEntityFilters(payload?.entities ?? payloadRecord?.entities);
+  const entityFilters = normalizeEntityFilters(
+    payload?.entities ?? payloadRecord?.entities,
+  );
 
-  const selectionSources = sourcesFromPayload.length ? sourcesFromPayload : sourcesFromUrl;
-  const selectionTaxonomy = taxonomyFromPayload.length ? taxonomyFromPayload : taxonomyFromUrl;
-  const selectionIndicatorTypes = indicatorsFromPayload.length ? indicatorsFromPayload : indicatorsFromUrl;
-  const selectionDatasets = datasetsFromPayload.length ? datasetsFromPayload : datasetsFromUrl;
+  const selectionSources = sourcesFromPayload.length
+    ? sourcesFromPayload
+    : sourcesFromUrl;
+  const selectionTaxonomy = taxonomyFromPayload.length
+    ? taxonomyFromPayload
+    : taxonomyFromUrl;
+  const selectionIndicatorTypes = indicatorsFromPayload.length
+    ? indicatorsFromPayload
+    : indicatorsFromUrl;
+  const selectionDatasets = datasetsFromPayload.length
+    ? datasetsFromPayload
+    : datasetsFromUrl;
   const resolvedTimePreset = timePresetFromPayload ?? timePresetFromUrl;
   const resolvedTimeRange =
-    timeRangeFromPayload ?? timeRangeFromUrl ?? deriveTimeRangeFromPreset(resolvedTimePreset ?? undefined);
+    timeRangeFromPayload ??
+    timeRangeFromUrl ??
+    deriveTimeRangeFromPreset(resolvedTimePreset ?? undefined);
 
-  const page = typeof payload?.page === "number" && payload.page >= 1 ? payload.page : 1;
-  const pageSize = typeof payload?.pageSize === "number" && payload.pageSize >= 1 ? payload.pageSize : 10;
+  const page =
+    typeof payload?.page === "number" && payload.page >= 1 ? payload.page : 1;
+  const pageSize =
+    typeof payload?.pageSize === "number" && payload.pageSize >= 1
+      ? payload.pageSize
+      : 10;
 
   const initialSearchRequest: SearchRequest = {
     query: resolvedQuery,
@@ -149,7 +181,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     sources: selectionSources.length ? selectionSources : undefined,
     taxonomy: selectionTaxonomy.length ? selectionTaxonomy : undefined,
     classifications: selectionTaxonomy.length ? selectionTaxonomy : undefined,
-    indicatorTypes: selectionIndicatorTypes.length ? selectionIndicatorTypes : undefined,
+    indicatorTypes: selectionIndicatorTypes.length
+      ? selectionIndicatorTypes
+      : undefined,
     datasets: selectionDatasets.length ? selectionDatasets : undefined,
     timePreset: resolvedTimePreset ?? undefined,
     timeRange: resolvedTimeRange ?? undefined,
@@ -174,9 +208,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
           Intelligence search
         </p>
-        <h1 className="text-3xl font-semibold text-slate-900">Search signals, cases, and chatter</h1>
+        <h1 className="text-3xl font-semibold text-slate-900">
+          Search signals, cases, and chatter
+        </h1>
         <p className="max-w-3xl text-sm text-slate-500">
-          Query across structured and unstructured datasets. Filters instantly narrow results by source, taxonomy, or time.
+          Query across structured and unstructured datasets. Filters instantly
+          narrow results by source, taxonomy, or time.
         </p>
       </header>
 
@@ -184,7 +221,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <div className="flex items-center gap-3 text-sm text-slate-600">
           <Sparkles className="h-4 w-4 text-teal-500" />
           <span>
-            {initialResults.stats.total} intelligence hits indexed · {initialResults.suggestions.length} auto-suggestions ready
+            {initialResults.stats.total} intelligence hits indexed ·{" "}
+            {initialResults.suggestions.length} auto-suggestions ready
           </span>
         </div>
         <div className="flex flex-wrap gap-2 text-xs text-slate-500">
@@ -198,8 +236,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {savedSearchLabel ? (
         <Card className="border-teal-200 bg-teal-50 text-sm text-teal-700">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-500">Saved search</p>
-          <p className="text-base font-semibold text-teal-800">{savedSearchLabel}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-500">
+            Saved search
+          </p>
+          <p className="text-base font-semibold text-teal-800">
+            {savedSearchLabel}
+          </p>
         </Card>
       ) : null}
 

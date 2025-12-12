@@ -7,9 +7,12 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-gradient-to-r from-sky-500 to-teal-400 text-white shadow-lg hover:shadow-xl",
-        secondary: "bg-white text-slate-900 border-slate-200 hover:border-teal-300 hover:text-teal-600",
-        ghost: "bg-transparent text-slate-500 hover:text-teal-500 border-transparent",
+        primary:
+          "bg-gradient-to-r from-sky-500 to-teal-400 text-white shadow-lg hover:shadow-xl",
+        secondary:
+          "bg-white text-slate-900 border-slate-200 hover:border-teal-300 hover:text-teal-600",
+        ghost:
+          "bg-transparent text-slate-500 hover:text-teal-500 border-transparent",
       },
       size: {
         sm: "text-sm px-3 py-1.5",
@@ -21,10 +24,11 @@ const buttonVariants = cva(
       variant: "primary",
       size: "md",
     },
-  }
+  },
 );
 
-export type ButtonProps = ComponentPropsWithoutRef<"button"> & VariantProps<typeof buttonVariants>;
+export type ButtonProps = ComponentPropsWithoutRef<"button"> &
+  VariantProps<typeof buttonVariants>;
 
 export function Button({ className, variant, size, ...props }: ButtonProps) {
   return (

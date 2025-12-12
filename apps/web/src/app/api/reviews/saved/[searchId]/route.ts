@@ -13,7 +13,9 @@ const updateSchema = z.object({
 });
 
 function resolveApiBase() {
-  return process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null;
+  return (
+    process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null
+  );
 }
 
 function resolveApiKey() {
@@ -35,7 +37,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const body = await request.json();
     const parsed = updateSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid update payload", issues: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid update payload", issues: parsed.error.flatten() },
+        { status: 400 },
+      );
     }
 
     const baseUrl = resolveApiBase();
@@ -59,13 +64,22 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const errorMessage = typeof payload.detail === "string" ? payload.detail : "Failed to update saved search";
-      return NextResponse.json({ error: errorMessage, details: payload }, { status: response.status });
+      const errorMessage =
+        typeof payload.detail === "string"
+          ? payload.detail
+          : "Failed to update saved search";
+      return NextResponse.json(
+        { error: errorMessage, details: payload },
+        { status: response.status },
+      );
     }
     return NextResponse.json(payload, { status: response.status });
   } catch (error) {
     console.error("Update saved search proxy error", error);
-    return NextResponse.json({ error: "Unable to update saved search" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Unable to update saved search" },
+      { status: 500 },
+    );
   }
 }
 
@@ -87,12 +101,21 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const errorMessage = typeof payload.detail === "string" ? payload.detail : "Failed to delete saved search";
-      return NextResponse.json({ error: errorMessage, details: payload }, { status: response.status });
+      const errorMessage =
+        typeof payload.detail === "string"
+          ? payload.detail
+          : "Failed to delete saved search";
+      return NextResponse.json(
+        { error: errorMessage, details: payload },
+        { status: response.status },
+      );
     }
     return NextResponse.json(payload, { status: response.status });
   } catch (error) {
     console.error("Delete saved search proxy error", error);
-    return NextResponse.json({ error: "Unable to delete saved search" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Unable to delete saved search" },
+      { status: 500 },
+    );
   }
 }

@@ -1,4 +1,9 @@
-import { isPlainObject, normalizeTimeRange, serializeSearchPayloadParam, toStringArray } from "@/lib/search/filters";
+import {
+  isPlainObject,
+  normalizeTimeRange,
+  serializeSearchPayloadParam,
+  toStringArray,
+} from "@/lib/search/filters";
 
 export type SearchParamPayload = Record<string, unknown>;
 
@@ -6,7 +11,9 @@ type BuildSearchHrefOptions = {
   label?: string | null;
 };
 
-function extractSearchPayload(params: SearchParamPayload | null | undefined): SearchParamPayload {
+function extractSearchPayload(
+  params: SearchParamPayload | null | undefined,
+): SearchParamPayload {
   if (params && typeof params === "object") {
     const record = params as Record<string, unknown>;
     if (isPlainObject(record.request)) {
@@ -19,7 +26,7 @@ function extractSearchPayload(params: SearchParamPayload | null | undefined): Se
 
 export function buildSearchHref(
   params: SearchParamPayload | null | undefined,
-  options?: BuildSearchHrefOptions
+  options?: BuildSearchHrefOptions,
 ): string {
   const payload = extractSearchPayload(params);
 
@@ -32,7 +39,9 @@ export function buildSearchHref(
 
   const sources = toStringArray(payload.sources ?? payload.source);
   const taxonomy = toStringArray(payload.taxonomy ?? payload.classification);
-  const indicatorTypes = toStringArray(payload.indicatorTypes ?? payload.indicator_types);
+  const indicatorTypes = toStringArray(
+    payload.indicatorTypes ?? payload.indicator_types,
+  );
   const datasets = toStringArray(payload.datasets);
 
   const timePreset =
@@ -63,7 +72,11 @@ export function buildSearchHref(
   if (timePreset) {
     searchParams.set("timePreset", timePreset);
   }
-  if (timeRange && typeof timeRange.start === "string" && typeof timeRange.end === "string") {
+  if (
+    timeRange &&
+    typeof timeRange.start === "string" &&
+    typeof timeRange.end === "string"
+  ) {
     searchParams.set("timeStart", timeRange.start);
     searchParams.set("timeEnd", timeRange.end);
   }

@@ -10,7 +10,7 @@ pnpm --filter web dev
 
 By default the app bootstraps against the mock API client unless `I4G_API_URL` is set. Use `pnpm --filter web build` followed by `pnpm --filter web start` for a production-like run.
 
-Hybrid search schema snapshots are synchronized automatically before `dev/build/start` via `scripts/sync-hybrid-schema.js`. The script copies `proto/docs/examples/reviews_search_schema.json` into `src/config/generated/hybrid_search_schema.json`. Override the source by exporting `I4G_SCHEMA_SNAPSHOT=/path/to/schema.json` when running the pnpm command if the proto repo is not checked out.
+Hybrid search schema snapshots are synchronized automatically before `dev/build/start` via `scripts/sync-hybrid-schema.js`. The script copies `core/docs/examples/reviews_search_schema.json` into `src/config/generated/hybrid_search_schema.json`. Override the source by exporting `I4G_SCHEMA_SNAPSHOT=/path/to/schema.json` when running the pnpm command if the core repo is not checked out.
 
 ### Testing
 

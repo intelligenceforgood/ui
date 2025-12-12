@@ -25,7 +25,9 @@ const mockResult = {
 };
 
 function resolveApiBase() {
-  return process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null;
+  return (
+    process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null
+  );
 }
 
 function resolveApiKey() {
@@ -82,7 +84,11 @@ function isRawResult(value: unknown): value is RawResult {
 
 function toStringArray(value: unknown): string[] {
   if (Array.isArray(value)) {
-    return value.filter((item): item is string => typeof item === "string" && item.length > 0).slice(0, 12);
+    return value
+      .filter(
+        (item): item is string => typeof item === "string" && item.length > 0,
+      )
+      .slice(0, 12);
   }
   return [];
 }
@@ -122,7 +128,10 @@ function mapResult(payload: RawResult, index: number): DiscoveryResult {
     documentId,
     documentName,
     summary,
-    label: typeof payload.label === "string" ? payload.label : payload.struct?.ground_truth_label ?? null,
+    label:
+      typeof payload.label === "string"
+        ? payload.label
+        : payload.struct?.ground_truth_label ?? null,
     tags,
     source:
       typeof payload.source === "string"
@@ -137,7 +146,9 @@ function mapResult(payload: RawResult, index: number): DiscoveryResult {
           ? payload.struct.index_type
           : null,
     struct: toRecord(payload.struct ?? payload.document?.struct_data ?? {}),
-    rankSignals: toRecord(payload.rank_signals ?? payload.raw?.rankSignals ?? {}),
+    rankSignals: toRecord(
+      payload.rank_signals ?? payload.raw?.rankSignals ?? {},
+    ),
     raw: payload.raw ?? payload,
   } satisfies DiscoveryResult;
 }
@@ -158,8 +169,8 @@ function buildMockResponse(query: string): DiscoverySearchResponse {
           tags: ["demo", "vertex", `sample-${offset + 1}`],
           raw: template.raw,
         } as RawResult,
-        offset
-      )
+        offset,
+      ),
     ),
     totalSize: 3,
     nextPageToken: undefined,
@@ -173,9 +184,12 @@ function buildUrl(baseUrl: string, params: z.infer<typeof requestSchema>) {
   if (params.pageToken) url.searchParams.set("page_token", params.pageToken);
   if (params.project) url.searchParams.set("project", params.project);
   if (params.location) url.searchParams.set("location", params.location);
-  if (params.dataStoreId) url.searchParams.set("data_store_id", params.dataStoreId);
-  if (params.servingConfigId) url.searchParams.set("serving_config_id", params.servingConfigId);
-  if (params.filterExpression) url.searchParams.set("filter", params.filterExpression);
+  if (params.dataStoreId)
+    url.searchParams.set("data_store_id", params.dataStoreId);
+  if (params.servingConfigId)
+    url.searchParams.set("serving_config_id", params.servingConfigId);
+  if (params.filterExpression)
+    url.searchParams.set("filter", params.filterExpression);
   if (params.boostJson) url.searchParams.set("boost", params.boostJson);
   return url;
 }
@@ -191,9 +205,13 @@ function mapResponse(payload: unknown): DiscoverySearchResponse {
     : [];
 
   const mapped = rawResults.map((item, index) => mapResult(item, index));
-  const totalSize = typeof objectPayload.total_size === "number" ? objectPayload.total_size : mapped.length;
+  const totalSize =
+    typeof objectPayload.total_size === "number"
+      ? objectPayload.total_size
+      : mapped.length;
   const nextPageToken =
-    typeof objectPayload.next_page_token === "string" && objectPayload.next_page_token.length > 0
+    typeof objectPayload.next_page_token === "string" &&
+    objectPayload.next_page_token.length > 0
       ? objectPayload.next_page_token
       : undefined;
 
@@ -215,7 +233,7 @@ export async function POST(request: Request) {
           error: "Invalid Discovery request",
           issues: parsed.error.flatten(),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -243,14 +261,23 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const errorPayload = await response.json().catch(() => ({}));
-      const message = typeof errorPayload.detail === "string" ? errorPayload.detail : "Discovery search failed";
-      return NextResponse.json({ error: message, details: errorPayload }, { status: response.status });
+      const message =
+        typeof errorPayload.detail === "string"
+          ? errorPayload.detail
+          : "Discovery search failed";
+      return NextResponse.json(
+        { error: message, details: errorPayload },
+        { status: response.status },
+      );
     }
 
     const payload = await response.json();
     return NextResponse.json(mapResponse(payload));
   } catch (error) {
     console.error("Discovery search proxy error", error);
-    return NextResponse.json({ error: "Discovery search failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Discovery search failed" },
+      { status: 500 },
+    );
   }
 }

@@ -9,8 +9,8 @@ export const colors = {
     200: "#E2E8F0",
     300: "#CBD5F5",
     700: "#334155",
-    900: "#0F172A"
-  }
+    900: "#0F172A",
+  },
 };
 
 export const typography = {

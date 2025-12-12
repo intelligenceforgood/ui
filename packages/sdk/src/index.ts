@@ -97,14 +97,18 @@ const searchRequestSchema = z
         return true;
       }
       if (payload.fromDate && payload.toDate) {
-        return new Date(payload.fromDate).getTime() <= new Date(payload.toDate).getTime();
+        return (
+          new Date(payload.fromDate).getTime() <=
+          new Date(payload.toDate).getTime()
+        );
       }
       return false;
     },
     {
-      message: "fromDate and toDate must both be provided and fromDate must be before toDate",
+      message:
+        "fromDate and toDate must both be provided and fromDate must be before toDate",
       path: ["fromDate"],
-    }
+    },
   );
 
 export type SearchRequest = z.infer<typeof searchRequestSchema>;
@@ -199,7 +203,7 @@ const taxonomyNodeSchema: z.ZodType<TaxonomyNode> = z.lazy(() =>
     description: z.string(),
     count: z.number(),
     children: z.array(taxonomyNodeSchema),
-  })
+  }),
 );
 
 const taxonomyResponseSchema = z.object({
@@ -334,7 +338,9 @@ export type DossierDownloads = {
   remote: DossierRemoteDownload[];
 };
 
-function normalizeDownloads(downloads?: DossierDownloadsWire | null): DossierDownloads {
+function normalizeDownloads(
+  downloads?: DossierDownloadsWire | null,
+): DossierDownloads {
   const local = downloads?.local;
   return {
     local: {
@@ -344,13 +350,16 @@ function normalizeDownloads(downloads?: DossierDownloadsWire | null): DossierDow
       html: local?.html ?? null,
       signatureManifest: local?.signature_manifest ?? null,
     },
-    remote: (downloads?.remote ?? []).map((entry) => ({
-      label: entry.label,
-      remoteRef: entry.remote_ref ?? null,
-      hash: entry.hash ?? null,
-      algorithm: entry.algorithm ?? null,
-      sizeBytes: entry.size_bytes ?? null,
-    } satisfies DossierRemoteDownload)),
+    remote: (downloads?.remote ?? []).map(
+      (entry) =>
+        ({
+          label: entry.label,
+          remoteRef: entry.remote_ref ?? null,
+          hash: entry.hash ?? null,
+          algorithm: entry.algorithm ?? null,
+          sizeBytes: entry.size_bytes ?? null,
+        }) satisfies DossierRemoteDownload,
+    ),
   } satisfies DossierDownloads;
 }
 
@@ -396,7 +405,9 @@ const dossierVerificationArtifactWireSchema = z.object({
   error: z.string().nullable().optional(),
 });
 
-type DossierVerificationArtifactWire = z.infer<typeof dossierVerificationArtifactWireSchema>;
+type DossierVerificationArtifactWire = z.infer<
+  typeof dossierVerificationArtifactWireSchema
+>;
 
 export type DossierVerificationArtifact = {
   label: string;
@@ -409,7 +420,9 @@ export type DossierVerificationArtifact = {
   error: string | null;
 };
 
-function normalizeVerificationArtifact(artifact: DossierVerificationArtifactWire): DossierVerificationArtifact {
+function normalizeVerificationArtifact(
+  artifact: DossierVerificationArtifactWire,
+): DossierVerificationArtifact {
   return {
     label: artifact.label,
     path: artifact.path ?? null,
@@ -444,7 +457,9 @@ export type DossierVerificationReport = {
   artifacts: DossierVerificationArtifact[];
 };
 
-function normalizeDossierVerification(payload: DossierVerificationWire): DossierVerificationReport {
+function normalizeDossierVerification(
+  payload: DossierVerificationWire,
+): DossierVerificationReport {
   return {
     planId: payload.plan_id,
     algorithm: payload.algorithm,
@@ -470,7 +485,10 @@ export class I4GClientError extends Error {
   }
 }
 
-type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+type FetchLike = (
+  input: RequestInfo | URL,
+  init?: RequestInit,
+) => Promise<Response>;
 
 export interface ClientConfig {
   baseUrl: string;
@@ -513,7 +531,9 @@ async function parseJson(response: Response) {
 
 export function createClient(config: ClientConfig): I4GClient {
   const { baseUrl, apiKey, additionalHeaders, fetchImpl } = config;
-  const runtimeFetch = fetchImpl ?? (typeof fetch !== "undefined" ? fetch.bind(globalThis) : undefined);
+  const runtimeFetch =
+    fetchImpl ??
+    (typeof fetch !== "undefined" ? fetch.bind(globalThis) : undefined);
 
   if (!runtimeFetch) {
     throw new Error("fetch is not available in this environment");
@@ -521,7 +541,11 @@ export function createClient(config: ClientConfig): I4GClient {
 
   const fetcher: FetchLike = runtimeFetch;
 
-  async function request<T>(path: string, schema: z.ZodSchema<T>, init?: RequestInit) {
+  async function request<T>(
+    path: string,
+    schema: z.ZodSchema<T>,
+    init?: RequestInit,
+  ) {
     const headers: Record<string, string> = {
       Accept: "application/json",
       ...(init?.body ? { "Content-Type": "application/json" } : {}),
@@ -545,7 +569,7 @@ export function createClient(config: ClientConfig): I4GClient {
       throw new I4GClientError(
         `Request failed with status ${response.status}`,
         response.status,
-        errorPayload
+        errorPayload,
       );
     }
 
@@ -590,9 +614,13 @@ export function createClient(config: ClientConfig): I4GClient {
     verifyDossier(planId) {
       const value = planIdSchema.parse(planId);
       const encoded = encodeURIComponent(value);
-      return request(`/reports/dossiers/${encoded}/verify`, dossierVerificationWireSchema, {
-        method: "POST",
-      }).then(normalizeDossierVerification);
+      return request(
+        `/reports/dossiers/${encoded}/verify`,
+        dossierVerificationWireSchema,
+        {
+          method: "POST",
+        },
+      ).then(normalizeDossierVerification);
     },
   };
 }
@@ -1025,7 +1053,8 @@ const mockDossiers: DossierRecord[] = [
         path: "/data/reports/dossiers/dossier-nyc-20251115-001.signatures.json",
       },
     },
-    signatureManifestPath: "/data/reports/dossiers/dossier-nyc-20251115-001.signatures.json",
+    signatureManifestPath:
+      "/data/reports/dossiers/dossier-nyc-20251115-001.signatures.json",
     signatureManifest: {
       algorithm: "sha256",
       generated_at: "2025-11-15T12:00:00Z",
@@ -1052,7 +1081,8 @@ const mockDossiers: DossierRecord[] = [
         markdown: "/data/reports/dossiers/dossier-nyc-20251115-001.md",
         pdf: "/drive/nyc/dossier-nyc-20251115-001.pdf",
         html: "/data/reports/dossiers/dossier-nyc-20251115-001.html",
-        signatureManifest: "/data/reports/dossiers/dossier-nyc-20251115-001.signatures.json",
+        signatureManifest:
+          "/data/reports/dossiers/dossier-nyc-20251115-001.signatures.json",
       },
       remote: [
         {
@@ -1159,25 +1189,32 @@ export function createMockClient(): I4GClient {
     async searchIntelligence(request) {
       const payload = searchRequestSchema.parse(request);
       const normalizedQuery = payload.query.trim().toLowerCase();
-      const normalizedSources = new Set(payload.sources?.map((s) => s.toLowerCase()) ?? []);
-      const normalizedTaxonomy = new Set(payload.taxonomy?.map((t) => t.toLowerCase()) ?? []);
+      const normalizedSources = new Set(
+        payload.sources?.map((s) => s.toLowerCase()) ?? [],
+      );
+      const normalizedTaxonomy = new Set(
+        payload.taxonomy?.map((t) => t.toLowerCase()) ?? [],
+      );
 
       let filtered = mockSearchResults;
 
       if (normalizedQuery) {
         filtered = filtered.filter((item) => {
-          const haystack = `${item.title} ${item.snippet} ${item.tags.join(" ")}`.toLowerCase();
+          const haystack =
+            `${item.title} ${item.snippet} ${item.tags.join(" ")}`.toLowerCase();
           return haystack.includes(normalizedQuery);
         });
       }
 
       if (normalizedSources.size) {
-        filtered = filtered.filter((item) => normalizedSources.has(item.source.toLowerCase()));
+        filtered = filtered.filter((item) =>
+          normalizedSources.has(item.source.toLowerCase()),
+        );
       }
 
       if (normalizedTaxonomy.size) {
         filtered = filtered.filter((item) =>
-          item.tags.some((tag) => normalizedTaxonomy.has(tag.toLowerCase()))
+          item.tags.some((tag) => normalizedTaxonomy.has(tag.toLowerCase())),
         );
       }
 
@@ -1197,7 +1234,11 @@ export function createMockClient(): I4GClient {
           pageSize,
         },
         facets: mockFacets,
-        suggestions: ["group-7 network", "safehouse turnover", "intake backlog"],
+        suggestions: [
+          "group-7 network",
+          "safehouse turnover",
+          "intake backlog",
+        ],
       } satisfies SearchResponse;
     },
     async listCases() {
@@ -1214,11 +1255,16 @@ export function createMockClient(): I4GClient {
       const normalizedStatus = payload.status.toLowerCase();
       let items = mockDossiers;
       if (normalizedStatus !== "all") {
-        items = items.filter((item) => item.status === normalizedStatus || item.status === payload.status);
+        items = items.filter(
+          (item) =>
+            item.status === normalizedStatus || item.status === payload.status,
+        );
       }
-      const sliced = items.slice(0, payload.limit).map((item) =>
-        payload.includeManifest ? item : { ...item, manifest: null }
-      );
+      const sliced = items
+        .slice(0, payload.limit)
+        .map((item) =>
+          payload.includeManifest ? item : { ...item, manifest: null },
+        );
       return {
         count: sliced.length,
         items: sliced,

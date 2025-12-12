@@ -34,9 +34,7 @@ export default function RootLayout({
       <body
         className={`${displayFont.variable} ${bodyFont.variable} font-sans antialiased bg-slate-50`}
       >
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

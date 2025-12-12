@@ -1,4 +1,4 @@
-'use server';
+"use server";
 
 import { z } from "zod";
 
@@ -92,7 +92,9 @@ const MOCK_RESULT: AccountListResult = {
 };
 
 function resolveApiBase() {
-  return process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null;
+  return (
+    process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null
+  );
 }
 
 function resolveApiKey() {
@@ -111,7 +113,9 @@ async function fetchJson(url: URL, init?: RequestInit) {
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`Account list request failed (${response.status}): ${text || 'no payload'}`);
+    throw new Error(
+      `Account list request failed (${response.status}): ${text || "no payload"}`,
+    );
   }
 
   const text = await response.text();
@@ -137,18 +141,20 @@ function sanitizeLimit(limit: number | undefined, fallback = 10) {
   return Math.min(Math.max(limit, 1), 50);
 }
 
-export async function getAccountListRuns(limit?: number): Promise<AccountListRun[]> {
-  const url = buildUrl('/accounts/runs');
+export async function getAccountListRuns(
+  limit?: number,
+): Promise<AccountListRun[]> {
+  const url = buildUrl("/accounts/runs");
   if (!url) {
     return MOCK_RUNS.slice(0, sanitizeLimit(limit));
   }
 
-  url.searchParams.set('limit', String(sanitizeLimit(limit)));
+  url.searchParams.set("limit", String(sanitizeLimit(limit)));
 
   const apiKey = resolveApiKey();
   const headers: Record<string, string> = {};
   if (apiKey) {
-    headers['X-API-KEY'] = apiKey;
+    headers["X-API-KEY"] = apiKey;
   }
 
   try {
@@ -156,7 +162,7 @@ export async function getAccountListRuns(limit?: number): Promise<AccountListRun
     const parsed = apiRunsResponseSchema.parse(payload);
     return parsed.runs;
   } catch (error) {
-    console.warn('Falling back to mock account list runs', error);
+    console.warn("Falling back to mock account list runs", error);
     return MOCK_RUNS.slice(0, sanitizeLimit(limit));
   }
 }
@@ -181,10 +187,10 @@ function buildRunPayload(input: AccountListRunRequest) {
   if (input.categories?.length) {
     payload.categories = input.categories;
   }
-  if (typeof input.topK === 'number') {
+  if (typeof input.topK === "number") {
     payload.top_k = input.topK;
   }
-  if (typeof input.includeSources === 'boolean') {
+  if (typeof input.includeSources === "boolean") {
     payload.include_sources = input.includeSources;
   }
   if (input.outputFormats?.length) {
@@ -193,36 +199,40 @@ function buildRunPayload(input: AccountListRunRequest) {
   return payload;
 }
 
-export async function triggerAccountListRun(input: AccountListRunRequest): Promise<AccountListResult> {
-  const url = buildUrl('/accounts/extract');
+export async function triggerAccountListRun(
+  input: AccountListRunRequest,
+): Promise<AccountListResult> {
+  const url = buildUrl("/accounts/extract");
   if (!url) {
     return MOCK_RESULT;
   }
 
   const payload = buildRunPayload(input);
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   };
   const apiKey = resolveApiKey();
   if (apiKey) {
-    headers['X-API-KEY'] = apiKey;
+    headers["X-API-KEY"] = apiKey;
   }
 
   try {
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       headers,
       body: JSON.stringify(payload),
-      cache: 'no-store',
+      cache: "no-store",
     });
     if (!response.ok) {
       const text = await response.text();
-      throw new Error(`Account list run failed (${response.status}): ${text || 'no payload'}`);
+      throw new Error(
+        `Account list run failed (${response.status}): ${text || "no payload"}`,
+      );
     }
     const data = (await response.json()) as unknown;
     return accountListResultSchema.parse(data);
   } catch (error) {
-    console.error('Falling back to mock account list result', error);
+    console.error("Falling back to mock account list result", error);
     return { ...MOCK_RESULT, request_id: `account-run-mock-${Date.now()}` };
   }
 }

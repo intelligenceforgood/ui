@@ -8,7 +8,8 @@ import AnalyticsCharts from "./analytics-charts";
 
 export const metadata: Metadata = {
   title: "Analytics",
-  description: "Monitor program impact, detection health, and pipeline throughput.",
+  description:
+    "Monitor program impact, detection health, and pipeline throughput.",
 };
 
 const trendIconMap: Record<AnalyticsMetric["trend"], ReactNode> = {
@@ -27,9 +28,12 @@ export default async function AnalyticsPage() {
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
           Program insights
         </p>
-        <h1 className="text-3xl font-semibold text-slate-900">Analytics & impact reporting</h1>
+        <h1 className="text-3xl font-semibold text-slate-900">
+          Analytics & impact reporting
+        </h1>
         <p className="max-w-3xl text-sm text-slate-500">
-          Track detection performance, pipeline health, and operational coverage to inform partner updates and resourcing decisions.
+          Track detection performance, pipeline health, and operational coverage
+          to inform partner updates and resourcing decisions.
         </p>
       </header>
 
@@ -43,7 +47,9 @@ export default async function AnalyticsPage() {
                 {metric.change}
               </span>
             </div>
-            <p className="text-3xl font-semibold text-slate-900">{metric.value}</p>
+            <p className="text-3xl font-semibold text-slate-900">
+              {metric.value}
+            </p>
           </Card>
         ))}
       </section>

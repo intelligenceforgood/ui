@@ -10,6 +10,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ events }, { status: 200 });
   } catch (error) {
     console.error("History proxy error", error);
-    return NextResponse.json({ error: "Unable to load history" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Unable to load history" },
+      { status: 500 },
+    );
   }
 }

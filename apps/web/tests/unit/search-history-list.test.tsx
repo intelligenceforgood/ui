@@ -5,7 +5,14 @@ import { SearchHistoryList } from "@/app/(console)/search/search-history-list";
 import type { SearchHistoryEvent } from "@/types/reviews";
 
 vi.mock("next/link", () => ({
-  default: ({ children, href, ...props }: { children: ReactNode; href: string }) => (
+  default: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: ReactNode;
+    href: string;
+  }) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -29,14 +36,18 @@ describe("SearchHistoryList", () => {
             params: {
               classifications: ["romance_scam"],
               datasets: ["intake"],
-              entities: [{ type: "wallet", value: "0xabc", match_mode: "exact" }],
+              entities: [
+                { type: "wallet", value: "0xabc", match_mode: "exact" },
+              ],
             },
           },
         ]}
-      />
+      />,
     );
 
-    expect(screen.getByText("Taxonomy: romance_scam · Datasets: intake")).toBeInTheDocument();
+    expect(
+      screen.getByText("Taxonomy: romance_scam · Datasets: intake"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Dataset: intake")).toBeInTheDocument();
   });
 
@@ -52,14 +63,16 @@ describe("SearchHistoryList", () => {
             },
           },
         ]}
-      />
+      />,
     );
 
     const rerunLink = screen.getByRole("link", { name: /rerun search/i });
     const href = rerunLink.getAttribute("href");
     expect(href).toBeTruthy();
     const url = new URL(href ?? "", "https://example.com");
-    expect(url.searchParams.get("savedSearchLabel")).toBe("Taxonomy: romance_scam · Datasets: intake");
+    expect(url.searchParams.get("savedSearchLabel")).toBe(
+      "Taxonomy: romance_scam · Datasets: intake",
+    );
   });
 
   it("replaces entries when new events arrive via props", async () => {
@@ -72,7 +85,7 @@ describe("SearchHistoryList", () => {
             query: "initial query",
           },
         ]}
-      />
+      />,
     );
 
     expect(screen.getByText("initial query")).toBeInTheDocument();
@@ -86,10 +99,12 @@ describe("SearchHistoryList", () => {
             query: "updated query",
           },
         ]}
-      />
+      />,
     );
 
-    await waitFor(() => expect(screen.getByText("updated query")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("updated query")).toBeInTheDocument(),
+    );
     expect(screen.queryByText("initial query")).not.toBeInTheDocument();
   });
 
@@ -103,7 +118,7 @@ describe("SearchHistoryList", () => {
             params: { text: "Fallback Text" },
           },
         ]}
-      />
+      />,
     );
 
     expect(screen.getByText("Fallback Text")).toBeInTheDocument();
@@ -125,7 +140,7 @@ describe("SearchHistoryList", () => {
             },
           },
         ]}
-      />
+      />,
     );
 
     expect(screen.getByText("High-risk wallets")).toBeInTheDocument();

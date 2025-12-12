@@ -14,7 +14,7 @@ interface PlatformClientConfig {
   apiKey?: string;
 }
 
-interface ProtoStructuredRecord {
+interface CoreStructuredRecord {
   case_id?: string;
   text?: string;
   metadata?: {
@@ -28,7 +28,7 @@ interface ProtoStructuredRecord {
   created_at?: string;
 }
 
-interface ProtoVectorRecord {
+interface CoreVectorRecord {
   label?: string;
   text?: string;
   document?: string;
@@ -37,12 +37,12 @@ interface ProtoVectorRecord {
   distance?: number;
 }
 
-interface ProtoSearchEntry {
+interface CoreSearchEntry {
   case_id?: string;
   score?: number;
   sources?: string[] | string;
-  record?: ProtoStructuredRecord | null;
-  vector?: ProtoVectorRecord | null;
+  record?: CoreStructuredRecord | null;
+  vector?: CoreVectorRecord | null;
   distance?: number;
   [key: string]: unknown;
 }
@@ -65,7 +65,7 @@ function toNumber(value: unknown, fallback: number): number {
   return fallback;
 }
 
-function buildScore(entry: ProtoSearchEntry): number {
+function buildScore(entry: CoreSearchEntry): number {
   const { score, vector } = entry ?? {};
   const candidate =
     [score, vector?.similarity, vector?.score, vector?.distance]
@@ -83,7 +83,7 @@ function buildScore(entry: ProtoSearchEntry): number {
   return candidate;
 }
 
-function extractTags(entry: ProtoSearchEntry): string[] {
+function extractTags(entry: CoreSearchEntry): string[] {
   const tags = new Set<string>();
   const record = entry?.record ?? {};
   const vector = entry?.vector ?? {};
@@ -121,7 +121,7 @@ function extractTags(entry: ProtoSearchEntry): string[] {
   return Array.from(tags).slice(0, 8);
 }
 
-function extractSource(entry: ProtoSearchEntry): string {
+function extractSource(entry: CoreSearchEntry): string {
   const sources = entry?.sources;
   if (Array.isArray(sources) && sources.length) {
     const normalized = sources.map((item) => String(item)).filter(Boolean);
@@ -146,7 +146,7 @@ function extractSource(entry: ProtoSearchEntry): string {
   return "unknown";
 }
 
-function extractTitle(entry: ProtoSearchEntry): string {
+function extractTitle(entry: CoreSearchEntry): string {
   const record = entry?.record ?? {};
   const vector = entry?.vector ?? {};
 
@@ -159,17 +159,21 @@ function extractTitle(entry: ProtoSearchEntry): string {
   }
 
   if (typeof record?.text === "string" && record.text) {
-    return record.text.split("\n").slice(0, 1).join(" ").slice(0, 120) || "Result";
+    return (
+      record.text.split("\n").slice(0, 1).join(" ").slice(0, 120) || "Result"
+    );
   }
 
   if (typeof vector?.text === "string" && vector.text) {
-    return vector.text.split("\n").slice(0, 1).join(" ").slice(0, 120) || "Result";
+    return (
+      vector.text.split("\n").slice(0, 1).join(" ").slice(0, 120) || "Result"
+    );
   }
 
   return "Result";
 }
 
-function extractSnippet(entry: ProtoSearchEntry): string {
+function extractSnippet(entry: CoreSearchEntry): string {
   const record = entry?.record ?? {};
   const vector = entry?.vector ?? {};
   const text =
@@ -181,16 +185,20 @@ function extractSnippet(entry: ProtoSearchEntry): string {
   return text.slice(0, 280);
 }
 
-function mapProtoSearchResult(entry: ProtoSearchEntry, fallbackIndex: number): SearchResult {
+function mapCoreSearchResult(
+  entry: CoreSearchEntry,
+  fallbackIndex: number,
+): SearchResult {
   const record = entry?.record ?? {};
   const id =
     (typeof record?.case_id === "string" && record.case_id) ||
     (typeof entry?.case_id === "string" && entry.case_id) ||
-    `proto-result-${fallbackIndex}`;
+    `core-result-${fallbackIndex}`;
 
   const tags = extractTags(entry);
   const occurredAt = normaliseIsoDate(record?.created_at);
-  const confidence = typeof record?.confidence === "number" ? record.confidence : undefined;
+  const confidence =
+    typeof record?.confidence === "number" ? record.confidence : undefined;
 
   return {
     id,
@@ -215,10 +223,17 @@ function buildFacets(results: SearchResult[]) {
     });
   });
 
-  const toFacet = (field: string, label: string, counts: Map<string, number>) => ({
+  const toFacet = (
+    field: string,
+    label: string,
+    counts: Map<string, number>,
+  ) => ({
     field,
     label,
-    options: Array.from(counts.entries()).map(([value, count]) => ({ value, count })),
+    options: Array.from(counts.entries()).map(([value, count]) => ({
+      value,
+      count,
+    })),
   });
 
   const facets = [] as SearchResponse["facets"];
@@ -234,7 +249,9 @@ function buildFacets(results: SearchResult[]) {
 function buildSuggestions(results: SearchResult[]): string[] {
   const topTags = results.flatMap((result) => result.tags).slice(0, 5);
   const unique = Array.from(new Set(topTags));
-  return unique.length ? unique : results.slice(0, 3).map((result) => result.title);
+  return unique.length
+    ? unique
+    : results.slice(0, 3).map((result) => result.title);
 }
 
 function toIsoOrUndefined(value?: string | null): string | undefined {
@@ -248,9 +265,9 @@ function toIsoOrUndefined(value?: string | null): string | undefined {
   return parsed.toISOString();
 }
 
-async function fetchProtoSearch(
+async function fetchCoreSearch(
   config: PlatformClientConfig,
-  request: SearchRequest
+  request: SearchRequest,
 ): Promise<SearchResponse> {
   const payload = searchRequestSchema.parse(request);
   const limit = payload.pageSize ?? 10;
@@ -306,7 +323,10 @@ async function fetchProtoSearch(
   if (payload.savedSearchOwner) {
     body.saved_search_owner = payload.savedSearchOwner;
   }
-  if (Array.isArray(payload.savedSearchTags) && payload.savedSearchTags.length) {
+  if (
+    Array.isArray(payload.savedSearchTags) &&
+    payload.savedSearchTags.length
+  ) {
     body.saved_search_tags = payload.savedSearchTags;
   }
 
@@ -336,26 +356,29 @@ async function fetchProtoSearch(
     }
 
     throw new I4GClientError(
-      `Proto search failed with status ${response.status}`,
+      `Core search failed with status ${response.status}`,
       response.status,
-      errorPayload
+      errorPayload,
     );
   }
 
   const data = (await response.json()) as unknown;
-  const objectPayload = (data && typeof data === "object") ? (data as Record<string, unknown>) : {};
+  const objectPayload =
+    data && typeof data === "object" ? (data as Record<string, unknown>) : {};
 
   const resultsPayload = objectPayload["results"];
   const rawResults = Array.isArray(resultsPayload)
-    ? (resultsPayload as ProtoSearchEntry[])
+    ? (resultsPayload as CoreSearchEntry[])
     : [];
-  const mapped = rawResults.map((entry, index) => mapProtoSearchResult(entry, index));
+  const mapped = rawResults.map((entry, index) =>
+    mapCoreSearchResult(entry, index),
+  );
 
   const total = toNumber(objectPayload["total"], mapped.length);
   const took = toNumber(
     (objectPayload["elapsed_ms"] as number | string | undefined) ??
       (objectPayload["duration_ms"] as number | string | undefined),
-    Math.max(90, mapped.length * 42)
+    Math.max(90, mapped.length * 42),
   );
 
   return {
@@ -384,10 +407,13 @@ export function createPlatformClient(config: PlatformClientConfig): I4GClient {
     ...restClient,
     async searchIntelligence(request) {
       try {
-        const response = await fetchProtoSearch(config, request);
+        const response = await fetchCoreSearch(config, request);
         return response;
       } catch (error) {
-        console.error("Falling back to mock search due to platform backend error", error);
+        console.error(
+          "Falling back to mock search due to platform backend error",
+          error,
+        );
         return mock.searchIntelligence(request);
       }
     },

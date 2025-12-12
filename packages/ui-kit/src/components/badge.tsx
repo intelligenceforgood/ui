@@ -15,13 +15,17 @@ const variantClasses: Record<BadgeVariant, string> = {
   info: "bg-sky-100 text-sky-600",
 };
 
-export function Badge({ className, variant = "default", ...props }: BadgeProps) {
+export function Badge({
+  className,
+  variant = "default",
+  ...props
+}: BadgeProps) {
   return (
     <span
       className={clsx(
         "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium",
         variantClasses[variant],
-        className
+        className,
       )}
       {...props}
     />

@@ -18,7 +18,7 @@ export async function POST(request: Request) {
           error: "Invalid verification request",
           issues: parsed.error.flatten(),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     console.error("Dossier verification API error", error);
     return NextResponse.json(
       { error: "Unable to verify dossier signatures" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

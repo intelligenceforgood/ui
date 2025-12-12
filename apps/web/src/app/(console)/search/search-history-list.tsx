@@ -8,7 +8,9 @@ import { buildSearchHref } from "@/lib/search-links";
 import { normalizeTimeRange, toStringArray } from "@/lib/search/filters";
 import type { SearchHistoryEvent } from "@/types/reviews";
 
-const timeRangeFormatter = new Intl.DateTimeFormat("en", { dateStyle: "medium" });
+const timeRangeFormatter = new Intl.DateTimeFormat("en", {
+  dateStyle: "medium",
+});
 
 function toNonEmptyString(value: unknown): string | undefined {
   if (typeof value !== "string") {
@@ -28,7 +30,7 @@ type HistoryFilterSummary = {
 
 function buildRerunParams(
   params: Record<string, unknown>,
-  descriptor: SearchHistoryEvent["savedSearch"]
+  descriptor: SearchHistoryEvent["savedSearch"],
 ): Record<string, unknown> {
   const payload: Record<string, unknown> = { ...params };
 
@@ -70,7 +72,9 @@ function dedupeStrings(values: string[]): string[] {
   return result;
 }
 
-function formatTimeRangeLabel(range: { start: string; end: string } | null): string | null {
+function formatTimeRangeLabel(
+  range: { start: string; end: string } | null,
+): string | null {
   if (!range) {
     return null;
   }
@@ -86,9 +90,17 @@ function formatTimeRangeLabel(range: { start: string; end: string } | null): str
   }
 }
 
-function summarizeHistoryParams(params: Record<string, unknown> | undefined): HistoryFilterSummary {
+function summarizeHistoryParams(
+  params: Record<string, unknown> | undefined,
+): HistoryFilterSummary {
   if (!params) {
-    return { summary: "", taxonomy: [], datasets: [], entityCount: 0, timeRangeLabel: null };
+    return {
+      summary: "",
+      taxonomy: [],
+      datasets: [],
+      entityCount: 0,
+      timeRangeLabel: null,
+    };
   }
 
   const taxonomy = dedupeStrings([
@@ -103,10 +115,13 @@ function summarizeHistoryParams(params: Record<string, unknown> | undefined): Hi
   const entityEntries = Array.isArray(params.entities) ? params.entities : [];
   const entityCount = entityEntries.filter(
     (entry): entry is Record<string, unknown> =>
-      Boolean(entry) && typeof entry === "object" && typeof (entry as Record<string, unknown>).value === "string"
+      Boolean(entry) &&
+      typeof entry === "object" &&
+      typeof (entry as Record<string, unknown>).value === "string",
   ).length;
   const timeRangeValue = normalizeTimeRange(
-    (params.timeRange as Record<string, unknown>) ?? (params.time_range as Record<string, unknown>)
+    (params.timeRange as Record<string, unknown>) ??
+      (params.time_range as Record<string, unknown>),
   );
   const timeRangeLabel = formatTimeRangeLabel(timeRangeValue);
 
@@ -118,7 +133,9 @@ function summarizeHistoryParams(params: Record<string, unknown> | undefined): Hi
     summaryParts.push(`Datasets: ${datasets.slice(0, 2).join(", ")}`);
   }
   if (entityCount) {
-    summaryParts.push(`${entityCount} entity filter${entityCount === 1 ? "" : "s"}`);
+    summaryParts.push(
+      `${entityCount} entity filter${entityCount === 1 ? "" : "s"}`,
+    );
   }
   if (timeRangeLabel) {
     summaryParts.push(`Time: ${timeRangeLabel}`);
@@ -149,7 +166,10 @@ type SearchHistoryListProps = {
   pageSize?: number;
 };
 
-export function SearchHistoryList({ events: initialEvents, pageSize = 6 }: SearchHistoryListProps) {
+export function SearchHistoryList({
+  events: initialEvents,
+  pageSize = 6,
+}: SearchHistoryListProps) {
   const [events, setEvents] = useState(initialEvents);
   const [requestedLimit, setRequestedLimit] = useState(initialEvents.length);
   const [isLoading, setIsLoading] = useState(false);
@@ -172,11 +192,15 @@ export function SearchHistoryList({ events: initialEvents, pageSize = 6 }: Searc
       const response = await fetch(`/api/reviews/history?limit=${nextLimit}`, {
         cache: "no-store",
       });
-      const payload = (await response.json().catch(() => null)) as
-        | { events?: SearchHistoryEvent[]; error?: string }
-        | null;
+      const payload = (await response.json().catch(() => null)) as {
+        events?: SearchHistoryEvent[];
+        error?: string;
+      } | null;
       if (!response.ok || !payload) {
-        const message = payload && typeof payload.error === "string" ? payload.error : "Unable to load history";
+        const message =
+          payload && typeof payload.error === "string"
+            ? payload.error
+            : "Unable to load history";
         throw new Error(message);
       }
       const nextEvents = Array.isArray(payload.events) ? payload.events : [];
@@ -184,7 +208,10 @@ export function SearchHistoryList({ events: initialEvents, pageSize = 6 }: Searc
       setRequestedLimit(nextEvents.length);
       setHasMore(nextEvents.length >= nextLimit);
     } catch (loadError) {
-      const message = loadError instanceof Error ? loadError.message : "Unable to load history";
+      const message =
+        loadError instanceof Error
+          ? loadError.message
+          : "Unable to load history";
       setErrorMessage(message);
     } finally {
       setIsLoading(false);
@@ -204,27 +231,44 @@ export function SearchHistoryList({ events: initialEvents, pageSize = 6 }: Searc
         <ul className="space-y-3">
           {events.map((event) => {
             const filters = summarizeHistoryParams(event.params);
-            const paramsQuery = typeof event.params?.["query"] === "string" ? (event.params["query"] as string) : undefined;
-            const paramsText = typeof event.params?.["text"] === "string" ? (event.params["text"] as string) : undefined;
+            const paramsQuery =
+              typeof event.params?.["query"] === "string"
+                ? (event.params["query"] as string)
+                : undefined;
+            const paramsText =
+              typeof event.params?.["text"] === "string"
+                ? (event.params["text"] as string)
+                : undefined;
             const queryCandidate = event.query ?? paramsQuery ?? paramsText;
-            const titleSource = typeof queryCandidate === "string" && queryCandidate.trim().length
-              ? queryCandidate.trim()
-              : filters.summary;
+            const titleSource =
+              typeof queryCandidate === "string" && queryCandidate.trim().length
+                ? queryCandidate.trim()
+                : filters.summary;
             const savedSearchName = toNonEmptyString(event.savedSearch?.name);
             const rerunLabel = savedSearchName ?? titleSource ?? undefined;
             const displayTitle = rerunLabel ?? "Untitled search";
             const labelOption = rerunLabel ? { label: rerunLabel } : undefined;
-            const classificationBadge = event.classification ?? filters.taxonomy[0];
-            const rerunParams = buildRerunParams(event.params, event.savedSearch ?? null);
+            const classificationBadge =
+              event.classification ?? filters.taxonomy[0];
+            const rerunParams = buildRerunParams(
+              event.params,
+              event.savedSearch ?? null,
+            );
 
             return (
-              <li key={event.id} className="rounded-2xl border border-slate-100 bg-white/70 p-4">
+              <li
+                key={event.id}
+                className="rounded-2xl border border-slate-100 bg-white/70 p-4"
+              >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{displayTitle}</p>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {displayTitle}
+                    </p>
                     <p className="text-xs text-slate-500">
                       <span className="inline-flex items-center gap-1">
-                        <Clock4 className="h-3.5 w-3.5" /> {formatDate(event.createdAt)}
+                        <Clock4 className="h-3.5 w-3.5" />{" "}
+                        {formatDate(event.createdAt)}
                       </span>
                       {" · "}
                       {event.actor}
@@ -238,22 +282,39 @@ export function SearchHistoryList({ events: initialEvents, pageSize = 6 }: Searc
                   </Link>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
-                  {savedSearchName ? <Badge variant="info">Saved search</Badge> : null}
-                  {classificationBadge ? <Badge variant="default">Tag: {classificationBadge}</Badge> : null}
+                  {savedSearchName ? (
+                    <Badge variant="info">Saved search</Badge>
+                  ) : null}
+                  {classificationBadge ? (
+                    <Badge variant="default">Tag: {classificationBadge}</Badge>
+                  ) : null}
                   {filters.datasets.slice(0, 2).map((dataset) => (
-                    <Badge key={`${event.id}-dataset-${dataset}`} variant="default">
+                    <Badge
+                      key={`${event.id}-dataset-${dataset}`}
+                      variant="default"
+                    >
                       Dataset: {dataset}
                     </Badge>
                   ))}
                   {filters.entityCount ? (
                     <Badge variant="default">
-                      {filters.entityCount} entity filter{filters.entityCount === 1 ? "" : "s"}
+                      {filters.entityCount} entity filter
+                      {filters.entityCount === 1 ? "" : "s"}
                     </Badge>
                   ) : null}
-                  {filters.timeRangeLabel ? <Badge variant="default">Window: {filters.timeRangeLabel}</Badge> : null}
-                  {event.caseId ? <Badge variant="default">Case: {event.caseId}</Badge> : null}
+                  {filters.timeRangeLabel ? (
+                    <Badge variant="default">
+                      Window: {filters.timeRangeLabel}
+                    </Badge>
+                  ) : null}
+                  {event.caseId ? (
+                    <Badge variant="default">Case: {event.caseId}</Badge>
+                  ) : null}
                   {typeof event.resultCount === "number" ? (
-                    <Badge variant="info">{event.resultCount} results · {event.total ?? event.resultCount} total</Badge>
+                    <Badge variant="info">
+                      {event.resultCount} results ·{" "}
+                      {event.total ?? event.resultCount} total
+                    </Badge>
                   ) : null}
                 </div>
               </li>
@@ -272,7 +333,12 @@ export function SearchHistoryList({ events: initialEvents, pageSize = 6 }: Searc
       ) : null}
       {events.length > 0 && hasMore ? (
         <div className="flex justify-center">
-          <Button type="button" variant="secondary" onClick={handleLoadMore} disabled={isLoading}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleLoadMore}
+            disabled={isLoading}
+          >
             {isLoading ? <LoaderIndicator /> : "Load more"}
           </Button>
         </div>

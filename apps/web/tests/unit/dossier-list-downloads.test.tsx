@@ -43,23 +43,35 @@ describe("DossierList downloads", () => {
   it("renders local download links through the API proxy", () => {
     const record = buildRecord();
 
-    render(<DossierList response={{ count: 1, items: [record] }} includeManifest={false} />);
+    render(
+      <DossierList
+        response={{ count: 1, items: [record] }}
+        includeManifest={false}
+      />,
+    );
 
     const pdfLink = screen.getByRole("link", { name: /pdf/i });
     expect(pdfLink).toBeInTheDocument();
     expect(pdfLink.getAttribute("href")).toBe(
-      "/api/dossiers/download?path=%2Fdata%2Freports%2Fdossiers%2Fplan-download-001.pdf"
+      "/api/dossiers/download?path=%2Fdata%2Freports%2Fdossiers%2Fplan-download-001.pdf",
     );
   });
 
   it("renders remote uploads with open links", () => {
     const record = buildRecord();
 
-    render(<DossierList response={{ count: 1, items: [record] }} includeManifest={false} />);
+    render(
+      <DossierList
+        response={{ count: 1, items: [record] }}
+        includeManifest={false}
+      />,
+    );
 
     expect(screen.getByText("Drive PDF")).toBeInTheDocument();
     const openLink = screen.getByRole("link", { name: /open/i });
-    expect(openLink.getAttribute("href")).toBe("https://drive.example.com/plan-download-001.pdf");
+    expect(openLink.getAttribute("href")).toBe(
+      "https://drive.example.com/plan-download-001.pdf",
+    );
     expect(screen.getByText(/SHA256/i)).toBeInTheDocument();
   });
 });

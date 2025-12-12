@@ -1,7 +1,15 @@
-import type { SearchEntityFilter, SearchRequest, SearchTimeRange } from "@i4g/sdk";
+import type {
+  SearchEntityFilter,
+  SearchRequest,
+  SearchTimeRange,
+} from "@i4g/sdk";
 
 const TIME_PRESET_PATTERN = /^\s*(\d+)([dhm])\s*$/i;
-const MATCH_MODES = new Set<SearchEntityFilter["matchMode"]>(["exact", "prefix", "contains"]);
+const MATCH_MODES = new Set<SearchEntityFilter["matchMode"]>([
+  "exact",
+  "prefix",
+  "contains",
+]);
 
 export type SearchPayload = Partial<SearchRequest>;
 
@@ -13,7 +21,9 @@ export function isPlainObject(value: unknown): value is PlainObject {
 
 export function toStringArray(value: unknown): string[] {
   if (Array.isArray(value)) {
-    return value.filter((entry): entry is string => typeof entry === "string" && entry.length > 0);
+    return value.filter(
+      (entry): entry is string => typeof entry === "string" && entry.length > 0,
+    );
   }
   if (typeof value === "string" && value.length > 0) {
     return value
@@ -24,7 +34,9 @@ export function toStringArray(value: unknown): string[] {
   return [];
 }
 
-export function deriveTimeRangeFromPreset(preset?: string | null): SearchTimeRange | undefined {
+export function deriveTimeRangeFromPreset(
+  preset?: string | null,
+): SearchTimeRange | undefined {
   if (!preset) {
     return undefined;
   }
@@ -53,7 +65,10 @@ export function deriveTimeRangeFromPreset(preset?: string | null): SearchTimeRan
     return undefined;
   }
 
-  return { start: start.toISOString(), end: end.toISOString() } satisfies SearchTimeRange;
+  return {
+    start: start.toISOString(),
+    end: end.toISOString(),
+  } satisfies SearchTimeRange;
 }
 
 export function normalizeEntityFilters(value: unknown): SearchEntityFilter[] {
@@ -65,17 +80,22 @@ export function normalizeEntityFilters(value: unknown): SearchEntityFilter[] {
     .filter((entry): entry is PlainObject => isPlainObject(entry))
     .map((entry) => {
       const type = typeof entry.type === "string" ? entry.type.trim() : "";
-      const rawValue = typeof entry.value === "string" ? entry.value.trim() : "";
-      const matchMode = typeof entry.matchMode === "string" && MATCH_MODES.has(entry.matchMode as SearchEntityFilter["matchMode"])
-        ? (entry.matchMode as SearchEntityFilter["matchMode"])
-        : "exact";
+      const rawValue =
+        typeof entry.value === "string" ? entry.value.trim() : "";
+      const matchMode =
+        typeof entry.matchMode === "string" &&
+        MATCH_MODES.has(entry.matchMode as SearchEntityFilter["matchMode"])
+          ? (entry.matchMode as SearchEntityFilter["matchMode"])
+          : "exact";
 
       return { type, value: rawValue, matchMode } satisfies SearchEntityFilter;
     })
     .filter((entry) => entry.type.length > 0 && entry.value.length > 0);
 }
 
-export function parseSearchPayloadParam(raw: string | string[] | undefined): SearchPayload | null {
+export function parseSearchPayloadParam(
+  raw: string | string[] | undefined,
+): SearchPayload | null {
   const value = Array.isArray(raw) ? raw[0] : raw;
   if (typeof value !== "string" || value.trim().length === 0) {
     return null;

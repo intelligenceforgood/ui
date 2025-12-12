@@ -44,18 +44,30 @@ export default function CaseIntakeForm() {
   const [receipt, setReceipt] = useState<IntakeReceipt | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = useCallback((event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = event.target;
-    setForm((current) => ({
-      ...current,
-      [name]: value,
-    }));
-  }, []);
+  const handleChange = useCallback(
+    (
+      event: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >,
+    ) => {
+      const { name, value } = event.target;
+      setForm((current) => ({
+        ...current,
+        [name]: value,
+      }));
+    },
+    [],
+  );
 
-  const handleFilesChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const nextFiles = event.target.files ? Array.from(event.target.files).slice(0, 5) : [];
-    setAttachments(nextFiles);
-  }, []);
+  const handleFilesChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const nextFiles = event.target.files
+        ? Array.from(event.target.files).slice(0, 5)
+        : [];
+      setAttachments(nextFiles);
+    },
+    [],
+  );
 
   const resetForm = useCallback(() => {
     setForm(initialForm);
@@ -99,8 +111,13 @@ export default function CaseIntakeForm() {
         });
 
         if (!response.ok) {
-          const data = await response.json().catch(() => ({ error: "Intake submission failed" }));
-          const message = typeof data.error === "string" ? data.error : "Intake submission failed";
+          const data = await response
+            .json()
+            .catch(() => ({ error: "Intake submission failed" }));
+          const message =
+            typeof data.error === "string"
+              ? data.error
+              : "Intake submission failed";
           setError(message);
           return;
         }
@@ -114,7 +131,7 @@ export default function CaseIntakeForm() {
         setIsSubmitting(false);
       }
     },
-    [attachments, form, resetForm]
+    [attachments, form, resetForm],
   );
 
   return (
@@ -122,7 +139,10 @@ export default function CaseIntakeForm() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1">
-            <label htmlFor="reporterName" className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            <label
+              htmlFor="reporterName"
+              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
+            >
               Reporter name
             </label>
             <Input
@@ -135,7 +155,10 @@ export default function CaseIntakeForm() {
             />
           </div>
           <div className="space-y-1">
-            <label htmlFor="source" className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            <label
+              htmlFor="source"
+              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
+            >
               Source
             </label>
             <select
@@ -155,7 +178,10 @@ export default function CaseIntakeForm() {
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="summary" className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+          <label
+            htmlFor="summary"
+            className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
+          >
             Summary
           </label>
           <Input
@@ -169,7 +195,10 @@ export default function CaseIntakeForm() {
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="details" className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+          <label
+            htmlFor="details"
+            className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
+          >
             Details
           </label>
           <textarea
@@ -186,28 +215,56 @@ export default function CaseIntakeForm() {
 
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-1">
-            <label htmlFor="contactEmail" className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            <label
+              htmlFor="contactEmail"
+              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
+            >
               Contact email
             </label>
-            <Input id="contactEmail" name="contactEmail" value={form.contactEmail} onChange={handleChange} type="email" />
+            <Input
+              id="contactEmail"
+              name="contactEmail"
+              value={form.contactEmail}
+              onChange={handleChange}
+              type="email"
+            />
           </div>
           <div className="space-y-1">
-            <label htmlFor="contactPhone" className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            <label
+              htmlFor="contactPhone"
+              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
+            >
               Contact phone
             </label>
-            <Input id="contactPhone" name="contactPhone" value={form.contactPhone} onChange={handleChange} />
+            <Input
+              id="contactPhone"
+              name="contactPhone"
+              value={form.contactPhone}
+              onChange={handleChange}
+            />
           </div>
           <div className="space-y-1">
-            <label htmlFor="contactHandle" className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            <label
+              htmlFor="contactHandle"
+              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
+            >
               Handle / chat id
             </label>
-            <Input id="contactHandle" name="contactHandle" value={form.contactHandle} onChange={handleChange} />
+            <Input
+              id="contactHandle"
+              name="contactHandle"
+              value={form.contactHandle}
+              onChange={handleChange}
+            />
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-1">
-            <label htmlFor="preferredContact" className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            <label
+              htmlFor="preferredContact"
+              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
+            >
               Preferred contact
             </label>
             <select
@@ -225,16 +282,36 @@ export default function CaseIntakeForm() {
             </select>
           </div>
           <div className="space-y-1">
-            <label htmlFor="incidentDate" className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            <label
+              htmlFor="incidentDate"
+              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
+            >
               Incident date
             </label>
-            <Input id="incidentDate" name="incidentDate" value={form.incidentDate} onChange={handleChange} type="date" />
+            <Input
+              id="incidentDate"
+              name="incidentDate"
+              value={form.incidentDate}
+              onChange={handleChange}
+              type="date"
+            />
           </div>
           <div className="space-y-1">
-            <label htmlFor="lossAmount" className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            <label
+              htmlFor="lossAmount"
+              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
+            >
               Estimated loss (USD)
             </label>
-            <Input id="lossAmount" name="lossAmount" value={form.lossAmount} onChange={handleChange} type="number" min="0" step="0.01" />
+            <Input
+              id="lossAmount"
+              name="lossAmount"
+              value={form.lossAmount}
+              onChange={handleChange}
+              type="number"
+              min="0"
+              step="0.01"
+            />
           </div>
         </div>
 
@@ -276,17 +353,33 @@ export default function CaseIntakeForm() {
           <Card className="border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4" />
-              Intake {receipt.intake_id} queued. {receipt.job_id ? `Processing job ${receipt.job_id}.` : ""}
+              Intake {receipt.intake_id} queued.{" "}
+              {receipt.job_id ? `Processing job ${receipt.job_id}.` : ""}
             </div>
           </Card>
         ) : null}
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" disabled={isSubmitting || !form.reporterName || !form.summary || !form.details}>
-            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          <Button
+            type="submit"
+            disabled={
+              isSubmitting ||
+              !form.reporterName ||
+              !form.summary ||
+              !form.details
+            }
+          >
+            {isSubmitting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
             {isSubmitting ? "Submitting" : "Submit"}
           </Button>
-          <Button type="button" variant="secondary" onClick={resetForm} disabled={isSubmitting}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={resetForm}
+            disabled={isSubmitting}
+          >
             Clear form
           </Button>
         </div>

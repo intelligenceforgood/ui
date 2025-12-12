@@ -23,6 +23,7 @@ This guide walks through the current analyst console experience. Screenshots are
 - **Quick actions:** Deep links into Search, Cases, and Taxonomy workflows.
 
 ### Common Tasks
+
 - Acknowledge new alerts and review their context.
 - Scan reminders to keep workstreams on schedule.
 - Use Quick Actions to jump back into your primary queue.
@@ -37,6 +38,7 @@ This guide walks through the current analyst console experience. Screenshots are
 - **Suggestions & stats:** Display total hits, query latency, and recommended searches.
 
 ### Common Tasks
+
 - Investigate a lead by querying a person, organisation, or location.
 - Narrow results to a specific source (e.g., customs filings) or taxonomy label.
 - Review tags to identify related cases or potential escalation paths.
@@ -50,6 +52,7 @@ This guide walks through the current analyst console experience. Screenshots are
 - **Queues panel:** Overview of workload distribution across queues.
 
 ### Common Tasks
+
 - Identify priorities at risk using the “Cases at risk” metric on the Dashboard, then drill into details here.
 - Reassign ownership or escalate cases that are blocked (future enhancement).
 - Export status snapshots for cross-team coordination (button placeholder currently).
@@ -63,6 +66,7 @@ This guide walks through the current analyst console experience. Screenshots are
 - **Actions:** “Add taxonomy node” and “Propose change” buttons (wiring pending) guide change management.
 
 ### Common Tasks
+
 - Review category definitions prior to tagging new cases.
 - Identify high-volume areas needing subcategory refinement.
 - Coordinate with the steward team for adjustments.
@@ -78,6 +82,7 @@ This guide walks through the current analyst console experience. Screenshots are
 - **Geography coverage:** Regional distribution of detected incidents (horizontal bar chart).
 
 ### Common Tasks
+
 - Monitor KPIs to ensure the programme stays within SLAs.
 - Share weekly trend reports with leadership or partners.
 - Identify regions or pipeline stages requiring additional resourcing.

@@ -9,7 +9,8 @@ import { DossierList } from "./dossier-list";
 
 export const metadata: Metadata = {
   title: "Evidence Dossiers",
-  description: "Verify dossier manifests and signatures before sharing with partners.",
+  description:
+    "Verify dossier manifests and signatures before sharing with partners.",
 };
 
 const statusOptions = ["completed", "pending", "leased", "failed", "all"];
@@ -28,16 +29,23 @@ type Filters = {
 
 function parseFilters(searchParams: SearchParamsRecord | undefined): Filters {
   const params = searchParams ?? {};
-  const rawStatus = typeof params.status === "string" ? params.status : "completed";
+  const rawStatus =
+    typeof params.status === "string" ? params.status : "completed";
   const status = statusOptions.includes(rawStatus) ? rawStatus : "completed";
-  const rawLimit = typeof params.limit === "string" ? Number(params.limit) : Number.NaN;
-  const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(Math.trunc(rawLimit), 5), 200) : 20;
-  const includeManifest = typeof params.manifest === "string" ? params.manifest === "1" : false;
+  const rawLimit =
+    typeof params.limit === "string" ? Number(params.limit) : Number.NaN;
+  const limit = Number.isFinite(rawLimit)
+    ? Math.min(Math.max(Math.trunc(rawLimit), 5), 200)
+    : 20;
+  const includeManifest =
+    typeof params.manifest === "string" ? params.manifest === "1" : false;
 
   return { status, limit, includeManifest };
 }
 
-export default async function EvidenceDossiersPage({ searchParams }: DossierPageProps) {
+export default async function EvidenceDossiersPage({
+  searchParams,
+}: DossierPageProps) {
   const resolvedParams = searchParams ? await searchParams : undefined;
   const filters = parseFilters(resolvedParams);
   const client = getI4GClient();
@@ -54,10 +62,13 @@ export default async function EvidenceDossiersPage({ searchParams }: DossierPage
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">
             Evidence readiness
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-slate-900">Evidence dossier verification</h1>
+          <h1 className="mt-2 text-3xl font-semibold text-slate-900">
+            Evidence dossier verification
+          </h1>
           <p className="mt-3 max-w-3xl text-sm text-slate-500">
-            Inspect bundled cases, confirm manifest signatures, and share law-enforcement-ready dossiers with clear
-            provenance. Toggle manifest payloads when you need the full JSON inline.
+            Inspect bundled cases, confirm manifest signatures, and share
+            law-enforcement-ready dossiers with clear provenance. Toggle
+            manifest payloads when you need the full JSON inline.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -78,18 +89,29 @@ export default async function EvidenceDossiersPage({ searchParams }: DossierPage
       <Card className="border-0 bg-gradient-to-r from-slate-900 to-indigo-900 p-6 text-white shadow-xl dark:from-slate-900 dark:to-slate-800">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-white/60">Filters</p>
-            <h2 className="mt-2 text-2xl font-semibold">Focus the verification pass</h2>
+            <p className="text-xs uppercase tracking-[0.4em] text-white/60">
+              Filters
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold">
+              Focus the verification pass
+            </h2>
             <p className="mt-2 max-w-2xl text-sm text-white/80">
-              Status filters limit the queue window. Pulling manifest payloads streams the entire JSON into the console,
-              which is useful for LEA disclosures but slightly slower.
+              Status filters limit the queue window. Pulling manifest payloads
+              streams the entire JSON into the console, which is useful for LEA
+              disclosures but slightly slower.
             </p>
           </div>
-          <Badge variant="default" className="bg-white/10 text-white shadow-none">
+          <Badge
+            variant="default"
+            className="bg-white/10 text-white shadow-none"
+          >
             {response.count} plan{response.count === 1 ? "" : "s"} loaded
           </Badge>
         </div>
-        <form className="mt-6 grid gap-4 lg:grid-cols-[2fr_1fr_1fr_1fr]" method="get">
+        <form
+          className="mt-6 grid gap-4 lg:grid-cols-[2fr_1fr_1fr_1fr]"
+          method="get"
+        >
           <label className="flex flex-col gap-2 text-sm font-semibold text-white">
             Queue status
             <div className="rounded-2xl bg-white/10 p-0.5">
@@ -127,11 +149,16 @@ export default async function EvidenceDossiersPage({ searchParams }: DossierPage
                 defaultChecked={filters.includeManifest}
                 className="h-4 w-4 rounded border-white/40 text-teal-400 focus:ring-teal-200"
               />
-              <span className="text-sm font-medium text-white/90">Include JSON</span>
+              <span className="text-sm font-medium text-white/90">
+                Include JSON
+              </span>
             </div>
           </label>
           <div className="flex flex-col gap-3 pt-6 lg:pt-0">
-            <Button type="submit" className="w-full bg-white text-slate-900 hover:bg-white">
+            <Button
+              type="submit"
+              className="w-full bg-white text-slate-900 hover:bg-white"
+            >
               Refresh dossiers
             </Button>
             <Link
@@ -144,7 +171,10 @@ export default async function EvidenceDossiersPage({ searchParams }: DossierPage
         </form>
       </Card>
 
-      <DossierList response={response} includeManifest={filters.includeManifest} />
+      <DossierList
+        response={response}
+        includeManifest={filters.includeManifest}
+      />
     </div>
   );
 }

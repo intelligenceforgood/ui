@@ -24,7 +24,9 @@ type SavedSearchesListProps = {
   items: SavedSearchRecord[];
 };
 
-function buildSavedSearchRunParams(item: SavedSearchRecord): Record<string, unknown> {
+function buildSavedSearchRunParams(
+  item: SavedSearchRecord,
+): Record<string, unknown> {
   const payload: Record<string, unknown> = { ...item.params };
 
   const idCandidate =
@@ -56,7 +58,8 @@ function buildSavedSearchRunParams(item: SavedSearchRecord): Record<string, unkn
   }
 
   const existingTags = toStringArray(
-    (payload["saved_search_tags"] as unknown) ?? (payload["savedSearchTags"] as unknown)
+    (payload["saved_search_tags"] as unknown) ??
+      (payload["savedSearchTags"] as unknown),
   );
   const tags = existingTags.length ? existingTags : item.tags;
   if (tags.length) {
@@ -66,7 +69,9 @@ function buildSavedSearchRunParams(item: SavedSearchRecord): Record<string, unkn
   return payload;
 }
 
-export function SavedSearchesList({ items: initialItems }: SavedSearchesListProps) {
+export function SavedSearchesList({
+  items: initialItems,
+}: SavedSearchesListProps) {
   const [items, setItems] = useState(initialItems);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -88,7 +93,10 @@ export function SavedSearchesList({ items: initialItems }: SavedSearchesListProp
         });
         if (!response.ok) {
           const details = await response.json().catch(() => ({}));
-          const message = typeof details.error === "string" ? details.error : "Unable to update saved search";
+          const message =
+            typeof details.error === "string"
+              ? details.error
+              : "Unable to update saved search";
           throw new Error(message);
         }
         setItems((current) =>
@@ -98,25 +106,34 @@ export function SavedSearchesList({ items: initialItems }: SavedSearchesListProp
                   ...item,
                   favorite: !item.favorite,
                 }
-              : item
-          )
+              : item,
+          ),
         );
-        setFeedback(!record.favorite ? `Marked "${record.name}" as favorite.` : `Removed "${record.name}" from favorites.`);
+        setFeedback(
+          !record.favorite
+            ? `Marked "${record.name}" as favorite.`
+            : `Removed "${record.name}" from favorites.`,
+        );
         router.refresh();
       } catch (updateError) {
-        const message = updateError instanceof Error ? updateError.message : "Unable to update saved search";
+        const message =
+          updateError instanceof Error
+            ? updateError.message
+            : "Unable to update saved search";
         setError(message);
       } finally {
         setPendingId(null);
       }
     },
-    [router]
+    [router],
   );
 
   const handleDelete = useCallback(
     async (record: SavedSearchRecord) => {
       if (typeof window !== "undefined") {
-        const confirmed = window.confirm(`Delete saved search "${record.name}"?`);
+        const confirmed = window.confirm(
+          `Delete saved search "${record.name}"?`,
+        );
         if (!confirmed) {
           return;
         }
@@ -130,20 +147,26 @@ export function SavedSearchesList({ items: initialItems }: SavedSearchesListProp
         });
         if (!response.ok) {
           const details = await response.json().catch(() => ({}));
-          const message = typeof details.error === "string" ? details.error : "Unable to delete saved search";
+          const message =
+            typeof details.error === "string"
+              ? details.error
+              : "Unable to delete saved search";
           throw new Error(message);
         }
         setItems((current) => current.filter((item) => item.id !== record.id));
         setFeedback(`Deleted "${record.name}"`);
         router.refresh();
       } catch (deleteError) {
-        const message = deleteError instanceof Error ? deleteError.message : "Unable to delete saved search";
+        const message =
+          deleteError instanceof Error
+            ? deleteError.message
+            : "Unable to delete saved search";
         setError(message);
       } finally {
         setPendingId(null);
       }
     },
-    [router]
+    [router],
   );
 
   return (
@@ -155,19 +178,30 @@ export function SavedSearchesList({ items: initialItems }: SavedSearchesListProp
         <Badge variant="default">{items.length} available</Badge>
       </div>
       {feedback ? (
-        <Card className="border-teal-200 bg-teal-50 text-xs text-teal-700">{feedback}</Card>
+        <Card className="border-teal-200 bg-teal-50 text-xs text-teal-700">
+          {feedback}
+        </Card>
       ) : null}
       {error ? (
-        <Card className="border-rose-200 bg-rose-50 text-xs text-rose-600">{error}</Card>
+        <Card className="border-rose-200 bg-rose-50 text-xs text-rose-600">
+          {error}
+        </Card>
       ) : null}
       {items.length ? (
         <ul className="space-y-3">
           {items.map((item) => (
-            <li key={item.id} className="rounded-2xl border border-slate-100 bg-white/70 p-4">
+            <li
+              key={item.id}
+              className="rounded-2xl border border-slate-100 bg-white/70 p-4"
+            >
               <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">{item.name}</p>
-                  <p className="text-xs text-slate-500">{item.owner ?? "shared"} · {formatDate(item.createdAt)}</p>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {item.name}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {item.owner ?? "shared"} · {formatDate(item.createdAt)}
+                  </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -176,7 +210,11 @@ export function SavedSearchesList({ items: initialItems }: SavedSearchesListProp
                     onClick={() => handleFavoriteToggle(item)}
                     className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600 transition hover:border-teal-200 hover:text-teal-600 disabled:opacity-60"
                   >
-                    {item.favorite ? <Star className="h-3 w-3" /> : <StarOff className="h-3 w-3" />}
+                    {item.favorite ? (
+                      <Star className="h-3 w-3" />
+                    ) : (
+                      <StarOff className="h-3 w-3" />
+                    )}
                     {item.favorite ? "Unfavorite" : "Favorite"}
                   </button>
                   <button
@@ -188,7 +226,9 @@ export function SavedSearchesList({ items: initialItems }: SavedSearchesListProp
                     <Trash2 className="h-3 w-3" /> Delete
                   </button>
                   <Link
-                    href={buildSearchHref(buildSavedSearchRunParams(item), { label: item.name })}
+                    href={buildSearchHref(buildSavedSearchRunParams(item), {
+                      label: item.name,
+                    })}
                     className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-600 transition hover:text-teal-700"
                   >
                     Run search
@@ -209,7 +249,8 @@ export function SavedSearchesList({ items: initialItems }: SavedSearchesListProp
         </ul>
       ) : (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-4 text-sm text-slate-500">
-          No saved searches yet. Build a query and use the FastAPI endpoint to store presets.
+          No saved searches yet. Build a query and use the FastAPI endpoint to
+          store presets.
         </div>
       )}
     </Card>

@@ -49,7 +49,11 @@ const mockSchema: HybridSearchSchema = {
 describe("SearchExperience", () => {
   beforeAll(async () => {
     const client = createMockClient();
-    initialResults = await client.searchIntelligence({ query: "", page: 1, pageSize: 10 });
+    initialResults = await client.searchIntelligence({
+      query: "",
+      page: 1,
+      pageSize: 10,
+    });
   });
 
   beforeEach(() => {
@@ -67,14 +71,18 @@ describe("SearchExperience", () => {
   });
 
   it("renders initial search results", () => {
-    render(<SearchExperience initialResults={initialResults} schema={mockSchema} />);
+    render(
+      <SearchExperience initialResults={initialResults} schema={mockSchema} />,
+    );
 
     const heading = screen.getByText(/shipping manifest links group-7/i);
     expect(heading).toBeInTheDocument();
   });
 
   it("submits a new query", async () => {
-    render(<SearchExperience initialResults={initialResults} schema={mockSchema} />);
+    render(
+      <SearchExperience initialResults={initialResults} schema={mockSchema} />,
+    );
 
     const input = screen.getByPlaceholderText(/search by entity/i);
     fireEvent.change(input, { target: { value: "group-7" } });
@@ -90,7 +98,9 @@ describe("SearchExperience", () => {
   });
 
   it("toggles source facet filters", async () => {
-    render(<SearchExperience initialResults={initialResults} schema={mockSchema} />);
+    render(
+      <SearchExperience initialResults={initialResults} schema={mockSchema} />,
+    );
 
     const sourceFacetButton = screen.getByRole("button", { name: /customs/i });
     fireEvent.click(sourceFacetButton);
@@ -103,9 +113,13 @@ describe("SearchExperience", () => {
   });
 
   it("applies dataset filters from schema chips", async () => {
-    render(<SearchExperience initialResults={initialResults} schema={mockSchema} />);
+    render(
+      <SearchExperience initialResults={initialResults} schema={mockSchema} />,
+    );
 
-    const datasetButton = screen.getByRole("button", { name: /retrieval_poc_dev/i });
+    const datasetButton = screen.getByRole("button", {
+      name: /retrieval_poc_dev/i,
+    });
     fireEvent.click(datasetButton);
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
@@ -116,19 +130,27 @@ describe("SearchExperience", () => {
   });
 
   it("prefills entity filter inputs from schema examples", () => {
-    render(<SearchExperience initialResults={initialResults} schema={mockSchema} />);
+    render(
+      <SearchExperience initialResults={initialResults} schema={mockSchema} />,
+    );
 
-    const addEntityButton = screen.getByRole("button", { name: /add entity filter/i });
+    const addEntityButton = screen.getByRole("button", {
+      name: /add entity filter/i,
+    });
     fireEvent.click(addEntityButton);
 
-    const exampleChip = screen.getByRole("button", { name: entityExampleValue });
+    const exampleChip = screen.getByRole("button", {
+      name: entityExampleValue,
+    });
     fireEvent.click(exampleChip);
 
     expect(screen.getByDisplayValue(entityExampleValue)).toBeInTheDocument();
   });
 
   it("updates query and filters when initial props change", async () => {
-    const { rerender } = render(<SearchExperience initialResults={initialResults} schema={mockSchema} />);
+    const { rerender } = render(
+      <SearchExperience initialResults={initialResults} schema={mockSchema} />,
+    );
 
     const updatedResults: SearchResponse = {
       ...initialResults,
@@ -150,10 +172,12 @@ describe("SearchExperience", () => {
           entities: [],
         }}
         schema={mockSchema}
-      />
+      />,
     );
 
-    await waitFor(() => expect(screen.getByDisplayValue("romance")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByDisplayValue("romance")).toBeInTheDocument(),
+    );
     expect(screen.getByText(/Tag: romance_scam/i)).toBeInTheDocument();
   });
 
@@ -168,7 +192,7 @@ describe("SearchExperience", () => {
           owner: "analyst@example.com",
           tags: ["priority"],
         }}
-      />
+      />,
     );
 
     const submit = screen.getByRole("button", { name: /^search$/i });
@@ -184,7 +208,9 @@ describe("SearchExperience", () => {
 
     fetchMock.mockClear();
 
-    const datasetButton = screen.getByRole("button", { name: /retrieval_poc_dev/i });
+    const datasetButton = screen.getByRole("button", {
+      name: /retrieval_poc_dev/i,
+    });
     fireEvent.click(datasetButton);
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));

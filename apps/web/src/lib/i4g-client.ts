@@ -20,7 +20,11 @@ function getMockClient(): I4GClient {
 function withMockFallback(client: I4GClient): I4GClient {
   const mock = getMockClient();
 
-  async function withFallback<T>(label: string, exec: () => Promise<T>, fallback: () => Promise<T>) {
+  async function withFallback<T>(
+    label: string,
+    exec: () => Promise<T>,
+    fallback: () => Promise<T>,
+  ) {
     try {
       return await exec();
     } catch (error) {
@@ -31,34 +35,52 @@ function withMockFallback(client: I4GClient): I4GClient {
 
   return {
     async getDashboardOverview() {
-      return withFallback("dashboard overview", () => client.getDashboardOverview(), () =>
-        mock.getDashboardOverview()
+      return withFallback(
+        "dashboard overview",
+        () => client.getDashboardOverview(),
+        () => mock.getDashboardOverview(),
       );
     },
     async searchIntelligence(request: SearchRequest) {
-      return withFallback("search results", () => client.searchIntelligence(request), () =>
-        mock.searchIntelligence(request)
+      return withFallback(
+        "search results",
+        () => client.searchIntelligence(request),
+        () => mock.searchIntelligence(request),
       );
     },
     async listCases() {
-      return withFallback("case list", () => client.listCases(), () => mock.listCases());
+      return withFallback(
+        "case list",
+        () => client.listCases(),
+        () => mock.listCases(),
+      );
     },
     async getTaxonomy() {
-      return withFallback("taxonomy", () => client.getTaxonomy(), () => mock.getTaxonomy());
+      return withFallback(
+        "taxonomy",
+        () => client.getTaxonomy(),
+        () => mock.getTaxonomy(),
+      );
     },
     async getAnalyticsOverview() {
-      return withFallback("analytics overview", () => client.getAnalyticsOverview(), () =>
-        mock.getAnalyticsOverview()
+      return withFallback(
+        "analytics overview",
+        () => client.getAnalyticsOverview(),
+        () => mock.getAnalyticsOverview(),
       );
     },
     async listDossiers(options?: DossierListOptions) {
-      return withFallback("dossier list", () => client.listDossiers(options), () =>
-        mock.listDossiers(options)
+      return withFallback(
+        "dossier list",
+        () => client.listDossiers(options),
+        () => mock.listDossiers(options),
       );
     },
     async verifyDossier(planId) {
-      return withFallback("dossier verification", () => client.verifyDossier(planId), () =>
-        mock.verifyDossier(planId)
+      return withFallback(
+        "dossier verification",
+        () => client.verifyDossier(planId),
+        () => mock.verifyDossier(planId),
       );
     },
   } satisfies I4GClient;
@@ -86,18 +108,17 @@ function resolveClient(): I4GClient {
     return cachedClient;
   }
 
-  let resolvedClient: I4GClient;
-  if (process.env.I4G_API_KIND === "proto") {
-    resolvedClient = createPlatformClient({
-      baseUrl,
-      apiKey: process.env.I4G_API_KEY,
-    });
-  } else {
-    resolvedClient = createClient({
-      baseUrl,
-      apiKey: process.env.I4G_API_KEY,
-    });
-  }
+  const useCoreApi = process.env.I4G_API_KIND === "core";
+
+  const resolvedClient: I4GClient = useCoreApi
+    ? createPlatformClient({
+        baseUrl,
+        apiKey: process.env.I4G_API_KEY,
+      })
+    : createClient({
+        baseUrl,
+        apiKey: process.env.I4G_API_KEY,
+      });
 
   cachedClient = withMockFallback(resolvedClient);
   return cachedClient;

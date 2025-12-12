@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 
 function resolveApiBase() {
-  return process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null;
+  return (
+    process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null
+  );
 }
 
 function resolveApiKey() {
@@ -30,7 +32,7 @@ export async function POST(request: Request) {
           job: null,
           mocked: true,
         },
-        { status: 201 }
+        { status: 201 },
       );
     }
 
@@ -40,7 +42,11 @@ export async function POST(request: Request) {
     const files = incomingForm.getAll("files");
     files.forEach((file, index) => {
       if (file instanceof File) {
-        outboundForm.append("files", file, file.name || `attachment-${index + 1}`);
+        outboundForm.append(
+          "files",
+          file,
+          file.name || `attachment-${index + 1}`,
+        );
       }
     });
 
@@ -51,13 +57,15 @@ export async function POST(request: Request) {
     });
 
     if (!response.ok) {
-      const errorPayload = await response.json().catch(() => ({ message: "Unknown error" }));
+      const errorPayload = await response
+        .json()
+        .catch(() => ({ message: "Unknown error" }));
       return NextResponse.json(
         {
           error: "Intake submission failed",
           details: errorPayload,
         },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -65,6 +73,9 @@ export async function POST(request: Request) {
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
     console.error("Intake API proxy error", error);
-    return NextResponse.json({ error: "Unable to submit intake" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Unable to submit intake" },
+      { status: 500 },
+    );
   }
 }

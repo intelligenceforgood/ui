@@ -58,7 +58,8 @@ export default async function CasesPage() {
             Coordinate investigations and follow-ups
           </h1>
           <p className="mt-2 max-w-3xl text-sm text-slate-500">
-            Monitor workload across queues, resolve blockers, and keep priority cases moving with clear ownership.
+            Monitor workload across queues, resolve blockers, and keep priority
+            cases moving with clear ownership.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -80,7 +81,9 @@ export default async function CasesPage() {
             <Briefcase className="h-9 w-9 rounded-2xl bg-teal-50 p-2 text-teal-600" />
             <div>
               <p className="text-sm text-slate-500">Active cases</p>
-              <p className="text-2xl font-semibold text-slate-900">{summary.active}</p>
+              <p className="text-2xl font-semibold text-slate-900">
+                {summary.active}
+              </p>
             </div>
           </div>
         </Card>
@@ -89,7 +92,9 @@ export default async function CasesPage() {
             <ShieldAlert className="h-9 w-9 rounded-2xl bg-rose-50 p-2 text-rose-500" />
             <div>
               <p className="text-sm text-slate-500">Escalations</p>
-              <p className="text-2xl font-semibold text-slate-900">{summary.escalations}</p>
+              <p className="text-2xl font-semibold text-slate-900">
+                {summary.escalations}
+              </p>
             </div>
           </div>
         </Card>
@@ -98,7 +103,9 @@ export default async function CasesPage() {
             <Gauge className="h-9 w-9 rounded-2xl bg-amber-50 p-2 text-amber-500" />
             <div>
               <p className="text-sm text-slate-500">Due today</p>
-              <p className="text-2xl font-semibold text-slate-900">{summary.dueToday}</p>
+              <p className="text-2xl font-semibold text-slate-900">
+                {summary.dueToday}
+              </p>
             </div>
           </div>
         </Card>
@@ -107,7 +114,9 @@ export default async function CasesPage() {
             <Users className="h-9 w-9 rounded-2xl bg-sky-50 p-2 text-sky-500" />
             <div>
               <p className="text-sm text-slate-500">Pending review</p>
-              <p className="text-2xl font-semibold text-slate-900">{summary.pendingReview}</p>
+              <p className="text-2xl font-semibold text-slate-900">
+                {summary.pendingReview}
+              </p>
             </div>
           </div>
         </Card>
@@ -121,22 +130,32 @@ export default async function CasesPage() {
           </div>
           <div className="divide-y divide-slate-100">
             {cases.map((caseItem) => (
-              <div key={caseItem.id} className="flex flex-col gap-4 px-6 py-4 md:flex-row md:items-center md:justify-between">
+              <div
+                key={caseItem.id}
+                className="flex flex-col gap-4 px-6 py-4 md:flex-row md:items-center md:justify-between"
+              >
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                    <span className={`rounded-full px-3 py-1 ${priorityStyles[caseItem.priority]}`}>
+                    <span
+                      className={`rounded-full px-3 py-1 ${priorityStyles[caseItem.priority]}`}
+                    >
                       Priority: {caseItem.priority}
                     </span>
-                    <span className={`rounded-full px-3 py-1 ${statusStyles[caseItem.status]}`}>
+                    <span
+                      className={`rounded-full px-3 py-1 ${statusStyles[caseItem.status]}`}
+                    >
                       {caseItem.status.replace("-", " ")}
                     </span>
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-500">
                       Queue: {caseItem.queue}
                     </span>
                   </div>
-                  <h3 className="text-base font-semibold text-slate-900">{caseItem.title}</h3>
+                  <h3 className="text-base font-semibold text-slate-900">
+                    {caseItem.title}
+                  </h3>
                   <p className="text-xs text-slate-500">
-                    Owner {caseItem.assignee} · Updated {formatDate(caseItem.updatedAt)}
+                    Owner {caseItem.assignee} · Updated{" "}
+                    {formatDate(caseItem.updatedAt)}
                   </p>
                   <div className="flex flex-wrap gap-2 text-xs text-slate-500">
                     {caseItem.tags.map((tag) => (
@@ -181,12 +200,19 @@ export default async function CasesPage() {
           </div>
           <div className="space-y-4">
             {queues.map((queue) => (
-              <div key={queue.id} className="rounded-xl border border-slate-100 bg-white/70 p-4">
+              <div
+                key={queue.id}
+                className="rounded-xl border border-slate-100 bg-white/70 p-4"
+              >
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-900">{queue.name}</p>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {queue.name}
+                  </p>
                   <Badge variant="info">{queue.count} cases</Badge>
                 </div>
-                <p className="mt-2 text-xs text-slate-500">{queue.description}</p>
+                <p className="mt-2 text-xs text-slate-500">
+                  {queue.description}
+                </p>
                 <div className="mt-3 flex items-center gap-2 text-xs text-slate-400">
                   <Tags className="h-3.5 w-3.5" />
                   Primary tags

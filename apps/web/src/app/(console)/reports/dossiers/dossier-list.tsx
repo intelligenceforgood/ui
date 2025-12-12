@@ -56,7 +56,10 @@ type DossierListProps = {
   includeManifest: boolean;
 };
 
-const statusVariantMap: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
+const statusVariantMap: Record<
+  string,
+  "default" | "success" | "warning" | "danger" | "info"
+> = {
   completed: "success",
   pending: "warning",
   leased: "info",
@@ -88,7 +91,9 @@ function formatCurrency(value?: unknown) {
   }).format(value);
 }
 
-function normalizePayload(payload: DossierRecord["payload"]): Record<string, unknown> {
+function normalizePayload(
+  payload: DossierRecord["payload"],
+): Record<string, unknown> {
   if (payload && typeof payload === "object") {
     return payload as Record<string, unknown>;
   }
@@ -158,18 +163,29 @@ function toHex(buffer: ArrayBuffer) {
     .join("");
 }
 
-function normalizeSignatureArtifacts(manifest: Record<string, unknown> | null | undefined) {
+function normalizeSignatureArtifacts(
+  manifest: Record<string, unknown> | null | undefined,
+) {
   if (!manifest) {
-    return [] as Array<{ label: string; path: string | null; expectedHash: string | null }>;
+    return [] as Array<{
+      label: string;
+      path: string | null;
+      expectedHash: string | null;
+    }>;
   }
   const artifactsRaw = manifest["artifacts"] as unknown;
   if (!Array.isArray(artifactsRaw)) {
-    return [] as Array<{ label: string; path: string | null; expectedHash: string | null }>;
+    return [] as Array<{
+      label: string;
+      path: string | null;
+      expectedHash: string | null;
+    }>;
   }
   return (artifactsRaw as Record<string, unknown>[]).map((entry) => ({
     label: String(entry.label ?? entry.path ?? "Artifact"),
     path: (entry.path as string) ?? null,
-    expectedHash: (entry.hash as string) ?? (entry.expected_hash as string) ?? null,
+    expectedHash:
+      (entry.hash as string) ?? (entry.expected_hash as string) ?? null,
   }));
 }
 
@@ -197,8 +213,12 @@ function extractCaseIds(record: DossierRecord): string[] {
 function StatsRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-slate-100/60 bg-white/70 px-4 py-3 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200">
-      <p className="text-[0.65rem] uppercase tracking-[0.35em] text-slate-400 dark:text-slate-500">{label}</p>
-      <p className="mt-2 text-base font-semibold text-slate-900 dark:text-white">{value}</p>
+      <p className="text-[0.65rem] uppercase tracking-[0.35em] text-slate-400 dark:text-slate-500">
+        {label}
+      </p>
+      <p className="mt-2 text-base font-semibold text-slate-900 dark:text-white">
+        {value}
+      </p>
     </div>
   );
 }
@@ -209,7 +229,9 @@ function ManifestPreview({ data }: { data: Record<string, unknown> | null }) {
   }
   return (
     <details className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-200">
-      <summary className="cursor-pointer text-sm font-semibold text-slate-700 dark:text-white">Manifest JSON</summary>
+      <summary className="cursor-pointer text-sm font-semibold text-slate-700 dark:text-white">
+        Manifest JSON
+      </summary>
       <pre className="mt-3 max-h-64 overflow-auto rounded-xl bg-slate-900/90 p-4 text-xs text-white">
         {JSON.stringify(data, null, 2)}
       </pre>
@@ -233,7 +255,8 @@ function SignaturePreview({ data }: { data: Record<string, unknown> | null }) {
   return (
     <details className="rounded-2xl border border-slate-100 bg-white/80 p-4 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200">
       <summary className="cursor-pointer text-sm font-semibold text-slate-800 dark:text-white">
-        Signature manifest ({artifacts.length} artifact{artifacts.length === 1 ? "" : "s"})
+        Signature manifest ({artifacts.length} artifact
+        {artifacts.length === 1 ? "" : "s"})
       </summary>
       <div className="mt-4 space-y-3">
         {artifacts.map((artifact) => (
@@ -241,15 +264,21 @@ function SignaturePreview({ data }: { data: Record<string, unknown> | null }) {
             key={String(artifact.label ?? artifact.path ?? Math.random())}
             className="rounded-2xl border border-slate-100/70 bg-slate-50/80 p-4 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-950/40"
           >
-            <p className="text-sm font-semibold text-slate-900 dark:text-white">{String(artifact.label ?? "Artifact")}</p>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">
+              {String(artifact.label ?? "Artifact")}
+            </p>
             <div className="mt-1 grid gap-2 md:grid-cols-2">
               <p className="flex items-center gap-2">
                 <Hash className="h-3.5 w-3.5 text-slate-400" />
-                <span className="truncate text-xs text-slate-500">{String(artifact.hash ?? "hash unavailable")}</span>
+                <span className="truncate text-xs text-slate-500">
+                  {String(artifact.hash ?? "hash unavailable")}
+                </span>
               </p>
               <p className="flex items-center gap-2">
                 <DownloadCloud className="h-3.5 w-3.5 text-slate-400" />
-                <span className="truncate text-xs text-slate-500">{String(artifact.path ?? "path unavailable")}</span>
+                <span className="truncate text-xs text-slate-500">
+                  {String(artifact.path ?? "path unavailable")}
+                </span>
               </p>
             </div>
           </div>
@@ -281,20 +310,28 @@ function DownloadChip({ label, path }: { label: string; path: string | null }) {
     >
       <DownloadCloud className="h-3.5 w-3.5" />
       {label}
-      <span className="text-[0.7rem] font-normal text-slate-500 dark:text-teal-100/70">{preview}</span>
+      <span className="text-[0.7rem] font-normal text-slate-500 dark:text-teal-100/70">
+        {preview}
+      </span>
     </a>
   );
 }
 
 function RemoteDownloadRow({ entry }: { entry: DossierRemoteDownload }) {
   const hasLink = isHttpUrl(entry.remoteRef);
-  const preview = entry.remoteRef ? formatPathPreview(entry.remoteRef) : "Remote reference unavailable";
+  const preview = entry.remoteRef
+    ? formatPathPreview(entry.remoteRef)
+    : "Remote reference unavailable";
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 bg-white/80 px-3 py-2 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
       <div>
-        <p className="text-sm font-semibold text-slate-900 dark:text-white">{entry.label}</p>
-        <p className="text-[0.7rem] text-slate-500 dark:text-teal-100/70">{preview}</p>
+        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+          {entry.label}
+        </p>
+        <p className="text-[0.7rem] text-slate-500 dark:text-teal-100/70">
+          {preview}
+        </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {hasLink && (
@@ -309,7 +346,8 @@ function RemoteDownloadRow({ entry }: { entry: DossierRemoteDownload }) {
         )}
         {entry.hash && (
           <span className="rounded-full bg-slate-100 px-2 py-1 text-[0.65rem] text-slate-600 dark:bg-slate-800 dark:text-teal-100/80">
-            {(entry.algorithm ?? "hash").toUpperCase()}: {entry.hash.slice(0, 10)}…
+            {(entry.algorithm ?? "hash").toUpperCase()}:{" "}
+            {entry.hash.slice(0, 10)}…
           </span>
         )}
         {typeof entry.sizeBytes === "number" && (
@@ -347,7 +385,11 @@ function DownloadsPanel({ downloads }: { downloads: DossierDownloads }) {
       {hasLocal && (
         <div className="flex flex-wrap gap-2">
           {localItems.map((item) => (
-            <DownloadChip key={item.label} label={item.label} path={item.path} />
+            <DownloadChip
+              key={item.label}
+              label={item.label}
+              path={item.path}
+            />
           ))}
         </div>
       )}
@@ -360,7 +402,8 @@ function DownloadsPanel({ downloads }: { downloads: DossierDownloads }) {
       )}
       {!hasLocal && hasRemote && (
         <p className="text-xs text-slate-500 dark:text-teal-100/70">
-          Local artifacts unavailable from the API response; remote uploads shown instead.
+          Local artifacts unavailable from the API response; remote uploads
+          shown instead.
         </p>
       )}
     </div>
@@ -394,17 +437,29 @@ function HandoffBanner({ downloads }: { downloads: DossierDownloads }) {
           <Link2 className="h-4 w-4" />
           LEA handoff
         </div>
-        <Button type="button" size="sm" variant="secondary" className="gap-2" onClick={handleCopy}>
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          className="gap-2"
+          onClick={handleCopy}
+        >
           <ClipboardCopy className="h-4 w-4" />
           {copied ? "Copied" : "Copy links"}
         </Button>
       </div>
       <p className="mt-2 text-xs text-teal-900/80 dark:text-teal-100/80">
-        Includes manifest and artifact links for partner download. Remote refs {hasRemote ? "include Drive uploads." : "fall back to local paths via the proxy."}
+        Includes manifest and artifact links for partner download. Remote refs{" "}
+        {hasRemote
+          ? "include Drive uploads."
+          : "fall back to local paths via the proxy."}
       </p>
       <div className="mt-3 flex flex-wrap gap-2 text-[0.75rem] text-teal-900/80 dark:text-teal-50/80">
         {shareableLinks.map((link) => (
-          <span key={link} className="rounded-full bg-white/80 px-3 py-1 dark:bg-slate-900/40">
+          <span
+            key={link}
+            className="rounded-full bg-white/80 px-3 py-1 dark:bg-slate-900/40"
+          >
             {formatPathPreview(link)}
           </span>
         ))}
@@ -413,7 +468,11 @@ function HandoffBanner({ downloads }: { downloads: DossierDownloads }) {
   );
 }
 
-function VerificationPanel({ entry }: { entry: VerificationEntry | undefined }) {
+function VerificationPanel({
+  entry,
+}: {
+  entry: VerificationEntry | undefined;
+}) {
   if (!entry || entry.status === "idle") {
     return null;
   }
@@ -441,7 +500,9 @@ function VerificationPanel({ entry }: { entry: VerificationEntry | undefined }) 
   }
 
   const { report } = entry;
-  const badgeVariant: "success" | "warning" = report.allVerified ? "success" : "warning";
+  const badgeVariant: "success" | "warning" = report.allVerified
+    ? "success"
+    : "warning";
   const headline = report.allVerified
     ? "All artifacts verified"
     : `${report.missingCount} missing · ${report.mismatchCount} mismatched`;
@@ -453,7 +514,9 @@ function VerificationPanel({ entry }: { entry: VerificationEntry | undefined }) 
           <ShieldCheck className="h-4 w-4" />
           {headline} · {report.algorithm}
         </div>
-        <Badge variant={badgeVariant}>{badgeVariant === "success" ? "Verified" : "Attention"}</Badge>
+        <Badge variant={badgeVariant}>
+          {badgeVariant === "success" ? "Verified" : "Attention"}
+        </Badge>
       </div>
       {report.warnings.length > 0 && (
         <ul className="list-disc space-y-1 pl-5 text-xs">
@@ -468,20 +531,44 @@ function VerificationPanel({ entry }: { entry: VerificationEntry | undefined }) 
             key={`${artifact.label}-${artifact.path ?? "unknown"}`}
             className="rounded-2xl border border-white/50 bg-white/80 p-3 text-xs text-slate-600 shadow-sm dark:border-teal-200/20 dark:bg-slate-950/30 dark:text-teal-50"
           >
-            <p className="text-sm font-semibold text-slate-900 dark:text-white">{artifact.label}</p>
-            <p className="mt-1 text-[0.7rem] text-slate-500 dark:text-teal-100/70">{artifact.path ?? "path unavailable"}</p>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">
+              {artifact.label}
+            </p>
+            <p className="mt-1 text-[0.7rem] text-slate-500 dark:text-teal-100/70">
+              {artifact.path ?? "path unavailable"}
+            </p>
             <div className="mt-2 flex flex-wrap items-center gap-3 text-[0.7rem]">
-              <span className={clsx("rounded-full px-2 py-1", artifact.exists ? "bg-teal-100 text-teal-700" : "bg-rose-100 text-rose-700")}>{
-                artifact.exists ? "Present" : "Missing"
-              }</span>
-              <span className={clsx("rounded-full px-2 py-1", artifact.matches ? "bg-teal-100 text-teal-700" : "bg-amber-100 text-amber-700")}>{
-                artifact.matches ? "Hash match" : "Hash mismatch"
-              }</span>
+              <span
+                className={clsx(
+                  "rounded-full px-2 py-1",
+                  artifact.exists
+                    ? "bg-teal-100 text-teal-700"
+                    : "bg-rose-100 text-rose-700",
+                )}
+              >
+                {artifact.exists ? "Present" : "Missing"}
+              </span>
+              <span
+                className={clsx(
+                  "rounded-full px-2 py-1",
+                  artifact.matches
+                    ? "bg-teal-100 text-teal-700"
+                    : "bg-amber-100 text-amber-700",
+                )}
+              >
+                {artifact.matches ? "Hash match" : "Hash mismatch"}
+              </span>
             </div>
             <p className="mt-2 text-[0.7rem] text-slate-500">
-              {artifact.expectedHash ? `Expected ${artifact.expectedHash.slice(0, 12)}…` : "Expected hash unavailable"}
+              {artifact.expectedHash
+                ? `Expected ${artifact.expectedHash.slice(0, 12)}…`
+                : "Expected hash unavailable"}
             </p>
-            {artifact.error && <p className="mt-1 text-[0.7rem] text-rose-500">{artifact.error}</p>}
+            {artifact.error && (
+              <p className="mt-1 text-[0.7rem] text-rose-500">
+                {artifact.error}
+              </p>
+            )}
           </div>
         ))}
       </div>
@@ -489,7 +576,11 @@ function VerificationPanel({ entry }: { entry: VerificationEntry | undefined }) 
   );
 }
 
-function ClientVerificationPanel({ entry }: { entry: ClientVerificationEntry | undefined }) {
+function ClientVerificationPanel({
+  entry,
+}: {
+  entry: ClientVerificationEntry | undefined;
+}) {
   if (!entry || entry.status === "idle") {
     return null;
   }
@@ -516,7 +607,9 @@ function ClientVerificationPanel({ entry }: { entry: ClientVerificationEntry | u
     return null;
   }
 
-  const mismatches = entry.report.artifacts.filter((artifact) => !artifact.matches || artifact.error);
+  const mismatches = entry.report.artifacts.filter(
+    (artifact) => !artifact.matches || artifact.error,
+  );
 
   return (
     <div className="space-y-3 rounded-3xl border border-indigo-200 bg-indigo-50/80 p-4 text-sm text-indigo-900 shadow-inner dark:border-indigo-400/30 dark:bg-indigo-500/10 dark:text-indigo-100">
@@ -535,23 +628,35 @@ function ClientVerificationPanel({ entry }: { entry: ClientVerificationEntry | u
             key={`${artifact.label}-${artifact.path ?? "unknown"}`}
             className={clsx(
               "rounded-2xl border bg-white/80 p-3 text-xs text-slate-600 shadow-sm dark:bg-slate-950/30",
-              artifact.matches && !artifact.error ? "border-white/50 dark:border-indigo-200/20" : "border-amber-200 dark:border-amber-300/40"
+              artifact.matches && !artifact.error
+                ? "border-white/50 dark:border-indigo-200/20"
+                : "border-amber-200 dark:border-amber-300/40",
             )}
           >
-            <p className="text-sm font-semibold text-slate-900 dark:text-white">{artifact.label}</p>
-            <p className="mt-1 text-[0.7rem] text-slate-500 dark:text-indigo-100/70">{artifact.path ?? "path unavailable"}</p>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">
+              {artifact.label}
+            </p>
+            <p className="mt-1 text-[0.7rem] text-slate-500 dark:text-indigo-100/70">
+              {artifact.path ?? "path unavailable"}
+            </p>
             <p className="mt-2 text-[0.7rem] text-slate-500">
               Expected {artifact.expectedHash?.slice(0, 12) ?? "unknown"}…
             </p>
             <p className="text-[0.7rem] text-slate-500">
               Computed {artifact.computedHash?.slice(0, 12) ?? "n/a"}…
             </p>
-            {artifact.error && <p className="mt-1 text-[0.7rem] text-rose-500">{artifact.error}</p>}
+            {artifact.error && (
+              <p className="mt-1 text-[0.7rem] text-rose-500">
+                {artifact.error}
+              </p>
+            )}
             {!artifact.error && (
               <span
                 className={clsx(
                   "mt-2 inline-flex rounded-full px-2 py-1",
-                  artifact.matches ? "bg-teal-100 text-teal-700" : "bg-amber-100 text-amber-700"
+                  artifact.matches
+                    ? "bg-teal-100 text-teal-700"
+                    : "bg-amber-100 text-amber-700",
                 )}
               >
                 {artifact.matches ? "Hash match" : "Mismatch"}
@@ -565,8 +670,12 @@ function ClientVerificationPanel({ entry }: { entry: ClientVerificationEntry | u
 }
 
 export function DossierList({ response, includeManifest }: DossierListProps) {
-  const [verifications, setVerifications] = useState<Record<string, VerificationEntry>>({});
-  const [clientVerifications, setClientVerifications] = useState<Record<string, ClientVerificationEntry>>({});
+  const [verifications, setVerifications] = useState<
+    Record<string, VerificationEntry>
+  >({});
+  const [clientVerifications, setClientVerifications] = useState<
+    Record<string, ClientVerificationEntry>
+  >({});
   const items: DossierRecord[] = response.items;
 
   async function handleVerify(planId: string) {
@@ -585,7 +694,9 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
       });
 
       if (!res.ok) {
-        const payload = (await res.json().catch(() => ({}))) as { error?: string };
+        const payload = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
         throw new Error(payload.error ?? "Verification failed");
       }
 
@@ -606,14 +717,20 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
   }
 
   async function handleClientVerify(record: DossierRecord) {
-    const signatureManifest = record.signatureManifest as Record<string, unknown> | null;
+    const signatureManifest = record.signatureManifest as Record<
+      string,
+      unknown
+    > | null;
     const artifacts = normalizeSignatureArtifacts(signatureManifest);
     const algorithm = (signatureManifest?.["algorithm"] as string) ?? "sha256";
 
     if (artifacts.length === 0) {
       setClientVerifications((prev) => ({
         ...prev,
-        [record.planId]: { status: "error", error: "Signature manifest missing artifacts" },
+        [record.planId]: {
+          status: "error",
+          error: "Signature manifest missing artifacts",
+        },
       }));
       return;
     }
@@ -668,14 +785,20 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
 
       setClientVerifications((prev) => ({
         ...prev,
-        [record.planId]: { status: "success", report: { algorithm, artifacts: results } },
+        [record.planId]: {
+          status: "success",
+          report: { algorithm, artifacts: results },
+        },
       }));
     } catch (error) {
       setClientVerifications((prev) => ({
         ...prev,
         [record.planId]: {
           status: "error",
-          error: error instanceof Error ? error.message : "Client-side verification failed",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Client-side verification failed",
         },
       }));
     }
@@ -685,7 +808,8 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
     return (
       <Card className="rounded-3xl border border-dashed border-slate-200 bg-white/60 p-10 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-300">
         <ShieldQuestion className="mx-auto mb-4 h-10 w-10 text-slate-300" />
-        No dossier plans match the current filters. Try widening the status or increasing the row limit.
+        No dossier plans match the current filters. Try widening the status or
+        increasing the row limit.
       </Card>
     );
   }
@@ -697,7 +821,10 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
         const verificationEntry = verifications[record.planId];
         const payload = normalizePayload(record.payload);
         const cases = extractCaseIds(record);
-        const jurisdiction = (payload["jurisdiction"] as string) ?? (payload["jurisdiction_key"] as string) ?? "—";
+        const jurisdiction =
+          (payload["jurisdiction"] as string) ??
+          (payload["jurisdiction_key"] as string) ??
+          "—";
         const totalLoss = formatCurrency(payload["total_loss_usd"]);
 
         return (
@@ -707,11 +834,16 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
           >
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Plan</p>
-                <h3 className="mt-1 text-2xl font-semibold text-slate-900 dark:text-white">{record.planId}</h3>
+                <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
+                  Plan
+                </p>
+                <h3 className="mt-1 text-2xl font-semibold text-slate-900 dark:text-white">
+                  {record.planId}
+                </h3>
                 <p className="mt-1 flex items-center gap-2 text-xs text-slate-500">
                   <Clock3 className="h-3.5 w-3.5" />
-                  Updated {formatDate(record.updatedAt)} · queued {formatDate(record.queuedAt)}
+                  Updated {formatDate(record.updatedAt)} · queued{" "}
+                  {formatDate(record.queuedAt)}
                 </p>
               </div>
               <Badge variant={statusVariant} className="self-start">
@@ -722,18 +854,32 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
             <div className="grid gap-4 md:grid-cols-4">
               <StatsRow label="Jurisdiction" value={String(jurisdiction)} />
               <StatsRow label="Total loss" value={totalLoss} />
-              <StatsRow label="Cases bundled" value={cases.length ? `${cases.length}` : "—"} />
-              <StatsRow label="Warnings" value={record.warnings.length + record.artifactWarnings.length ? `${record.warnings.length + record.artifactWarnings.length}` : "None"} />
+              <StatsRow
+                label="Cases bundled"
+                value={cases.length ? `${cases.length}` : "—"}
+              />
+              <StatsRow
+                label="Warnings"
+                value={
+                  record.warnings.length + record.artifactWarnings.length
+                    ? `${record.warnings.length + record.artifactWarnings.length}`
+                    : "None"
+                }
+              />
             </div>
 
-            {(record.warnings.length > 0 || record.artifactWarnings.length > 0 || record.error) && (
+            {(record.warnings.length > 0 ||
+              record.artifactWarnings.length > 0 ||
+              record.error) && (
               <div className="space-y-2 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 text-sm text-amber-900 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-100">
-                {[...record.warnings, ...record.artifactWarnings].map((warning) => (
-                  <p key={warning} className="flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4" />
-                    {warning}
-                  </p>
-                ))}
+                {[...record.warnings, ...record.artifactWarnings].map(
+                  (warning) => (
+                    <p key={warning} className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      {warning}
+                    </p>
+                  ),
+                )}
                 {record.error && (
                   <p className="flex items-center gap-2 text-rose-600 dark:text-rose-200">
                     <FileWarning className="h-4 w-4" />
@@ -769,7 +915,10 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
                   Cases
                 </p>
                 {cases.map((caseId) => (
-                  <span key={caseId} className="rounded-full bg-slate-900/5 px-3 py-1 text-slate-600 dark:bg-slate-100/10 dark:text-slate-200">
+                  <span
+                    key={caseId}
+                    className="rounded-full bg-slate-900/5 px-3 py-1 text-slate-600 dark:bg-slate-100/10 dark:text-slate-200"
+                  >
                     #{caseId}
                   </span>
                 ))}
@@ -784,17 +933,23 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
                 onClick={() => handleVerify(record.planId)}
               >
                 <ShieldCheck className="h-4 w-4" />
-                {verificationEntry?.status === "loading" ? "Verifying…" : "Verify signatures"}
+                {verificationEntry?.status === "loading"
+                  ? "Verifying…"
+                  : "Verify signatures"}
               </Button>
               <Button
                 type="button"
                 variant="secondary"
                 className="gap-2"
-                disabled={clientVerifications[record.planId]?.status === "loading"}
+                disabled={
+                  clientVerifications[record.planId]?.status === "loading"
+                }
                 onClick={() => handleClientVerify(record)}
               >
                 <ShieldHalf className="h-4 w-4" />
-                {clientVerifications[record.planId]?.status === "loading" ? "Verifying locally…" : "Verify client-side"}
+                {clientVerifications[record.planId]?.status === "loading"
+                  ? "Verifying locally…"
+                  : "Verify client-side"}
               </Button>
               <span className="text-xs text-slate-500">
                 {includeManifest
@@ -805,17 +960,26 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
 
             <VerificationPanel entry={verificationEntry} />
 
-            <ClientVerificationPanel entry={clientVerifications[record.planId]} />
+            <ClientVerificationPanel
+              entry={clientVerifications[record.planId]}
+            />
 
             {includeManifest && record.manifest ? (
-              <ManifestPreview data={record.manifest as Record<string, unknown>} />
+              <ManifestPreview
+                data={record.manifest as Record<string, unknown>}
+              />
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-300">
-                Manifest JSON hidden. Toggle “Include JSON” in the filters to stream manifest payloads.
+                Manifest JSON hidden. Toggle “Include JSON” in the filters to
+                stream manifest payloads.
               </div>
             )}
 
-            <SignaturePreview data={(record.signatureManifest as Record<string, unknown>) ?? null} />
+            <SignaturePreview
+              data={
+                (record.signatureManifest as Record<string, unknown>) ?? null
+              }
+            />
 
             <details className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-200">
               <summary className="cursor-pointer text-sm font-semibold text-slate-800 dark:text-white">
