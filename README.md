@@ -1,5 +1,10 @@
 # i4g Analyst UI
 
+[![Node](https://img.shields.io/badge/Node-20%2B-green.svg)](https://nodejs.org/)
+[![PNPM](https://img.shields.io/badge/PNPM-9-blue.svg)](https://pnpm.io/)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org/)
+[![Tests](https://img.shields.io/badge/Tests-Vitest%20%2B%20Playwright-lightgrey.svg)](apps/web/tests)
+
 A Turborepo/PNPM monorepo that hosts the next-generation Intelligence for Good analyst console, shared UI kits, design tokens, and an SDK for the FastAPI backend.
 
 ## Repository Layout
