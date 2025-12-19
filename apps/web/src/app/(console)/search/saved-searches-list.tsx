@@ -189,9 +189,9 @@ export function SavedSearchesList({
       ) : null}
       {items.length ? (
         <ul className="space-y-3">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <li
-              key={item.id}
+              key={`${item.id ?? "saved-search"}-${index}`}
               className="rounded-2xl border border-slate-100 bg-white/70 p-4"
             >
               <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">

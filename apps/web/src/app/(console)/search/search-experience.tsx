@@ -853,25 +853,28 @@ export default function SearchExperience({
                   </div>
                 </div>
               ) : null}
-              {results.facets.map((facet) => {
+              {results.facets.map((facet, facetIndex) => {
                 const selectionKey = facetFieldMap[facet.field];
                 if (!selectionKey) {
                   return null;
                 }
 
                 return (
-                  <div key={facet.field} className="space-y-3">
+                  <div
+                    key={`${facet.field}-${facetIndex}`}
+                    className="space-y-3"
+                  >
                     <p className="text-xs font-semibold text-slate-500">
                       {facet.label}
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {facet.options.map((option) => {
+                      {facet.options.map((option, optionIndex) => {
                         const isSelected = selection[selectionKey]?.includes(
                           option.value,
                         );
                         return (
                           <button
-                            key={option.value}
+                            key={`${facet.field}-${option.value}-${optionIndex}`}
                             type="button"
                             onClick={() =>
                               toggleFacet(selectionKey, option.value)
@@ -1120,9 +1123,9 @@ export default function SearchExperience({
                   Suggestions
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {results.suggestions.map((suggestion) => (
+                  {results.suggestions.map((suggestion, suggestionIndex) => (
                     <button
-                      key={suggestion}
+                      key={`${suggestion}-${suggestionIndex}`}
                       type="button"
                       onClick={() => triggerSearch({ query: suggestion })}
                       className="rounded-full border border-slate-200 px-3 py-1 text-slate-600 transition hover:border-teal-200 hover:text-teal-700"
@@ -1135,7 +1138,7 @@ export default function SearchExperience({
             ) : null}
 
             <ul className="space-y-4">
-              {results.results.map((result) => {
+              {results.results.map((result, index) => {
                 const pillClasses =
                   sourceColors[result.source] ?? "text-slate-600 bg-slate-100";
                 const occurred = new Intl.DateTimeFormat("en", {
@@ -1144,7 +1147,7 @@ export default function SearchExperience({
                 }).format(new Date(result.occurredAt));
 
                 return (
-                  <li key={result.id}>
+                  <li key={`${result.id ?? "result"}-${index}`}>
                     <Card className="group flex flex-col gap-4 p-6">
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                         <div>
@@ -1186,8 +1189,11 @@ export default function SearchExperience({
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-                        {result.tags.map((tag) => (
-                          <Badge key={tag} variant="default">
+                        {result.tags.map((tag, index) => (
+                          <Badge
+                            key={`${result.id}-tag-${tag}-${index}`}
+                            variant="default"
+                          >
                             #{tag}
                           </Badge>
                         ))}

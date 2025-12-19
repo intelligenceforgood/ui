@@ -229,7 +229,7 @@ export function SearchHistoryList({
       </div>
       {events.length ? (
         <ul className="space-y-3">
-          {events.map((event) => {
+          {events.map((event, index) => {
             const filters = summarizeHistoryParams(event.params);
             const paramsQuery =
               typeof event.params?.["query"] === "string"
@@ -257,7 +257,7 @@ export function SearchHistoryList({
 
             return (
               <li
-                key={event.id}
+                key={`${event.id ?? "history"}-${index}`}
                 className="rounded-2xl border border-slate-100 bg-white/70 p-4"
               >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
