@@ -35,6 +35,11 @@ interface CoreVectorRecord {
   similarity?: number;
   score?: number;
   distance?: number;
+  classification?: string;
+  confidence?: number;
+  case_id?: string;
+  entities?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 interface CoreSearchEntry {
@@ -44,6 +49,10 @@ interface CoreSearchEntry {
   record?: CoreStructuredRecord | null;
   vector?: CoreVectorRecord | null;
   distance?: number;
+  metadata?: {
+    classification?: string;
+    [key: string]: unknown;
+  };
   [key: string]: unknown;
 }
 
@@ -179,10 +188,23 @@ function extractSnippet(entry: CoreSearchEntry): string {
   const text =
     (typeof record?.text === "string" && record.text) ||
     (typeof vector?.text === "string" && vector.text) ||
-    (typeof vector?.document === "string" && vector.document) ||
-    "No excerpt available yet.";
+    (typeof vector?.document === "string" && vector.document);
 
-  return text.slice(0, 280);
+  if (text) {
+    return text.slice(0, 280);
+  }
+
+  // Fallback for migrated data where text content might be missing in local store
+  const classification =
+    record?.classification ||
+    vector?.classification ||
+    entry?.metadata?.classification;
+
+  if (classification) {
+    return `[Content unavailable] Classification: ${classification}`;
+  }
+
+  return "No excerpt available (migrated data).";
 }
 
 function mapCoreSearchResult(

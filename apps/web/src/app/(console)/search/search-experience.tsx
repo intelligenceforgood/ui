@@ -206,17 +206,7 @@ export default function SearchExperience({
   );
   const [savedSearchContext, setSavedSearchContext] =
     useState<SavedSearchDescriptor | null>(normalizedInitialSavedSearch);
-  const clearSavedSearchContext = useCallback(() => {
-    let wasCleared = false;
-    setSavedSearchContext((current) => {
-      if (current) {
-        wasCleared = true;
-        return null;
-      }
-      return current;
-    });
-    return wasCleared;
-  }, []);
+
   const [error, setError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -367,31 +357,9 @@ export default function SearchExperience({
         requestBody,
         savedSearchLabel ? { label: savedSearchLabel } : undefined,
       );
-      router.replace(nextHref, { scroll: false });
-
       startTransition(() => {
         setError(null);
-        void fetch("/api/search", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody),
-        })
-          .then(async (response) => {
-            if (!response.ok) {
-              setError("Search failed. Please try again.");
-              return;
-            }
-
-            const payload = (await response.json()) as SearchResponse;
-            setResults(payload);
-            setQuery(payload.stats.query);
-            setExpandedResultId(null);
-          })
-          .catch(() => {
-            setError("Search failed. Please try again.");
-          });
+        router.replace(nextHref, { scroll: false });
       });
     },
     [buildSearchRequestPayload, router],
@@ -407,15 +375,15 @@ export default function SearchExperience({
 
   const handleQueryChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
-      clearSavedSearchContext();
+      setSavedSearchContext(null);
       setQuery(event.target.value);
     },
-    [clearSavedSearchContext],
+    [],
   );
 
   const toggleFacet = useCallback(
     (field: FacetField, value: string) => {
-      const includeSavedSearchContext = !clearSavedSearchContext();
+      setSavedSearchContext(null);
       const alreadySelected = selection[field].includes(value);
       const nextValues = alreadySelected
         ? selection[field].filter((item) => item !== value)
@@ -430,16 +398,16 @@ export default function SearchExperience({
         nextSelection,
         undefined,
         {
-          includeSavedSearchContext,
+          includeSavedSearchContext: false,
         },
       );
     },
-    [clearSavedSearchContext, selection, triggerSearch],
+    [selection, triggerSearch],
   );
 
   const toggleIndicatorType = useCallback(
     (value: string) => {
-      const includeSavedSearchContext = !clearSavedSearchContext();
+      setSavedSearchContext(null);
       const alreadySelected = selection.indicatorTypes.includes(value);
       const nextValues = alreadySelected
         ? selection.indicatorTypes.filter((item) => item !== value)
@@ -450,15 +418,15 @@ export default function SearchExperience({
       };
       setSelection(nextSelection);
       triggerSearch({ indicatorTypes: nextValues }, nextSelection, undefined, {
-        includeSavedSearchContext,
+        includeSavedSearchContext: false,
       });
     },
-    [clearSavedSearchContext, selection, triggerSearch],
+    [selection, triggerSearch],
   );
 
   const toggleDataset = useCallback(
     (value: string) => {
-      const includeSavedSearchContext = !clearSavedSearchContext();
+      setSavedSearchContext(null);
       const alreadySelected = selection.datasets.includes(value);
       const nextValues = alreadySelected
         ? selection.datasets.filter((item) => item !== value)
@@ -469,15 +437,15 @@ export default function SearchExperience({
       };
       setSelection(nextSelection);
       triggerSearch({ datasets: nextValues }, nextSelection, undefined, {
-        includeSavedSearchContext,
+        includeSavedSearchContext: false,
       });
     },
-    [clearSavedSearchContext, selection, triggerSearch],
+    [selection, triggerSearch],
   );
 
   const toggleTimePreset = useCallback(
     (value: string) => {
-      const includeSavedSearchContext = !clearSavedSearchContext();
+      setSavedSearchContext(null);
       const nextPreset = selection.timePreset === value ? null : value;
       const nextSelection: FacetSelection = {
         ...selection,
@@ -485,14 +453,14 @@ export default function SearchExperience({
       };
       setSelection(nextSelection);
       triggerSearch({ timePreset: nextPreset }, nextSelection, undefined, {
-        includeSavedSearchContext,
+        includeSavedSearchContext: false,
       });
     },
-    [clearSavedSearchContext, selection, triggerSearch],
+    [selection, triggerSearch],
   );
 
   const addEntityFilter = useCallback(() => {
-    clearSavedSearchContext();
+    setSavedSearchContext(null);
     setEntityFilters((current) => [
       ...current,
       {
@@ -502,42 +470,39 @@ export default function SearchExperience({
         matchMode: "exact",
       },
     ]);
-  }, [clearSavedSearchContext, defaultIndicatorType]);
+  }, [defaultIndicatorType]);
 
   const updateEntityFilter = useCallback(
     (id: string, patch: Partial<EntityFilterRow>) => {
-      clearSavedSearchContext();
+      setSavedSearchContext(null);
       setEntityFilters((current) =>
         current.map((entry) =>
           entry.id === id ? { ...entry, ...patch } : entry,
         ),
       );
     },
-    [clearSavedSearchContext],
+    [],
   );
 
-  const removeEntityFilter = useCallback(
-    (id: string) => {
-      clearSavedSearchContext();
-      setEntityFilters((current) => current.filter((entry) => entry.id !== id));
-    },
-    [clearSavedSearchContext],
-  );
+  const removeEntityFilter = useCallback((id: string) => {
+    setSavedSearchContext(null);
+    setEntityFilters((current) => current.filter((entry) => entry.id !== id));
+  }, []);
 
   const resetEntityFilters = useCallback(() => {
-    const includeSavedSearchContext = !clearSavedSearchContext();
+    setSavedSearchContext(null);
     setEntityFilters([]);
     triggerSearch({ entities: [] }, undefined, [], {
-      includeSavedSearchContext,
+      includeSavedSearchContext: false,
     });
-  }, [clearSavedSearchContext, triggerSearch]);
+  }, [triggerSearch]);
 
   const applyEntityFilters = useCallback(() => {
     triggerSearch({ entities: entityFilters }, undefined, entityFilters);
   }, [entityFilters, triggerSearch]);
 
   const clearFilters = useCallback(() => {
-    const includeSavedSearchContext = !clearSavedSearchContext();
+    setSavedSearchContext(null);
     const cleared: FacetSelection = {
       sources: [],
       taxonomy: [],
@@ -558,9 +523,9 @@ export default function SearchExperience({
       },
       cleared,
       [],
-      { includeSavedSearchContext },
+      { includeSavedSearchContext: false },
     );
-  }, [clearSavedSearchContext, triggerSearch]);
+  }, [triggerSearch]);
 
   const toggleDetails = useCallback((id: string) => {
     setExpandedResultId((current) => (current === id ? null : id));
@@ -1056,7 +1021,8 @@ export default function SearchExperience({
             ) : null}
             <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
               <Badge variant="info">
-                {results.stats.total} results in {results.stats.took} ms
+                {results.stats.total} results in{" "}
+                {Math.round(results.stats.took)} ms
               </Badge>
               {isPending ? (
                 <Badge variant="default" className="animate-pulse">

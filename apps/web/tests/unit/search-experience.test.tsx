@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import SearchExperience from "@/app/(console)/search/search-experience";
 import type { HybridSearchSchema } from "@/types/reviews";
 import { createMockClient, type SearchResponse } from "@i4g/sdk";
+import { useRouter } from "next/navigation";
 import {
   afterEach,
   beforeAll,
@@ -13,20 +14,9 @@ import {
   type Mock,
 } from "vitest";
 
-vi.mock("next/navigation", () => {
-  const mockRouter = {
-    refresh: vi.fn(),
-    push: vi.fn(),
-    replace: vi.fn(),
-    prefetch: vi.fn(),
-    back: vi.fn(),
-    forward: vi.fn(),
-  };
-
-  return {
-    useRouter: () => mockRouter,
-  };
-});
+vi.mock("next/navigation", () => ({
+  useRouter: vi.fn(),
+}));
 
 let initialResults: SearchResponse;
 const originalFetch = global.fetch;
@@ -47,6 +37,8 @@ const mockSchema: HybridSearchSchema = {
 };
 
 describe("SearchExperience", () => {
+  const replaceMock = vi.fn();
+
   beforeAll(async () => {
     const client = createMockClient();
     initialResults = await client.searchIntelligence({
@@ -57,6 +49,16 @@ describe("SearchExperience", () => {
   });
 
   beforeEach(() => {
+    replaceMock.mockClear();
+    (useRouter as Mock).mockReturnValue({
+      replace: replaceMock,
+      refresh: vi.fn(),
+      push: vi.fn(),
+      prefetch: vi.fn(),
+      back: vi.fn(),
+      forward: vi.fn(),
+    });
+
     fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => initialResults,
@@ -90,11 +92,10 @@ describe("SearchExperience", () => {
     const submit = screen.getByRole("button", { name: /^search$/i });
     fireEvent.click(submit);
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(replaceMock).toHaveBeenCalledTimes(1));
 
-    const requestInit = fetchMock.mock.calls[0][1] as RequestInit;
-    const requestBody = JSON.parse(requestInit.body as string);
-    expect(requestBody.query).toBe("group-7");
+    const url = new URL(replaceMock.mock.calls[0][0], "http://localhost");
+    expect(url.searchParams.get("query")).toBe("group-7");
   });
 
   it("toggles source facet filters", async () => {
@@ -105,11 +106,11 @@ describe("SearchExperience", () => {
     const sourceFacetButton = screen.getByRole("button", { name: /customs/i });
     fireEvent.click(sourceFacetButton);
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(replaceMock).toHaveBeenCalledTimes(1));
 
-    const requestInit = fetchMock.mock.calls[0][1] as RequestInit;
-    const requestBody = JSON.parse(requestInit.body as string);
-    expect(requestBody.sources).toContain("customs");
+    const url = new URL(replaceMock.mock.calls[0][0], "http://localhost");
+    const sources = url.searchParams.get("sources");
+    expect(sources).toContain("customs");
   });
 
   it("applies dataset filters from schema chips", async () => {
@@ -122,11 +123,11 @@ describe("SearchExperience", () => {
     });
     fireEvent.click(datasetButton);
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(replaceMock).toHaveBeenCalledTimes(1));
 
-    const requestInit = fetchMock.mock.calls[0][1] as RequestInit;
-    const requestBody = JSON.parse(requestInit.body as string);
-    expect(requestBody.datasets).toContain("retrieval_poc_dev");
+    const url = new URL(replaceMock.mock.calls[0][0], "http://localhost");
+    const datasets = url.searchParams.get("datasets");
+    expect(datasets).toContain("retrieval_poc_dev");
   });
 
   it("prefills entity filter inputs from schema examples", () => {
@@ -198,27 +199,33 @@ describe("SearchExperience", () => {
     const submit = screen.getByRole("button", { name: /^search$/i });
     fireEvent.click(submit);
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    let requestInit = fetchMock.mock.calls[0][1] as RequestInit;
-    let requestBody = JSON.parse(requestInit.body as string);
+    await waitFor(() => expect(replaceMock).toHaveBeenCalledTimes(1));
+    const url = new URL(replaceMock.mock.calls[0][0], "http://localhost");
+    const payloadParam = url.searchParams.get("payload");
+    expect(payloadParam).not.toBeNull();
+    const requestBody = JSON.parse(payloadParam!);
+
     expect(requestBody.savedSearchId).toBe("saved-123");
     expect(requestBody.savedSearchName).toBe("Tagged search");
     expect(requestBody.savedSearchOwner).toBe("analyst@example.com");
     expect(requestBody.savedSearchTags).toEqual(["priority"]);
 
-    fetchMock.mockClear();
+    replaceMock.mockClear();
 
     const datasetButton = screen.getByRole("button", {
       name: /retrieval_poc_dev/i,
     });
     fireEvent.click(datasetButton);
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    requestInit = fetchMock.mock.calls[0][1] as RequestInit;
-    requestBody = JSON.parse(requestInit.body as string);
-    expect(requestBody.savedSearchId).toBeUndefined();
-    expect(requestBody.savedSearchName).toBeUndefined();
-    expect(requestBody.savedSearchOwner).toBeUndefined();
-    expect(requestBody.savedSearchTags).toBeUndefined();
+    await waitFor(() => expect(replaceMock).toHaveBeenCalledTimes(1));
+    const url2 = new URL(replaceMock.mock.calls[0][0], "http://localhost");
+    const payloadParam2 = url2.searchParams.get("payload");
+    expect(payloadParam2).not.toBeNull();
+    const requestBody2 = JSON.parse(payloadParam2!);
+
+    expect(requestBody2.savedSearchId).toBeUndefined();
+    expect(requestBody2.savedSearchName).toBeUndefined();
+    expect(requestBody2.savedSearchOwner).toBeUndefined();
+    expect(requestBody2.savedSearchTags).toBeUndefined();
   });
 });
