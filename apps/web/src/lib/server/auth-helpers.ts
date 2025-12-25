@@ -1,4 +1,4 @@
-import { GoogleAuth } from "google-auth-library";
+import { getIapToken } from "@/lib/iap-token";
 
 export async function getIapHeaders(): Promise<Record<string, string>> {
   const headers: Record<string, string> = {};
@@ -9,14 +9,9 @@ export async function getIapHeaders(): Promise<Record<string, string>> {
     process.env.NEXT_PUBLIC_API_BASE_URL;
 
   if (audience) {
-    try {
-      const auth = new GoogleAuth();
-      const client = await auth.getIdTokenClient(audience);
-      // Pass audience explicitly to getRequestHeaders to ensure the token is generated
-      const iapHeaders = await client.getRequestHeaders(audience);
-      Object.assign(headers, iapHeaders);
-    } catch (err) {
-      console.warn("Failed to generate auth token", err);
+    const token = await getIapToken(audience);
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
     }
   }
   return headers;

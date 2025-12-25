@@ -109,6 +109,9 @@ function resolveClient(): I4GClient {
   }
 
   const useCoreApi = process.env.I4G_API_KIND === "core";
+  console.error(
+    `I4G Client Init: useCoreApi=${useCoreApi}, IAP_CLIENT_ID=${process.env.I4G_IAP_CLIENT_ID ? "SET" : "UNSET"}`,
+  );
 
   const resolvedClient: I4GClient = useCoreApi
     ? createPlatformClient({
