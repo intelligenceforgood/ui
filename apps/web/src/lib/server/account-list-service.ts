@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { getIapHeaders } from "./auth-helpers";
 
 const apiRunSchema = z.object({
   request_id: z.string(),
@@ -102,10 +103,12 @@ function resolveApiKey() {
 }
 
 async function fetchJson(url: URL, init?: RequestInit) {
+  const iapHeaders = await getIapHeaders();
   const response = await fetch(url, {
     ...init,
     headers: {
       ...(init?.headers ?? {}),
+      ...iapHeaders,
       Accept: "application/json",
     },
     cache: "no-store",
@@ -215,6 +218,8 @@ export async function triggerAccountListRun(
   if (apiKey) {
     headers["X-API-KEY"] = apiKey;
   }
+  const iapHeaders = await getIapHeaders();
+  Object.assign(headers, iapHeaders);
 
   try {
     const response = await fetch(url, {

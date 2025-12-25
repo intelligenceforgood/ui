@@ -8,10 +8,12 @@ import {
   type SearchResponse,
   type SearchResult,
 } from "@i4g/sdk";
+import { GoogleAuth } from "google-auth-library";
 
 interface PlatformClientConfig {
   baseUrl: string;
   apiKey?: string;
+  iapClientId?: string;
 }
 
 interface CoreStructuredRecord {
@@ -361,6 +363,21 @@ async function fetchCoreSearch(
 
   if (config.apiKey) {
     headers["X-API-KEY"] = config.apiKey;
+  }
+
+  if (config.iapClientId) {
+    try {
+      console.log("Generating IAP token for audience:", config.iapClientId);
+      const auth = new GoogleAuth();
+      const client = await auth.getIdTokenClient(config.iapClientId);
+      const iapHeaders = await client.getRequestHeaders();
+      console.log("Generated IAP headers keys:", Object.keys(iapHeaders));
+      Object.assign(headers, iapHeaders);
+    } catch (err) {
+      console.warn("Failed to generate IAP token for core search", err);
+    }
+  } else {
+    console.log("No IAP Client ID configured, skipping token generation");
   }
 
   const response = await fetch(url, {

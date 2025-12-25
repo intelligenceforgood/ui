@@ -114,6 +114,7 @@ function resolveClient(): I4GClient {
     ? createPlatformClient({
         baseUrl,
         apiKey: process.env.I4G_API_KEY,
+        iapClientId: process.env.I4G_IAP_CLIENT_ID,
       })
     : createClient({
         baseUrl,

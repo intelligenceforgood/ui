@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getIapHeaders } from "@/lib/server/auth-helpers";
 
 const requestSchema = z.object({
   query: z.string().trim().min(1, "Query is required"),
@@ -247,6 +248,9 @@ export async function POST(request: Request) {
     const headers: Record<string, string> = {
       Accept: "application/json",
     };
+
+    const iapHeaders = await getIapHeaders();
+    Object.assign(headers, iapHeaders);
 
     const apiKey = resolveApiKey();
     if (apiKey) {

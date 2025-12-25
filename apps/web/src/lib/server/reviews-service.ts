@@ -6,6 +6,7 @@ import type {
   SavedSearchRecord,
   SearchHistoryEvent,
 } from "@/types/reviews";
+import { getIapHeaders } from "./auth-helpers";
 import {
   isPlainObject,
   mapHistoryEvent,
@@ -39,6 +40,9 @@ async function fetchJson(path: string, params?: Record<string, string>) {
   const headers: Record<string, string> = {
     Accept: "application/json",
   };
+
+  const iapHeaders = await getIapHeaders();
+  Object.assign(headers, iapHeaders);
 
   const apiKey = resolveApiKey();
   if (apiKey) {
