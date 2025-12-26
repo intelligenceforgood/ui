@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getIapToken } from "@/lib/iap-token";
 
 function resolveApiBase() {
   return (
@@ -50,9 +51,15 @@ export async function POST(request: Request) {
       }
     });
 
+    const iapClientId = process.env.I4G_IAP_CLIENT_ID;
+    const iapToken = iapClientId ? await getIapToken(iapClientId) : null;
+    const headers: Record<string, string> = {};
+    if (apiKey) headers["X-API-KEY"] = apiKey;
+    if (iapToken) headers["Authorization"] = `Bearer ${iapToken}`;
+
     const response = await fetch(new URL("/intakes/", apiBase), {
       method: "POST",
-      headers: apiKey ? { "X-API-KEY": apiKey } : undefined,
+      headers,
       body: outboundForm,
     });
 

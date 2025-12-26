@@ -553,7 +553,7 @@ export function createClient(config: ClientConfig): I4GClient {
     };
 
     if (apiKey) {
-      headers.Authorization = `Bearer ${apiKey}`;
+      headers["X-API-KEY"] = apiKey;
     }
 
     const response = await fetcher(buildUrl(baseUrl, path), {

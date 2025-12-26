@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getIapToken } from "@/lib/iap-token";
 
 const requestSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
@@ -49,6 +50,14 @@ export async function POST(request: Request) {
     const apiKey = resolveApiKey();
     if (apiKey) {
       headers["X-API-KEY"] = apiKey;
+    }
+
+    const iapClientId = process.env.I4G_IAP_CLIENT_ID;
+    if (iapClientId) {
+      const token = await getIapToken(iapClientId);
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
     }
 
     const response = await fetch(url, {

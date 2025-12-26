@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getIapToken } from "@/lib/iap-token";
 
 type RouteContext = {
   params: Promise<{ searchId: string }>;
@@ -22,11 +23,18 @@ function resolveApiKey() {
   return process.env.I4G_API_KEY ?? process.env.NEXT_PUBLIC_API_KEY ?? null;
 }
 
-function buildHeaders() {
+async function buildHeaders() {
   const headers: Record<string, string> = { Accept: "application/json" };
   const apiKey = resolveApiKey();
   if (apiKey) {
     headers["X-API-KEY"] = apiKey;
+  }
+  const iapClientId = process.env.I4G_IAP_CLIENT_ID;
+  if (iapClientId) {
+    const token = await getIapToken(iapClientId);
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
   }
   return headers;
 }
@@ -49,7 +57,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     const url = new URL(`/reviews/search/saved/${params.searchId}`, baseUrl);
-    const headers = { ...buildHeaders(), "Content-Type": "application/json" };
+    const baseHeaders = await buildHeaders();
+    const headers = { ...baseHeaders, "Content-Type": "application/json" };
 
     const response = await fetch(url, {
       method: "PATCH",
@@ -92,7 +101,7 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
     }
 
     const url = new URL(`/reviews/search/saved/${params.searchId}`, baseUrl);
-    const headers = buildHeaders();
+    const headers = await buildHeaders();
 
     const response = await fetch(url, {
       method: "DELETE",
