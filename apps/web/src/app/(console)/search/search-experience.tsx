@@ -17,6 +17,7 @@ import type {
 } from "@/types/reviews";
 import { deriveTimeRangeFromPreset } from "@/lib/search/filters";
 import { buildSearchHref } from "@/lib/search-links";
+import { TextWithTokens } from "@/components/text-with-tokens";
 import {
   ArrowUpRight,
   BookmarkPlus,
@@ -1126,10 +1127,10 @@ export default function SearchExperience({
                             <span>{occurred}</span>
                           </div>
                           <h3 className="mt-2 text-lg font-semibold text-slate-900">
-                            {result.title}
+                            <TextWithTokens text={result.title} />
                           </h3>
                           <p className="mt-1 text-sm text-slate-500">
-                            {result.snippet}
+                            <TextWithTokens text={result.snippet} />
                           </p>
                         </div>
                         <div className="flex flex-col items-end gap-2 text-right">
@@ -1166,7 +1167,9 @@ export default function SearchExperience({
                       </div>
                       {expandedResultId === result.id ? (
                         <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-4 text-sm text-slate-600">
-                          <p>{result.snippet}</p>
+                          <p>
+                            <TextWithTokens text={result.snippet} />
+                          </p>
                           <dl className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
                             <div className="flex flex-col">
                               <dt className="font-semibold uppercase tracking-[0.2em] text-slate-400">

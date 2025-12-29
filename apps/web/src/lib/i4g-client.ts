@@ -83,6 +83,13 @@ function withMockFallback(client: I4GClient): I4GClient {
         () => mock.verifyDossier(planId),
       );
     },
+    async detokenize(token, caseId) {
+      return withFallback(
+        "detokenize",
+        () => client.detokenize(token, caseId),
+        () => mock.detokenize(token, caseId),
+      );
+    },
   } satisfies I4GClient;
 }
 

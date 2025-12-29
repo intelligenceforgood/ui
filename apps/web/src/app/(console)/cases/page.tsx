@@ -11,6 +11,7 @@ import {
   Tags,
   Users,
 } from "lucide-react";
+import { TextWithTokens } from "@/components/text-with-tokens";
 
 export const metadata: Metadata = {
   title: "Cases & Tasks",
@@ -151,7 +152,10 @@ export default async function CasesPage() {
                     </span>
                   </div>
                   <h3 className="text-base font-semibold text-slate-900">
-                    {caseItem.title}
+                    <TextWithTokens
+                      text={caseItem.title}
+                      caseId={caseItem.id}
+                    />
                   </h3>
                   <p className="text-xs text-slate-500">
                     Owner {caseItem.assignee} · Updated{" "}

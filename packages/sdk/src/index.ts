@@ -505,7 +505,20 @@ export interface I4GClient {
   getAnalyticsOverview(): Promise<AnalyticsOverview>;
   listDossiers(options?: DossierListOptions): Promise<DossierListResponse>;
   verifyDossier(planId: string): Promise<DossierVerificationReport>;
+  detokenize(token: string, caseId?: string): Promise<DetokenizeResponse>;
 }
+
+const detokenizeResponseSchema = z.object({
+  token: z.string(),
+  prefix: z.string(),
+  canonical_value: z.string(),
+  pepper_version: z.string(),
+  case_id: z.string().nullable().optional(),
+  detector: z.string().nullable().optional(),
+  created_at: z.string().nullable().optional(),
+});
+
+export type DetokenizeResponse = z.infer<typeof detokenizeResponseSchema>;
 
 function buildUrl(baseUrl: string, path: string) {
   if (path.startsWith("http")) {
@@ -621,6 +634,13 @@ export function createClient(config: ClientConfig): I4GClient {
           method: "POST",
         },
       ).then(normalizeDossierVerification);
+    },
+    detokenize(token, caseId) {
+      const payload = { token, case_id: caseId };
+      return request("/tokenization/detokenize", detokenizeResponseSchema, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
     },
   };
 }
@@ -1283,6 +1303,17 @@ export function createMockClient(): I4GClient {
           artifacts: [],
         }
       );
+    },
+    async detokenize(token, caseId) {
+      return {
+        token,
+        prefix: token.split("-")[0] || "UNK",
+        canonical_value: `[REVEALED: ${token}]`,
+        pepper_version: "mock-v1",
+        case_id: caseId || null,
+        detector: "mock-detector",
+        created_at: new Date().toISOString(),
+      };
     },
   };
 }
