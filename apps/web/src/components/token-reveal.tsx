@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { EyeOff, Loader2, Lock } from "lucide-react";
-import { getI4GClient } from "@/lib/i4g-client";
+import { detokenizeAction } from "@/actions/tokenization";
 import { Button } from "@i4g/ui-kit";
 
 interface TokenRevealProps {
@@ -27,9 +27,8 @@ export function TokenReveal({ token, caseId, className }: TokenRevealProps) {
     setError(null);
 
     try {
-      const client = getI4GClient();
-      const response = await client.detokenize(token, caseId);
-      setRevealedValue(response.canonical_value);
+      const value = await detokenizeAction(token, caseId);
+      setRevealedValue(value);
       setIsOpen(true);
     } catch (err) {
       console.error("Failed to detokenize:", err);
@@ -51,15 +50,15 @@ export function TokenReveal({ token, caseId, className }: TokenRevealProps) {
   }`;
 
   return (
-    <div className={containerClass}>
-      <div className="relative group">
+    <span className={containerClass}>
+      <span className="relative group">
         <code className={codeClass}>{isOpen ? revealedValue : token}</code>
         {error && (
           <span className="absolute -bottom-5 left-0 text-[10px] text-red-500 whitespace-nowrap">
             {error}
           </span>
         )}
-      </div>
+      </span>
 
       <Button
         variant="ghost"
@@ -78,6 +77,6 @@ export function TokenReveal({ token, caseId, className }: TokenRevealProps) {
         )}
         <span className="sr-only">{isOpen ? "Hide value" : "Reveal PII"}</span>
       </Button>
-    </div>
+    </span>
   );
 }

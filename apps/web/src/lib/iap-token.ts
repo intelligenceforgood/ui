@@ -14,32 +14,14 @@ export async function getIapToken(iapClientId: string): Promise<string | null> {
         });
         if (response.ok) {
           token = await response.text();
-          console.error(
-            `IAP: Fetched token from metadata server. Length: ${token.length}`,
-          );
-          try {
-            const payload = JSON.parse(
-              Buffer.from(token.split(".")[1], "base64").toString(),
-            );
-            console.error(`IAP: Token email claim: ${payload.email}`);
-          } catch (e) {
-            console.error("IAP: Failed to decode token payload for debug", e);
-          }
-        } else {
-          console.error(
-            `IAP: Metadata server returned status ${response.status}`,
-          );
         }
-      } catch (e) {
-        console.error("IAP: Failed to fetch token from metadata server", e);
+      } catch {
+        // Metadata server not available
       }
-    } else {
-      console.error("IAP: Not in Cloud Run (K_SERVICE not set)");
     }
 
     // 2. Fallback to GoogleAuth (Local / Other)
     if (!token) {
-      console.error("IAP: Falling back to GoogleAuth");
       const auth = new GoogleAuth();
       const client = await auth.getIdTokenClient(iapClientId);
       const iapHeaders = await client.getRequestHeaders(iapClientId);

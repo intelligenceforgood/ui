@@ -290,15 +290,11 @@ function toIsoOrUndefined(value?: string | null): string | undefined {
 }
 
 function createAuthenticatedFetch(iapClientId: string) {
-  console.error(`IAP: Creating authenticated fetch wrapper for ${iapClientId}`);
   return async (url: RequestInfo | URL, init?: RequestInit) => {
-    console.error(`IAP: Authenticated fetch executing for ${url}`);
     const token = await getIapToken(iapClientId);
     const headers = new Headers(init?.headers);
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
-    } else {
-      console.error("IAP: No token available for authenticated fetch");
     }
     return fetch(url, { ...init, headers });
   };
@@ -308,11 +304,6 @@ async function fetchCoreSearch(
   config: PlatformClientConfig,
   request: SearchRequest,
 ): Promise<SearchResponse> {
-  console.error("IAP: fetchCoreSearch called");
-  console.error(
-    `IAP: Config - baseUrl=${config.baseUrl}, iapClientId=${config.iapClientId ? "SET" : "UNSET"}`,
-  );
-
   const payload = searchRequestSchema.parse(request);
   const limit = payload.pageSize ?? 10;
   const page = payload.page ?? 1;
@@ -447,14 +438,11 @@ async function fetchCoreSearch(
 }
 
 export function createPlatformClient(config: PlatformClientConfig): I4GClient {
-  console.error("IAP: createPlatformClient initializing");
   const mock = createMockClient();
 
   const fetchImpl = config.iapClientId
     ? createAuthenticatedFetch(config.iapClientId)
     : undefined;
-
-  console.error(`IAP: fetchImpl configured: ${!!fetchImpl}`);
 
   const restClient = createClient({
     baseUrl: config.baseUrl,

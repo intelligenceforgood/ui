@@ -1124,7 +1124,7 @@ export default function SearchExperience({
                             >
                               {result.source}
                             </span>
-                            <span>{occurred}</span>
+                            <span suppressHydrationWarning>{occurred}</span>
                           </div>
                           <h3 className="mt-2 text-lg font-semibold text-slate-900">
                             <TextWithTokens text={result.title} />
