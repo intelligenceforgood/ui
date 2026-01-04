@@ -1,4 +1,33 @@
 import { z } from "zod";
+import {
+  ScamIntent,
+  DeliveryChannel,
+  SocialEngineeringTechnique,
+  RequestedAction,
+  ClaimedPersona,
+} from "../../../types/taxonomy";
+
+const scoredLabelSchema = z.object({
+  label: z.string(),
+  confidence: z.number().min(0).max(1),
+  explanation: z.string().optional().nullable(),
+});
+
+export type ScoredLabel = z.infer<typeof scoredLabelSchema>;
+
+const fraudClassificationResultSchema = z.object({
+  intent: z.array(scoredLabelSchema),
+  channel: z.array(scoredLabelSchema),
+  techniques: z.array(scoredLabelSchema),
+  actions: z.array(scoredLabelSchema),
+  persona: z.array(scoredLabelSchema),
+  risk_score: z.number().min(0).max(100),
+  taxonomy_version: z.string(),
+});
+
+export type FraudClassificationResult = z.infer<
+  typeof fraudClassificationResultSchema
+>;
 
 export const intakeSchema = z.object({
   intake_id: z.string(),
@@ -121,6 +150,7 @@ const searchResultSchema = z.object({
   snippet: z.string(),
   source: z.string(),
   tags: z.array(z.string()),
+  classification: fraudClassificationResultSchema.optional(),
   score: z.number(),
   occurredAt: z.string(),
   confidence: z.number().optional(),
@@ -160,6 +190,7 @@ const caseSummarySchema = z.object({
   assignee: z.string(),
   queue: z.string(),
   tags: z.array(z.string()),
+  classification: fraudClassificationResultSchema.optional(),
   progress: z.number().min(0).max(100),
   dueAt: z.string().nullable(),
 });

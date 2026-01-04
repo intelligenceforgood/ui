@@ -12,6 +12,13 @@ import {
   Users,
 } from "lucide-react";
 import { TextWithTokens } from "@/components/text-with-tokens";
+import {
+  ScamIntentDescriptions,
+  DeliveryChannelDescriptions,
+  SocialEngineeringTechniqueDescriptions,
+  RequestedActionDescriptions,
+  ClaimedPersonaDescriptions,
+} from "../../../../../types/taxonomy";
 
 export const metadata: Metadata = {
   title: "Cases & Tasks",
@@ -162,11 +169,91 @@ export default async function CasesPage() {
                     {formatDate(caseItem.updatedAt)}
                   </p>
                   <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-                    {caseItem.tags.map((tag) => (
-                      <Badge key={`${caseItem.id}-${tag}`} variant="default">
-                        #{tag}
-                      </Badge>
-                    ))}
+                    {caseItem.classification ? (
+                      <>
+                        {caseItem.classification.intent.map((item, i) => (
+                          <Badge
+                            key={`intent-${i}`}
+                            variant="danger"
+                            title={
+                              ScamIntentDescriptions[
+                                item.label as keyof typeof ScamIntentDescriptions
+                              ] ||
+                              item.explanation ||
+                              ""
+                            }
+                          >
+                            Intent: {item.label}
+                          </Badge>
+                        ))}
+                        {caseItem.classification.channel.map((item, i) => (
+                          <Badge
+                            key={`channel-${i}`}
+                            variant="info"
+                            title={
+                              DeliveryChannelDescriptions[
+                                item.label as keyof typeof DeliveryChannelDescriptions
+                              ] ||
+                              item.explanation ||
+                              ""
+                            }
+                          >
+                            Channel: {item.label}
+                          </Badge>
+                        ))}
+                        {caseItem.classification.techniques.map((item, i) => (
+                          <Badge
+                            key={`tech-${i}`}
+                            variant="warning"
+                            title={
+                              SocialEngineeringTechniqueDescriptions[
+                                item.label as keyof typeof SocialEngineeringTechniqueDescriptions
+                              ] ||
+                              item.explanation ||
+                              ""
+                            }
+                          >
+                            Technique: {item.label}
+                          </Badge>
+                        ))}
+                        {caseItem.classification.actions.map((item, i) => (
+                          <Badge
+                            key={`action-${i}`}
+                            variant="default"
+                            title={
+                              RequestedActionDescriptions[
+                                item.label as keyof typeof RequestedActionDescriptions
+                              ] ||
+                              item.explanation ||
+                              ""
+                            }
+                          >
+                            Action: {item.label}
+                          </Badge>
+                        ))}
+                        {caseItem.classification.persona.map((item, i) => (
+                          <Badge
+                            key={`persona-${i}`}
+                            variant="default"
+                            title={
+                              ClaimedPersonaDescriptions[
+                                item.label as keyof typeof ClaimedPersonaDescriptions
+                              ] ||
+                              item.explanation ||
+                              ""
+                            }
+                          >
+                            Persona: {item.label}
+                          </Badge>
+                        ))}
+                      </>
+                    ) : (
+                      caseItem.tags.map((tag) => (
+                        <Badge key={`${caseItem.id}-${tag}`} variant="default">
+                          #{tag}
+                        </Badge>
+                      ))
+                    )}
                   </div>
                 </div>
                 <div className="flex w-full flex-col gap-3 sm:max-w-[220px]">

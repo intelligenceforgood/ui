@@ -29,6 +29,13 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import {
+  ScamIntentDescriptions,
+  DeliveryChannelDescriptions,
+  SocialEngineeringTechniqueDescriptions,
+  RequestedActionDescriptions,
+  ClaimedPersonaDescriptions,
+} from "../../../../../../types/taxonomy";
 
 type MatchMode = "exact" | "prefix" | "contains";
 
@@ -1156,14 +1163,94 @@ export default function SearchExperience({
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-                        {result.tags.map((tag, index) => (
-                          <Badge
-                            key={`${result.id}-tag-${tag}-${index}`}
-                            variant="default"
-                          >
-                            #{tag}
-                          </Badge>
-                        ))}
+                        {result.classification ? (
+                          <>
+                            {result.classification.intent.map((item, i) => (
+                              <Badge
+                                key={`intent-${i}`}
+                                variant="danger"
+                                title={
+                                  ScamIntentDescriptions[
+                                    item.label as keyof typeof ScamIntentDescriptions
+                                  ] ||
+                                  item.explanation ||
+                                  ""
+                                }
+                              >
+                                Intent: {item.label}
+                              </Badge>
+                            ))}
+                            {result.classification.channel.map((item, i) => (
+                              <Badge
+                                key={`channel-${i}`}
+                                variant="info"
+                                title={
+                                  DeliveryChannelDescriptions[
+                                    item.label as keyof typeof DeliveryChannelDescriptions
+                                  ] ||
+                                  item.explanation ||
+                                  ""
+                                }
+                              >
+                                Channel: {item.label}
+                              </Badge>
+                            ))}
+                            {result.classification.techniques.map((item, i) => (
+                              <Badge
+                                key={`tech-${i}`}
+                                variant="warning"
+                                title={
+                                  SocialEngineeringTechniqueDescriptions[
+                                    item.label as keyof typeof SocialEngineeringTechniqueDescriptions
+                                  ] ||
+                                  item.explanation ||
+                                  ""
+                                }
+                              >
+                                Technique: {item.label}
+                              </Badge>
+                            ))}
+                            {result.classification.actions.map((item, i) => (
+                              <Badge
+                                key={`action-${i}`}
+                                variant="default"
+                                title={
+                                  RequestedActionDescriptions[
+                                    item.label as keyof typeof RequestedActionDescriptions
+                                  ] ||
+                                  item.explanation ||
+                                  ""
+                                }
+                              >
+                                Action: {item.label}
+                              </Badge>
+                            ))}
+                            {result.classification.persona.map((item, i) => (
+                              <Badge
+                                key={`persona-${i}`}
+                                variant="default"
+                                title={
+                                  ClaimedPersonaDescriptions[
+                                    item.label as keyof typeof ClaimedPersonaDescriptions
+                                  ] ||
+                                  item.explanation ||
+                                  ""
+                                }
+                              >
+                                Persona: {item.label}
+                              </Badge>
+                            ))}
+                          </>
+                        ) : (
+                          result.tags.map((tag, index) => (
+                            <Badge
+                              key={`${result.id}-tag-${tag}-${index}`}
+                              variant="default"
+                            >
+                              #{tag}
+                            </Badge>
+                          ))
+                        )}
                       </div>
                       {expandedResultId === result.id ? (
                         <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-4 text-sm text-slate-600">
