@@ -18,7 +18,7 @@ import {
   SocialEngineeringTechniqueDescriptions,
   RequestedActionDescriptions,
   ClaimedPersonaDescriptions,
-} from "../../../../../types/taxonomy";
+} from "../../../../../../types/taxonomy";
 
 export const metadata: Metadata = {
   title: "Cases & Tasks",
