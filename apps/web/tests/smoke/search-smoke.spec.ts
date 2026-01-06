@@ -85,7 +85,7 @@ test.describe("search smoke", () => {
       // Expect badge with the same name
       if (labelText) {
         await expect(
-          page.getByText(`Tag: ${labelText}`, { exact: false }),
+          page.getByText(`Tag: ${labelText}`, { exact: false }).first(),
         ).toBeVisible();
       }
     }
