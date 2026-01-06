@@ -94,31 +94,7 @@ const facetFieldMap: Record<string, FacetField> = {
 };
 
 // Mirrors core/src/i4g/classification/classifier.py HEURISTICS keys for cross-ui consistency.
-const taxonomyPresets = [
-  {
-    value: "romance_scam",
-    label: "Romance scam",
-    description:
-      "Relationship / affection grooming paired with money or asset requests.",
-  },
-  {
-    value: "crypto_investment",
-    label: "Crypto investment",
-    description: "Wallet + coin mentions or high-return investment language.",
-  },
-  {
-    value: "phishing",
-    label: "Phishing",
-    description:
-      "Suspicious login/reset prompts, impersonation, or short-link channels.",
-  },
-  {
-    value: "potential_crypto",
-    label: "Potential crypto",
-    description:
-      "Wallets present but weak pattern match; queue for analyst confirmation.",
-  },
-] as const;
+// Note: This is now dynamically populated via schema.classifications (backed by CampaignService)
 
 const sourceColors: Record<string, string> = {
   customs: "text-amber-600 bg-amber-50",
@@ -700,22 +676,25 @@ export default function SearchExperience({
               </p>
               <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
                 <p className="text-xs font-semibold text-slate-500">
-                  Fraud patterns
+                  Active Campaigns
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
-                  Derived from core heuristics. Apply one or combine with data
-                  source filters.
+                  Filter by ongoing intelligence campaigns and taxonomy
+                  classifications.
                 </p>
                 <div className="mt-3 space-y-2">
-                  {taxonomyPresets.map((preset) => {
-                    const isSelected = selection.taxonomy.includes(
-                      preset.value,
-                    );
+                  {schema.classifications.map((item) => {
+                    // Start of backward compatibility or if schema returns strings
+                    const value = item;
+                    const label = item;
+                    const description = null;
+
+                    const isSelected = selection.taxonomy.includes(value);
                     return (
                       <button
-                        key={preset.value}
+                        key={value}
                         type="button"
-                        onClick={() => toggleFacet("taxonomy", preset.value)}
+                        onClick={() => toggleFacet("taxonomy", value)}
                         className={
                           "w-full rounded-xl border px-3 py-2 text-left transition " +
                           (isSelected
@@ -723,17 +702,23 @@ export default function SearchExperience({
                             : "border-slate-200 bg-white text-slate-600 hover:border-teal-200")
                         }
                       >
-                        <p className="text-sm font-semibold">{preset.label}</p>
-                        <p className="text-xs text-slate-500">
-                          {preset.description}
-                        </p>
+                        <p className="text-sm font-semibold">{label}</p>
+                        {description ? (
+                          <p className="text-xs text-slate-500">
+                            {description}
+                          </p>
+                        ) : null}
                       </button>
                     );
                   })}
+                  {schema.classifications.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic">
+                      No active campaigns found.
+                    </p>
+                  ) : null}
                 </div>
                 <p className="mt-3 text-[11px] text-slate-400">
-                  Mirrors `core/src/i4g/classification/classifier.py` heuristics
-                  for analyst parity.
+                  Synced with core/src/i4g/services/campaigns.py
                 </p>
               </div>
               {indicatorOptions.length ? (

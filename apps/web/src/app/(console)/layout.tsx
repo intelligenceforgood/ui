@@ -28,6 +28,7 @@ const navItems = [
   { href: "/discovery", label: "Discovery", icon: Globe },
   { href: "/cases", label: "Cases & Tasks", icon: CaseSensitive },
   { href: "/reports/dossiers", label: "Evidence dossiers", icon: FileCheck2 },
+  { href: "/campaigns", label: "Campaigns", icon: Layers },
   { href: "/taxonomy", label: "Taxonomy", icon: Layers },
   { href: "/analytics", label: "Analytics", icon: LineChart },
 ];
