@@ -1257,6 +1257,41 @@ export default function SearchExperience({
                           <p>
                             <TextWithTokens text={result.snippet} />
                           </p>
+
+                          {result.classification?.explanation ? (
+                            <div className="mt-4 rounded-md bg-white p-3 shadow-sm ring-1 ring-slate-900/5">
+                              <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                Classification Analysis
+                              </h4>
+                              <p className="text-slate-700">
+                                {result.classification.explanation}
+                              </p>
+                            </div>
+                          ) : null}
+
+                          {result.classification?.few_shot_examples &&
+                          result.classification.few_shot_examples.length > 0 ? (
+                            <div className="mt-4 space-y-2">
+                              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                Reference Examples
+                              </h4>
+                              <div className="grid gap-2 sm:grid-cols-2">
+                                {result.classification.few_shot_examples.map(
+                                  (ex, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="rounded border border-slate-200 bg-white p-2 text-xs"
+                                    >
+                                      <pre className="whitespace-pre-wrap break-all font-mono text-[10px] text-slate-500">
+                                        {JSON.stringify(ex, null, 2)}
+                                      </pre>
+                                    </div>
+                                  ),
+                                )}
+                              </div>
+                            </div>
+                          ) : null}
+
                           <dl className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
                             <div className="flex flex-col">
                               <dt className="font-semibold uppercase tracking-[0.2em] text-slate-400">

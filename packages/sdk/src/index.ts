@@ -21,6 +21,8 @@ const fraudClassificationResultSchema = z.object({
   techniques: z.array(scoredLabelSchema),
   actions: z.array(scoredLabelSchema),
   persona: z.array(scoredLabelSchema),
+  explanation: z.string().optional().nullable(),
+  few_shot_examples: z.array(z.record(z.unknown())).optional(),
   risk_score: z.number().min(0).max(100),
   taxonomy_version: z.string(),
 });
