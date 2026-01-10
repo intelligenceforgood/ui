@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Card } from "@i4g/ui-kit";
-import { Bookmark, Star, StarOff, Trash2 } from "lucide-react";
+import { Bookmark, RefreshCcw, Star, StarOff, Trash2 } from "lucide-react";
 import { buildSearchHref } from "@/lib/search-links";
-import { toStringArray } from "@/lib/search/filters";
+import { isPlainObject, toStringArray } from "@/lib/search/filters";
 import type { SavedSearchRecord } from "@/types/reviews";
 
 function formatDate(value: string) {
@@ -27,7 +27,27 @@ type SavedSearchesListProps = {
 function buildSavedSearchRunParams(
   item: SavedSearchRecord,
 ): Record<string, unknown> {
-  const payload: Record<string, unknown> = { ...item.params };
+  let payload: Record<string, unknown> = { ...item.params };
+  // If "request" exists and contains params, we hoist them up and remove "request"
+  // to avoid buildSearchHref using the raw nested object.
+  if (isPlainObject(payload["request"])) {
+    payload = {
+      ...payload,
+      ...(payload["request"] as Record<string, unknown>),
+    };
+    delete payload["request"];
+  }
+
+  // Fallback: if no query text is present in the saved parameters, assume the
+  // saved search name is the query. This handles legacy saves or cases where
+  // the user named the search after their primary keyword (e.g. "MEC Mule").
+  if (
+    typeof payload["query"] !== "string" &&
+    typeof payload["text"] !== "string" &&
+    item.name
+  ) {
+    payload["query"] = item.name;
+  }
 
   const idCandidate =
     typeof payload["saved_search_id"] === "string"
@@ -229,9 +249,9 @@ export function SavedSearchesList({
                     href={buildSearchHref(buildSavedSearchRunParams(item), {
                       label: item.name,
                     })}
-                    className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-600 transition hover:text-teal-700"
+                    className="inline-flex items-center gap-2 text-xs font-semibold text-teal-600 transition hover:text-teal-700"
                   >
-                    Run search
+                    <RefreshCcw className="h-3.5 w-3.5" /> Rerun search
                   </Link>
                 </div>
               </div>

@@ -1,2 +1,5 @@
 # Generated schema snapshot; keep raw copy for schema:check
 apps/web/src/config/generated/hybrid_search_schema.json
+
+# Test artifacts
+apps/web/test-results/

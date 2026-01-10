@@ -5,7 +5,11 @@ import { useCallback, useEffect, useState } from "react";
 import { Badge, Button, Card } from "@i4g/ui-kit";
 import { Clock4, History, RefreshCcw } from "lucide-react";
 import { buildSearchHref } from "@/lib/search-links";
-import { normalizeTimeRange, toStringArray } from "@/lib/search/filters";
+import {
+  isPlainObject,
+  normalizeTimeRange,
+  toStringArray,
+} from "@/lib/search/filters";
 import type { SearchHistoryEvent } from "@/types/reviews";
 
 const timeRangeFormatter = new Intl.DateTimeFormat("en", {
@@ -31,8 +35,27 @@ type HistoryFilterSummary = {
 function buildRerunParams(
   params: Record<string, unknown>,
   descriptor: SearchHistoryEvent["savedSearch"],
+  fallbackQuery?: string,
 ): Record<string, unknown> {
-  const payload: Record<string, unknown> = { ...params };
+  let payload: Record<string, unknown> = { ...params };
+  // If "request" exists and contains params, we hoist them up and remove "request"
+  // to avoid buildSearchHref using the raw nested object.
+  if (isPlainObject(payload["request"])) {
+    payload = {
+      ...payload,
+      ...(payload["request"] as Record<string, unknown>),
+    };
+    delete payload["request"];
+  }
+
+  // Fallback: if no query found in params, use the fallback (from event.query or name)
+  if (
+    typeof payload["query"] !== "string" &&
+    typeof payload["text"] !== "string" &&
+    fallbackQuery
+  ) {
+    payload["query"] = fallbackQuery;
+  }
 
   if (descriptor?.id) {
     payload["saved_search_id"] = descriptor.id;
@@ -253,6 +276,7 @@ export function SearchHistoryList({
             const rerunParams = buildRerunParams(
               event.params,
               event.savedSearch ?? null,
+              queryCandidate,
             );
 
             return (
