@@ -221,28 +221,29 @@ const casesResponseSchema = z.object({
 
 export type CasesResponse = z.infer<typeof casesResponseSchema>;
 
-export type TaxonomyNode = {
-  id: string;
-  label: string;
-  description: string;
-  count: number;
-  children: TaxonomyNode[];
-};
+export const taxonomyItemSchema = z.object({
+  code: z.string(),
+  label: z.string(),
+  description: z.string(),
+  examples: z.array(z.string()),
+});
 
-const taxonomyNodeSchema: z.ZodType<TaxonomyNode> = z.lazy(() =>
-  z.object({
-    id: z.string(),
-    label: z.string(),
-    description: z.string(),
-    count: z.number(),
-    children: z.array(taxonomyNodeSchema),
-  }),
-);
+export type TaxonomyItem = z.infer<typeof taxonomyItemSchema>;
+
+export const taxonomyAxisSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  description: z.string(),
+  items: z.array(taxonomyItemSchema),
+});
+
+export type TaxonomyAxis = z.infer<typeof taxonomyAxisSchema>;
 
 const taxonomyResponseSchema = z.object({
+  version: z.string(),
   steward: z.string(),
   updatedAt: z.string(),
-  nodes: z.array(taxonomyNodeSchema),
+  axes: z.array(taxonomyAxisSchema),
 });
 
 export type TaxonomyResponse = z.infer<typeof taxonomyResponseSchema>;
@@ -708,7 +709,7 @@ const mockDashboardData: DashboardOverview = {
   alerts: [
     {
       id: "alert-1",
-      title: "Potential trafficking network detected",
+      title: "Potential crypto scam network detected",
       detail: "Signal strength 0.92 · Cross-border pattern",
       time: "5m ago",
       variant: "danger",
@@ -770,11 +771,11 @@ const mockDashboardData: DashboardOverview = {
 const mockSearchResults: SearchResult[] = [
   {
     id: "result-1",
-    title: "Shipping manifest links Group-7 to flagged port of entry",
+    title: "Crypto wallet cluster links Pattern-3 to flagged exchange",
     snippet:
-      "Customs filings from 12 Oct indicate Group-7 rerouted cargo through Port Azul. Discrepancies match known trafficker profile.",
-    source: "customs",
-    tags: ["trafficking", "group-7", "port-azul"],
+      "Blockchain analysis from 12 Oct indicates Pattern-3 rerouted funds through Exchange X. Discrepancies match known pig-butchering profile.",
+    source: "blockchain",
+    tags: ["crypto-scam", "pattern-3", "exchange-x"],
     score: 0.92,
     occurredAt: "2025-11-18T13:04:00Z",
     confidence: 0.91,
@@ -803,7 +804,7 @@ const mockSearchResults: SearchResult[] = [
   },
   {
     id: "result-4",
-    title: "Financial transfer pattern aligns with prior trafficking ring",
+    title: "Financial transfer pattern aligns with prior investment fraud ring",
     snippet:
       "Clustered transfers originating from shell companies cross-referenced with FinCEN alert #5815.",
     source: "financial",
@@ -840,9 +841,9 @@ const mockFacets: SearchFacet[] = [
     field: "taxonomy",
     label: "Taxonomy",
     options: [
-      { value: "trafficking", count: 14 },
-      { value: "child-labor", count: 6 },
-      { value: "group-7", count: 4 },
+      { value: "crypto-scam", count: 14 },
+      { value: "romance-scam", count: 6 },
+      { value: "pattern-3", count: 4 },
       { value: "finance", count: 5 },
     ],
   },
@@ -858,13 +859,13 @@ const mockCasesResponse: CasesResponse = {
   cases: [
     {
       id: "case-482",
-      title: "Group-7 cross-border trafficking investigation",
+      title: "Pattern-3 cross-border crypto investigation",
       priority: "critical",
       status: "active",
       updatedAt: "2025-11-19T08:41:00Z",
       assignee: "J. Alvarez",
       queue: "Rapid Response",
-      tags: ["trafficking", "group-7", "cross-border"],
+      tags: ["crypto-scam", "pattern-3", "cross-border"],
       progress: 68,
       dueAt: "2025-11-21T17:00:00Z",
     },
@@ -946,72 +947,20 @@ const mockCasesResponse: CasesResponse = {
 };
 
 const mockTaxonomyResponse: TaxonomyResponse = {
+  version: "1.0",
   steward: "Policy & Standards Team",
-  updatedAt: "2025-11-18T09:30:00Z",
-  nodes: [
+  updatedAt: "2026-01-10T12:00:00Z",
+  axes: [
     {
-      id: "tax-trafficking",
-      label: "Trafficking",
-      description: "Indicators and cases relating to human trafficking.",
-      count: 128,
-      children: [
+      id: "intents",
+      label: "Intents",
+      description: "Primary fraud intents",
+      items: [
         {
-          id: "tax-trafficking-labor",
-          label: "Labor Exploitation",
-          description: "Forced or coerced labor scenarios.",
-          count: 54,
-          children: [],
-        },
-        {
-          id: "tax-trafficking-sex",
-          label: "Sexual Exploitation",
-          description: "Sexual exploitation and related offenses.",
-          count: 47,
-          children: [],
-        },
-      ],
-    },
-    {
-      id: "tax-financial",
-      label: "Financial Facilitation",
-      description: "Money movement supporting suspicious activity.",
-      count: 86,
-      children: [
-        {
-          id: "tax-financial-shell",
-          label: "Shell Companies",
-          description: "Use of shell entities to mask flows.",
-          count: 31,
-          children: [],
-        },
-        {
-          id: "tax-financial-remittance",
-          label: "Remittance Patterns",
-          description: "Structured remittances suggesting laundering.",
-          count: 19,
-          children: [],
-        },
-      ],
-    },
-    {
-      id: "tax-intake",
-      label: "Partner Intake",
-      description: "Signals sourced from NGO and hotline partners.",
-      count: 63,
-      children: [
-        {
-          id: "tax-intake-hotline",
-          label: "Hotline",
-          description: "Hotline submissions and escalations.",
-          count: 28,
-          children: [],
-        },
-        {
-          id: "tax-intake-shelter",
-          label: "Shelter",
-          description: "Reports from shelter partners.",
-          count: 17,
-          children: [],
+          code: "INTENT.IMPOSTER",
+          label: "Imposter",
+          description: "Pretending to be someone else",
+          examples: [],
         },
       ],
     },

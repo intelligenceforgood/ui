@@ -3,19 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createCampaign } from "@/lib/server/campaigns-service";
+import type { TaxonomyResponse } from "@i4g/sdk";
 
-interface TaxonomyNode {
-  id: string;
-  label: string;
-  children?: TaxonomyNode[];
-  description?: string;
-}
+export function CampaignForm({ taxonomy }: { taxonomy: TaxonomyResponse }) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _taxonomy = taxonomy;
 
-interface TaxonomyTree {
-  nodes: TaxonomyNode[];
-}
-
-export function CampaignForm({ taxonomy }: { taxonomy: TaxonomyTree }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -42,36 +35,38 @@ export function CampaignForm({ taxonomy }: { taxonomy: TaxonomyTree }) {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const toggleId = (id: string) => {
     setSelectedTaxonomyIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   };
 
+  // Function temporarily unused until UI is updated for 5-axis taxonomy
+  /*
   const renderNode = (node: TaxonomyNode, depth = 0) => {
     return (
       <div key={node.id} style={{ marginLeft: depth * 20 }} className="py-2">
         <label className="flex items-start gap-2 cursor-pointer">
           <input
             type="checkbox"
+            className="mt-1"
             checked={selectedTaxonomyIds.includes(node.id)}
             onChange={() => toggleId(node.id)}
-            className="mt-1 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
           />
           <div>
-            <span className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {node.label}
             </span>
-            {node.description && (
-              <p className="text-xs text-slate-500">{node.description}</p>
-            )}
+            <p className="text-xs text-slate-500">{node.description}</p>
           </div>
         </label>
-
-        {node.children?.map((child) => renderNode(child, depth + 1))}
+        {node.children &&
+          node.children.map((child) => renderNode(child, depth + 1))}
       </div>
     );
   };
+  */
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
@@ -109,14 +104,17 @@ export function CampaignForm({ taxonomy }: { taxonomy: TaxonomyTree }) {
             </span>
             <div className="absolute bottom-full right-0 mb-2 hidden w-64 rounded bg-slate-800 p-3 text-xs text-white shadow-lg group-hover:block z-10">
               This selection links your tactical work to organizational risk
-              categories (e.g., Trafficking, Financial Facilitation). It drives
+              categories (e.g., Scam Intent, Delivery Channel). It drives
               executive reporting and ensures your campaign is counted in the
               correct strategic buckets.
             </div>
           </div>
         </div>
         <div className="rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
-          {taxonomy.nodes.map((node) => renderNode(node))}
+          <p className="text-sm text-yellow-600">
+            Campaign Taxonomy selection is temporarily disabled pending UI
+            update for 5-axis taxonomy.
+          </p>
         </div>
       </div>
 

@@ -77,7 +77,9 @@ describe("SearchExperience", () => {
       <SearchExperience initialResults={initialResults} schema={mockSchema} />,
     );
 
-    const heading = screen.getByText(/shipping manifest links group-7/i);
+    const heading = screen.getByText(
+      /Crypto wallet cluster links Pattern-3 to flagged exchange/i,
+    );
     expect(heading).toBeInTheDocument();
   });
 

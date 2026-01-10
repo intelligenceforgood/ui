@@ -196,10 +196,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   const initialResults = await client.searchIntelligence(initialSearchRequest);
 
-  const [schema, history, savedSearches] = await Promise.all([
+  const [schema, history, savedSearches, taxonomy] = await Promise.all([
     getHybridSearchSchema(),
     getSearchHistory(6),
     listSavedSearches({ limit: 6 }),
+    client.getTaxonomy(),
   ]);
 
   return (
@@ -247,6 +248,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       <SearchExperience
         initialResults={initialResults}
+        taxonomy={taxonomy}
         initialSelection={{
           sources: selectionSources,
           taxonomy: selectionTaxonomy,

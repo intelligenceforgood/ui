@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Button, Card, Input } from "@i4g/ui-kit";
-import type { SearchRequest, SearchResponse } from "@i4g/sdk";
+import type { SearchRequest, SearchResponse, TaxonomyResponse } from "@i4g/sdk";
 import type {
   HybridSearchSchema,
   SavedSearchDescriptor,
@@ -29,13 +29,18 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import {
-  ScamIntentDescriptions,
-  DeliveryChannelDescriptions,
-  SocialEngineeringTechniqueDescriptions,
-  RequestedActionDescriptions,
-  ClaimedPersonaDescriptions,
-} from "../../../../../../types/taxonomy";
+
+function getTaxonomyDescription(
+  taxonomy: TaxonomyResponse,
+  label: string,
+): string {
+  if (!taxonomy?.axes) return "";
+  for (const axis of taxonomy.axes) {
+    const item = axis.items.find((i) => i.code === label || i.label === label);
+    if (item) return item.description;
+  }
+  return "";
+}
 
 type MatchMode = "exact" | "prefix" | "contains";
 
@@ -83,6 +88,7 @@ type BuildSearchRequestOptions = {
 
 type SearchExperienceProps = {
   initialResults: SearchResponse;
+  taxonomy: TaxonomyResponse;
   initialSelection?: InitialSelection;
   initialSavedSearch?: SavedSearchDescriptor | null;
   schema: HybridSearchSchema;
@@ -130,6 +136,7 @@ const buildEntityFilterRows = (
 
 export default function SearchExperience({
   initialResults,
+  taxonomy,
   initialSelection,
   initialSavedSearch,
   schema,
@@ -1155,11 +1162,8 @@ export default function SearchExperience({
                                 key={`intent-${i}`}
                                 variant="danger"
                                 title={
-                                  ScamIntentDescriptions[
-                                    item.label as keyof typeof ScamIntentDescriptions
-                                  ] ||
                                   item.explanation ||
-                                  ""
+                                  getTaxonomyDescription(taxonomy, item.label)
                                 }
                               >
                                 Intent: {item.label}
@@ -1170,11 +1174,8 @@ export default function SearchExperience({
                                 key={`channel-${i}`}
                                 variant="info"
                                 title={
-                                  DeliveryChannelDescriptions[
-                                    item.label as keyof typeof DeliveryChannelDescriptions
-                                  ] ||
                                   item.explanation ||
-                                  ""
+                                  getTaxonomyDescription(taxonomy, item.label)
                                 }
                               >
                                 Channel: {item.label}
@@ -1185,11 +1186,8 @@ export default function SearchExperience({
                                 key={`tech-${i}`}
                                 variant="warning"
                                 title={
-                                  SocialEngineeringTechniqueDescriptions[
-                                    item.label as keyof typeof SocialEngineeringTechniqueDescriptions
-                                  ] ||
                                   item.explanation ||
-                                  ""
+                                  getTaxonomyDescription(taxonomy, item.label)
                                 }
                               >
                                 Technique: {item.label}
@@ -1200,11 +1198,8 @@ export default function SearchExperience({
                                 key={`action-${i}`}
                                 variant="default"
                                 title={
-                                  RequestedActionDescriptions[
-                                    item.label as keyof typeof RequestedActionDescriptions
-                                  ] ||
                                   item.explanation ||
-                                  ""
+                                  getTaxonomyDescription(taxonomy, item.label)
                                 }
                               >
                                 Action: {item.label}
@@ -1215,11 +1210,8 @@ export default function SearchExperience({
                                 key={`persona-${i}`}
                                 variant="default"
                                 title={
-                                  ClaimedPersonaDescriptions[
-                                    item.label as keyof typeof ClaimedPersonaDescriptions
-                                  ] ||
                                   item.explanation ||
-                                  ""
+                                  getTaxonomyDescription(taxonomy, item.label)
                                 }
                               >
                                 Persona: {item.label}
