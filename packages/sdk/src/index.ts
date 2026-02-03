@@ -189,12 +189,12 @@ const caseSummarySchema = z.object({
   priority: z.enum(["critical", "high", "medium", "low"]),
   status: z.enum(["new", "active", "blocked", "awaiting-input", "closed"]),
   updatedAt: z.string(),
-  assignee: z.string(),
-  queue: z.string(),
+  assignee: z.string().nullable().optional(),
+  queue: z.string().nullable().optional(),
   tags: z.array(z.string()),
   classification: fraudClassificationResultSchema.optional(),
-  progress: z.number().min(0).max(100),
-  dueAt: z.string().nullable(),
+  progress: z.number().min(0).max(100).nullable().optional(),
+  dueAt: z.string().nullable().optional(),
 });
 
 export type CaseSummary = z.infer<typeof caseSummarySchema>;
@@ -220,6 +220,48 @@ const casesResponseSchema = z.object({
 });
 
 export type CasesResponse = z.infer<typeof casesResponseSchema>;
+
+const caseArtifactSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  name: z.string(),
+  url: z.string().optional(),
+  metadata: z.record(z.any()).optional(),
+});
+export type CaseArtifact = z.infer<typeof caseArtifactSchema>;
+
+const caseTimelineEventSchema = z.object({
+  id: z.string(),
+  timestamp: z.string(),
+  description: z.string(),
+  actor: z.string().nullable().optional(),
+  type: z.string(),
+});
+export type CaseTimelineEvent = z.infer<typeof caseTimelineEventSchema>;
+
+const caseGraphNodeSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  type: z.string(),
+  data: z.record(z.any()).optional(),
+});
+export type CaseGraphNode = z.infer<typeof caseGraphNodeSchema>;
+
+const caseGraphLinkSchema = z.object({
+  source: z.string(),
+  target: z.string(),
+  relation: z.string(),
+});
+export type CaseGraphLink = z.infer<typeof caseGraphLinkSchema>;
+
+export const caseDetailSchema = caseSummarySchema.extend({
+  description: z.string().optional(),
+  artifacts: z.array(caseArtifactSchema),
+  timeline: z.array(caseTimelineEventSchema),
+  graph_nodes: z.array(caseGraphNodeSchema),
+  graph_links: z.array(caseGraphLinkSchema),
+});
+export type CaseDetail = z.infer<typeof caseDetailSchema>;
 
 export const taxonomyItemSchema = z.object({
   code: z.string(),
@@ -535,6 +577,7 @@ export interface I4GClient {
   getDashboardOverview(): Promise<DashboardOverview>;
   searchIntelligence(request: SearchRequest): Promise<SearchResponse>;
   listCases(): Promise<CasesResponse>;
+  getCase(id: string): Promise<CaseDetail>;
   getTaxonomy(): Promise<TaxonomyResponse>;
   getAnalyticsOverview(): Promise<AnalyticsOverview>;
   listDossiers(options?: DossierListOptions): Promise<DossierListResponse>;
@@ -637,6 +680,9 @@ export function createClient(config: ClientConfig): I4GClient {
     },
     listCases() {
       return request("/cases", casesResponseSchema);
+    },
+    getCase(id) {
+      return request(`/cases/${id}`, caseDetailSchema);
     },
     getTaxonomy() {
       return request("/taxonomy", taxonomyResponseSchema);
@@ -1245,6 +1291,44 @@ export function createMockClient(): I4GClient {
     },
     async listCases() {
       return mockCasesResponse;
+    },
+    async getCase(id) {
+      const found = mockCasesResponse.cases.find((c) => c.id === id);
+      const base = found || {
+        id,
+        title: `Investigation ${id}`,
+        status: "active" as const,
+        priority: "medium" as const,
+        assignee: "analyst@example.com",
+        updatedAt: new Date().toISOString(),
+        queue: "General",
+        tags: [],
+        progress: 0,
+        dueAt: null,
+      };
+
+      return {
+        ...base,
+        description: "Mocked detailed view for UI development.",
+        artifacts: [
+          {
+            id: "art-1",
+            type: "document",
+            name: "Suspicious Report.pdf",
+            metadata: { size: "1.2MB" },
+          },
+        ],
+        timeline: [
+          {
+            id: "evt-1",
+            timestamp: new Date().toISOString(),
+            description: "Case opened",
+            type: "system",
+          },
+        ],
+        graph_nodes: [],
+        graph_links: [],
+      };
     },
     async getTaxonomy() {
       return mockTaxonomyResponse;

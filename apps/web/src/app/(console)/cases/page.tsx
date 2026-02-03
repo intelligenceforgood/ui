@@ -59,9 +59,12 @@ function formatDate(value: string | null | undefined) {
 
 export default async function CasesPage() {
   const client = getI4GClient();
+  const casesPromise = client.listCases();
+  const taxonomyPromise = client.getTaxonomy();
+
   const [{ summary, cases, queues }, taxonomy] = await Promise.all([
-    client.listCases(),
-    client.getTaxonomy(),
+    casesPromise,
+    taxonomyPromise,
   ]);
 
   return (
@@ -265,13 +268,13 @@ export default async function CasesPage() {
                   <div className="text-xs text-slate-500">
                     Due {formatDate(caseItem.dueAt)}
                   </div>
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-end gap-2 text-xs font-semibold text-teal-600 transition hover:text-teal-700"
+                  <Link
+                    href={`/cases/${caseItem.id}`}
+                    className="inline-flex items-center justify-end gap-2 text-xs font-bold text-teal-600 transition hover:text-teal-700 hover:underline"
                   >
-                    Open workspace
+                    Open Case &rarr;
                     <ArrowUpRight className="h-3.5 w-3.5" />
-                  </button>
+                  </Link>
                 </div>
               </div>
             ))}

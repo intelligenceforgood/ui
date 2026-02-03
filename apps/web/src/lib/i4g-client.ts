@@ -55,6 +55,13 @@ function withMockFallback(client: I4GClient): I4GClient {
         () => mock.listCases(),
       );
     },
+    async getCase(id) {
+      return withFallback(
+        `case detail ${id}`,
+        () => client.getCase(id),
+        () => mock.getCase(id),
+      );
+    },
     async getTaxonomy() {
       return withFallback(
         "taxonomy",
@@ -128,7 +135,14 @@ function resolveClient(): I4GClient {
         apiKey: process.env.I4G_API_KEY,
       });
 
-  cachedClient = withMockFallback(resolvedClient);
+  // Only enable mock fallback if explicitly requested, otherwise fail loudly so
+  // configuration/networking errors are visible.
+  if (process.env.NEXT_PUBLIC_ENABLE_MOCK_FALLBACK === "true") {
+    cachedClient = withMockFallback(resolvedClient);
+  } else {
+    cachedClient = resolvedClient;
+  }
+
   return cachedClient;
 }
 
