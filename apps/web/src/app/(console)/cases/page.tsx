@@ -57,9 +57,28 @@ function formatDate(value: string | null | undefined) {
   }).format(new Date(value));
 }
 
-export default async function CasesPage() {
+export default async function CasesPage(props: {
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const searchParams = await props.searchParams;
+  const status =
+    typeof searchParams?.status === "string" ? searchParams.status : undefined;
+  const priority =
+    typeof searchParams?.priority === "string"
+      ? searchParams.priority
+      : undefined;
+  const queue =
+    typeof searchParams?.queue === "string" ? searchParams.queue : undefined;
+  const dueDate =
+    typeof searchParams?.due === "string" ? searchParams.due : undefined;
+
   const client = getI4GClient();
-  const casesPromise = client.listCases();
+  const casesPromise = client.listCases({
+    status,
+    priority,
+    queue,
+    due_date: dueDate,
+  });
   const taxonomyPromise = client.getTaxonomy();
 
   const [{ summary, cases, queues }, taxonomy] = await Promise.all([
@@ -96,50 +115,58 @@ export default async function CasesPage() {
       </header>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card>
-          <div className="flex items-center gap-3">
-            <Briefcase className="h-9 w-9 rounded-2xl bg-teal-50 p-2 text-teal-600" />
-            <div>
-              <p className="text-sm text-slate-500">Active cases</p>
-              <p className="text-2xl font-semibold text-slate-900">
-                {summary.active}
-              </p>
+        <Link href="/cases">
+          <Card className="h-full transition-colors hover:bg-slate-50/50">
+            <div className="flex items-center gap-3">
+              <Briefcase className="h-9 w-9 rounded-2xl bg-teal-50 p-2 text-teal-600" />
+              <div>
+                <p className="text-sm text-slate-500">Active cases</p>
+                <p className="text-2xl font-semibold text-slate-900">
+                  {summary.active}
+                </p>
+              </div>
             </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-3">
-            <ShieldAlert className="h-9 w-9 rounded-2xl bg-rose-50 p-2 text-rose-500" />
-            <div>
-              <p className="text-sm text-slate-500">Escalations</p>
-              <p className="text-2xl font-semibold text-slate-900">
-                {summary.escalations}
-              </p>
+          </Card>
+        </Link>
+        <Link href="/cases?priority=critical,high">
+          <Card className="h-full transition-colors hover:bg-slate-50/50">
+            <div className="flex items-center gap-3">
+              <ShieldAlert className="h-9 w-9 rounded-2xl bg-rose-50 p-2 text-rose-500" />
+              <div>
+                <p className="text-sm text-slate-500">Escalations</p>
+                <p className="text-2xl font-semibold text-slate-900">
+                  {summary.escalations}
+                </p>
+              </div>
             </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-3">
-            <Gauge className="h-9 w-9 rounded-2xl bg-amber-50 p-2 text-amber-500" />
-            <div>
-              <p className="text-sm text-slate-500">Due today</p>
-              <p className="text-2xl font-semibold text-slate-900">
-                {summary.dueToday}
-              </p>
+          </Card>
+        </Link>
+        <Link href="/cases?due=today">
+          <Card className="h-full transition-colors hover:bg-slate-50/50">
+            <div className="flex items-center gap-3">
+              <Gauge className="h-9 w-9 rounded-2xl bg-amber-50 p-2 text-amber-500" />
+              <div>
+                <p className="text-sm text-slate-500">Due today</p>
+                <p className="text-2xl font-semibold text-slate-900">
+                  {summary.dueToday}
+                </p>
+              </div>
             </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-3">
-            <Users className="h-9 w-9 rounded-2xl bg-sky-50 p-2 text-sky-500" />
-            <div>
-              <p className="text-sm text-slate-500">Pending review</p>
-              <p className="text-2xl font-semibold text-slate-900">
-                {summary.pendingReview}
-              </p>
+          </Card>
+        </Link>
+        <Link href="/cases?status=new">
+          <Card className="h-full transition-colors hover:bg-slate-50/50">
+            <div className="flex items-center gap-3">
+              <Users className="h-9 w-9 rounded-2xl bg-sky-50 p-2 text-sky-500" />
+              <div>
+                <p className="text-sm text-slate-500">Pending review</p>
+                <p className="text-2xl font-semibold text-slate-900">
+                  {summary.pendingReview}
+                </p>
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </Link>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[2fr_1fr]">
@@ -288,9 +315,10 @@ export default async function CasesPage() {
           </div>
           <div className="space-y-4">
             {queues.map((queue) => (
-              <div
+              <Link
                 key={queue.id}
-                className="rounded-xl border border-slate-100 bg-white/70 p-4"
+                href={`/cases?queue=${queue.id}`}
+                className="block rounded-xl border border-slate-100 bg-white/70 p-4 transition-colors hover:border-teal-200 hover:bg-teal-50/20"
               >
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-slate-900">
@@ -305,7 +333,7 @@ export default async function CasesPage() {
                   <Tags className="h-3.5 w-3.5" />
                   Primary tags
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </Card>

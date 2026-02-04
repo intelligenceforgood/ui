@@ -573,10 +573,18 @@ export interface ClientConfig {
   additionalHeaders?: Record<string, string>;
 }
 
+export interface CasesListOptions {
+  limit?: number;
+  status?: string;
+  priority?: string;
+  queue?: string;
+  due_date?: string;
+}
+
 export interface I4GClient {
   getDashboardOverview(): Promise<DashboardOverview>;
   searchIntelligence(request: SearchRequest): Promise<SearchResponse>;
-  listCases(): Promise<CasesResponse>;
+  listCases(options?: CasesListOptions): Promise<CasesResponse>;
   getCase(id: string): Promise<CaseDetail>;
   getTaxonomy(): Promise<TaxonomyResponse>;
   getAnalyticsOverview(): Promise<AnalyticsOverview>;
@@ -678,8 +686,17 @@ export function createClient(config: ClientConfig): I4GClient {
         body: JSON.stringify(payload),
       });
     },
-    listCases() {
-      return request("/cases", casesResponseSchema);
+    listCases(options) {
+      const query = new URLSearchParams();
+      if (options?.limit) query.set("limit", String(options.limit));
+      if (options?.status) query.set("status", options.status);
+      if (options?.priority) query.set("priority", options.priority);
+      if (options?.queue) query.set("queue", options.queue);
+      if (options?.due_date) query.set("due_date", options.due_date);
+
+      const queryString = query.toString();
+      const path = queryString ? `/cases?${queryString}` : "/cases";
+      return request(path, casesResponseSchema);
     },
     getCase(id) {
       return request(`/cases/${id}`, caseDetailSchema);
