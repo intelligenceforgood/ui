@@ -115,7 +115,9 @@ function resolveClient(): I4GClient {
   }
 
   const baseUrl =
-    process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+    (typeof window === "undefined" ? process.env.I4G_API_URL : "/api") ??
+    process.env.NEXT_PUBLIC_API_BASE_URL ??
+    "";
 
   if (!baseUrl) {
     cachedClient = getMockClient();

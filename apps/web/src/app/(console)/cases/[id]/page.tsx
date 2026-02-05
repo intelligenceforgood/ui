@@ -2,7 +2,14 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getI4GClient } from "@/lib/i4g-client";
 import { Badge, Button, Card } from "@i4g/ui-kit";
-import { ArrowLeft, Clock, Paperclip, Share2, ShieldAlert } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock,
+  ExternalLink,
+  Paperclip,
+  Share2,
+  ShieldAlert,
+} from "lucide-react";
 import Link from "next/link";
 
 // Force dynamic since we are fetching a specific ID
@@ -108,9 +115,23 @@ async function CaseDetailView({ id }: { id: string }) {
               {caseData.artifacts.map((art) => (
                 <li
                   key={art.id}
-                  className="flex items-center justify-between p-2 bg-slate-50 rounded text-sm"
+                  className="flex items-center justify-between p-2 bg-slate-50 rounded text-sm transition-colors hover:bg-slate-100"
                 >
-                  <span className="truncate max-w-[180px]">{art.name}</span>
+                  {art.url ? (
+                    <a
+                      href={art.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-blue-600 hover:text-blue-800 hover:underline truncate max-w-[180px]"
+                    >
+                      {art.name}
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  ) : (
+                    <span className="truncate max-w-[180px] text-slate-700">
+                      {art.name}
+                    </span>
+                  )}
                   <Badge variant="default" className="text-xs">
                     {art.type}
                   </Badge>

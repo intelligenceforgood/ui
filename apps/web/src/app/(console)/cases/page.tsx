@@ -37,6 +37,10 @@ const statusStyles: Record<CaseSummary["status"], string> = {
   blocked: "bg-rose-50 text-rose-600",
   "awaiting-input": "bg-amber-50 text-amber-600",
   closed: "bg-slate-200 text-slate-600",
+  queued: "bg-purple-50 text-purple-600",
+  in_review: "bg-blue-50 text-blue-600",
+  accepted: "bg-emerald-50 text-emerald-600",
+  rejected: "bg-red-50 text-red-600",
 };
 
 const priorityStyles: Record<CaseSummary["priority"], string> = {
