@@ -14,17 +14,6 @@ const requestSchema = z.object({
   boostJson: z.string().optional(),
 });
 
-const mockResult = {
-  summary: "Mock Discovery result",
-  label: "sample",
-  tags: ["demo", "vertex"],
-  source: "mock",
-  index_type: "demo-index",
-  struct: { summary: "Mock result", source: "mock" },
-  rank_signals: { semanticSimilarityScore: 0.91 },
-  raw: { message: "Mock result" },
-};
-
 function resolveApiBase() {
   return (
     process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null
@@ -154,30 +143,6 @@ function mapResult(payload: RawResult, index: number): DiscoveryResult {
   } satisfies DiscoveryResult;
 }
 
-function buildMockResponse(query: string): DiscoverySearchResponse {
-  const template = {
-    ...mockResult,
-    summary: query ? `Mock hit for "${query}"` : mockResult.summary,
-  };
-  return {
-    results: [0, 1, 2].map((offset) =>
-      mapResult(
-        {
-          ...template,
-          rank: offset + 1,
-          document_id: `mock-${offset + 1}`,
-          document_name: `mock-document-${offset + 1}`,
-          tags: ["demo", "vertex", `sample-${offset + 1}`],
-          raw: template.raw,
-        } as RawResult,
-        offset,
-      ),
-    ),
-    totalSize: 3,
-    nextPageToken: undefined,
-  } satisfies DiscoverySearchResponse;
-}
-
 function buildUrl(baseUrl: string, params: z.infer<typeof requestSchema>) {
   const url = new URL("/discovery/search", baseUrl);
   url.searchParams.set("query", params.query);
@@ -241,7 +206,10 @@ export async function POST(request: Request) {
     const params = parsed.data;
     const apiBase = resolveApiBase();
     if (!apiBase) {
-      return NextResponse.json(buildMockResponse(params.query));
+      return NextResponse.json(
+        { error: "Backend API URL is not configured (I4G_API_URL)." },
+        { status: 503 },
+      );
     }
 
     const url = buildUrl(apiBase, params);
