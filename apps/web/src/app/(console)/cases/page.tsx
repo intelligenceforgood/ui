@@ -33,12 +33,9 @@ export const metadata: Metadata = {
 
 const statusStyles: Record<CaseSummary["status"], string> = {
   new: "bg-slate-100 text-slate-600",
-  active: "bg-teal-50 text-teal-600",
-  blocked: "bg-rose-50 text-rose-600",
-  "awaiting-input": "bg-amber-50 text-amber-600",
-  closed: "bg-slate-200 text-slate-600",
-  queued: "bg-purple-50 text-purple-600",
   in_review: "bg-blue-50 text-blue-600",
+  awaiting_input: "bg-amber-50 text-amber-600",
+  closed: "bg-slate-200 text-slate-600",
   accepted: "bg-emerald-50 text-emerald-600",
   rejected: "bg-red-50 text-red-600",
 };
@@ -195,7 +192,7 @@ export default async function CasesPage(props: {
                     <span
                       className={`rounded-full px-3 py-1 ${statusStyles[caseItem.status]}`}
                     >
-                      {caseItem.status.replace("-", " ")}
+                      {caseItem.status.replace(/[-_]/g, " ")}
                     </span>
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-500">
                       Queue: {caseItem.queue}
