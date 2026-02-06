@@ -17,6 +17,7 @@
    - **TypeScript:** Use for all new code. Favor functional patterns (pure helpers, composable hooks). Model data with interfaces mirroring FastAPI schemas. Use discriminated unions for status branching.
    - **React:** Functional components with hooks only. Type components with `React.FC` only if children are required. Move derived state to custom hooks. Style via CSS modules or `@i4g/ui-kit`. Snapshot backend interactions in Storybook/Playwright.
    - **Execution:** Debug and fix end-to-end in one request. Capture all runtime args in `settings.toml` (source of truth). Default to TOML-based settings workflow.
+   - **Formatting:** ALWAYS run `pnpm format` in `ui/` after editing any file. The formatting must match Prettier rules exactly.
 
 4. **Core Architecture** – `src/i4g/api/app.py` wires FastAPI routers, middleware (rate limit + TASK_STATUS), and the report-generation lock. `src/i4g/api/review.py` orchestrates search + queue actions backed by `ReviewStore`, `HybridRetriever`, and audit logging via `store.log_action`. Background work executes through `src/i4g/worker/jobs/*` and `src/i4g/worker/tasks.py` (e.g., `generate_report_for_case`).
 
