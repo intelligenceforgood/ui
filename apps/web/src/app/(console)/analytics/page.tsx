@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Card } from "@i4g/ui-kit";
+import { Badge, Card } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
 import type { AnalyticsMetric } from "@i4g/sdk";
 import { Activity, TrendingDown, TrendingUp } from "lucide-react";
 import AnalyticsCharts from "./analytics-charts";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Analytics",
@@ -13,9 +15,18 @@ export const metadata: Metadata = {
 };
 
 const trendIconMap: Record<AnalyticsMetric["trend"], ReactNode> = {
-  up: <TrendingUp className="h-4 w-4 text-emerald-500" />,
-  down: <TrendingDown className="h-4 w-4 text-rose-500" />,
-  flat: <Activity className="h-4 w-4 text-slate-400" />,
+  up: <TrendingUp className="h-3 w-3" />,
+  down: <TrendingDown className="h-3 w-3" />,
+  flat: <Activity className="h-3 w-3" />,
+};
+
+const trendColorMap: Record<
+  AnalyticsMetric["trend"],
+  "success" | "danger" | "default"
+> = {
+  up: "success",
+  down: "danger",
+  flat: "default",
 };
 
 export default async function AnalyticsPage() {
@@ -24,14 +35,14 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="space-y-8">
-      <header className="space-y-3">
+      <header>
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
           Program insights
         </p>
-        <h1 className="text-3xl font-semibold text-slate-900">
+        <h1 className="mt-2 text-3xl font-semibold text-slate-900">
           Analytics & impact reporting
         </h1>
-        <p className="max-w-3xl text-sm text-slate-500">
+        <p className="mt-2 max-w-3xl text-sm text-slate-500">
           Track detection performance, pipeline health, and operational coverage
           to inform partner updates and resourcing decisions.
         </p>
@@ -40,12 +51,14 @@ export default async function AnalyticsPage() {
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {analytics.metrics.map((metric) => (
           <Card key={metric.id} className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-slate-400">
-              <span>{metric.label}</span>
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500">
+            <div className="flex items-start justify-between">
+              <span className="text-sm font-medium text-slate-500">
+                {metric.label}
+              </span>
+              <Badge variant={trendColorMap[metric.trend]} className="gap-1">
                 {trendIconMap[metric.trend]}
                 {metric.change}
-              </span>
+              </Badge>
             </div>
             <p className="text-3xl font-semibold text-slate-900">
               {metric.value}
