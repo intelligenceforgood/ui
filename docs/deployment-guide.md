@@ -46,7 +46,7 @@ pnpm install
 # commit pnpm-lock.yaml when it changes
 ```
 
-Build, push, and optionally run the container using Docker Buildx (example mirrors the Streamlit workflow):
+Build, push, and optionally run the container using Docker Buildx:
 
 ```bash
 docker buildx build \

@@ -25,8 +25,7 @@ export default function DiscoveryPage() {
             <p className="max-w-3xl text-sm text-slate-500 dark:text-slate-400">
               Analysts can experiment with boost specs, filters, and override
               parameters without leaving the console. Queries route through the
-              FastAPI `/discovery/search` endpoint so Streamlit and Next.js stay
-              in sync.
+              FastAPI `/discovery/search` endpoint.
             </p>
           </div>
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300">
