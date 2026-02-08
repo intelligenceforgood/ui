@@ -54,44 +54,6 @@ const accountListResultSchema = z.object({
 export type AccountListRun = z.infer<typeof apiRunSchema>;
 export type AccountListResult = z.infer<typeof accountListResultSchema>;
 
-const MOCK_RUNS: AccountListRun[] = [
-  {
-    request_id: "account-run-mock-1",
-    actor: "accounts_api:mock",
-    source: "api",
-    generated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    indicator_count: 4,
-    source_count: 3,
-    warnings: ["Mock data only"],
-    artifacts: {
-      pdf: "https://example.org/mock-account-list.pdf",
-      xlsx: "https://example.org/mock-account-list.xlsx",
-    },
-    categories: ["bank", "crypto"],
-    metadata: { requested_top_k: 25 },
-  },
-];
-
-const MOCK_RESULT: AccountListResult = {
-  request_id: "account-run-mock-1",
-  generated_at: new Date().toISOString(),
-  indicators: [
-    {
-      category: "bank",
-      item: "Mock Bank",
-      type: "account",
-      number: "****1111",
-      source_case_id: "mock-case-1",
-    },
-  ],
-  sources: [],
-  warnings: ["Mock execution"],
-  metadata: { requested_top_k: 25 },
-  artifacts: {
-    pdf: "https://example.org/mock-account-list.pdf",
-  },
-};
-
 function resolveApiBase() {
   return (
     process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null
@@ -149,7 +111,9 @@ export async function getAccountListRuns(
 ): Promise<AccountListRun[]> {
   const url = buildUrl("/accounts/runs");
   if (!url) {
-    return MOCK_RUNS.slice(0, sanitizeLimit(limit));
+    throw new Error(
+      "I4G_API_URL is not configured. Cannot fetch account list runs.",
+    );
   }
 
   url.searchParams.set("limit", String(sanitizeLimit(limit)));
@@ -160,14 +124,9 @@ export async function getAccountListRuns(
     headers["X-API-KEY"] = apiKey;
   }
 
-  try {
-    const payload = await fetchJson(url, { headers });
-    const parsed = apiRunsResponseSchema.parse(payload);
-    return parsed.runs;
-  } catch (error) {
-    console.warn("Falling back to mock account list runs", error);
-    return MOCK_RUNS.slice(0, sanitizeLimit(limit));
-  }
+  const payload = await fetchJson(url, { headers });
+  const parsed = apiRunsResponseSchema.parse(payload);
+  return parsed.runs;
 }
 
 export type AccountListRunRequest = {
@@ -207,7 +166,9 @@ export async function triggerAccountListRun(
 ): Promise<AccountListResult> {
   const url = buildUrl("/accounts/extract");
   if (!url) {
-    return MOCK_RESULT;
+    throw new Error(
+      "I4G_API_URL is not configured. Cannot trigger account list run.",
+    );
   }
 
   const payload = buildRunPayload(input);
@@ -221,23 +182,18 @@ export async function triggerAccountListRun(
   const iapHeaders = await getIapHeaders();
   Object.assign(headers, iapHeaders);
 
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(payload),
-      cache: "no-store",
-    });
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(
-        `Account list run failed (${response.status}): ${text || "no payload"}`,
-      );
-    }
-    const data = (await response.json()) as unknown;
-    return accountListResultSchema.parse(data);
-  } catch (error) {
-    console.error("Falling back to mock account list result", error);
-    return { ...MOCK_RESULT, request_id: `account-run-mock-${Date.now()}` };
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(
+      `Account list run failed (${response.status}): ${text || "no payload"}`,
+    );
   }
+  const data = (await response.json()) as unknown;
+  return accountListResultSchema.parse(data);
 }

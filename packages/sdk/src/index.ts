@@ -753,6 +753,11 @@ function toMillis(section: string) {
   return section.length * 9 + 42;
 }
 
+// ---------------------------------------------------------------------------
+// Mock data & client — kept for unit tests only (e.g. search-experience.test).
+// Production code must NOT import createMockClient; use createClient instead.
+// ---------------------------------------------------------------------------
+
 const mockDashboardData: DashboardOverview = {
   metrics: [
     {
@@ -1253,6 +1258,13 @@ const mockVerificationReports: Record<string, DossierVerificationReport> = {
   },
 };
 
+/**
+ * Creates a mock I4GClient populated with static fixture data.
+ *
+ * **Test-only** — do not use in production code. Production consumers should
+ * use `createClient()` or `createPlatformClient()` which require a live
+ * backend URL.
+ */
 export function createMockClient(): I4GClient {
   return {
     async getDashboardOverview() {

@@ -1,6 +1,5 @@
 import {
   createClient,
-  createMockClient,
   I4GClientError,
   searchRequestSchema,
   type I4GClient,
@@ -438,8 +437,6 @@ async function fetchCoreSearch(
 }
 
 export function createPlatformClient(config: PlatformClientConfig): I4GClient {
-  const mock = createMockClient();
-
   const fetchImpl = config.iapClientId
     ? createAuthenticatedFetch(config.iapClientId)
     : undefined;
@@ -451,19 +448,9 @@ export function createPlatformClient(config: PlatformClientConfig): I4GClient {
   });
 
   return {
-    ...mock,
     ...restClient,
     async searchIntelligence(request) {
-      try {
-        const response = await fetchCoreSearch(config, request);
-        return response;
-      } catch (error) {
-        console.error(
-          "Falling back to mock search due to platform backend error",
-          error,
-        );
-        return mock.searchIntelligence(request);
-      }
+      return fetchCoreSearch(config, request);
     },
   } satisfies I4GClient;
 }
