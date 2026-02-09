@@ -12,8 +12,7 @@
       ],
       "react-dom": ["../../node_modules/@types/react-dom/index"],
       "react-dom/*": ["../../node_modules/@types/react-dom/*"]
-    },
-    "types": ["node"]
+    }
   },
   "include": ["src/**/*"]
 }
