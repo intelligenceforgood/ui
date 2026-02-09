@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { createCampaign } from "@/lib/server/campaigns-service";
 import type { TaxonomyResponse } from "@i4g/sdk";
 
-export function CampaignForm({ taxonomy }: { taxonomy: TaxonomyResponse }) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _taxonomy = taxonomy;
-
+export function CampaignForm({
+  taxonomy: _taxonomy,
+}: {
+  taxonomy: TaxonomyResponse;
+}) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -35,38 +36,9 @@ export function CampaignForm({ taxonomy }: { taxonomy: TaxonomyResponse }) {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const toggleId = (id: string) => {
-    setSelectedTaxonomyIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
-  };
-
-  // Function temporarily unused until UI is updated for 5-axis taxonomy
-  /*
-  const renderNode = (node: TaxonomyNode, depth = 0) => {
-    return (
-      <div key={node.id} style={{ marginLeft: depth * 20 }} className="py-2">
-        <label className="flex items-start gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            className="mt-1"
-            checked={selectedTaxonomyIds.includes(node.id)}
-            onChange={() => toggleId(node.id)}
-          />
-          <div>
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {node.label}
-            </span>
-            <p className="text-xs text-slate-500">{node.description}</p>
-          </div>
-        </label>
-        {node.children &&
-          node.children.map((child) => renderNode(child, depth + 1))}
-      </div>
-    );
-  };
-  */
+  // TODO: re-enable when taxonomy selector UI is updated for 5-axis taxonomy
+  void _taxonomy;
+  void setSelectedTaxonomyIds;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">

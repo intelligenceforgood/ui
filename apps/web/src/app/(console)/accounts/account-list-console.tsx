@@ -78,8 +78,8 @@ function WarningList({ warnings }: { warnings: string[] }) {
   }
   return (
     <ul className="space-y-2 text-sm text-amber-600">
-      {warnings.map((warning) => (
-        <li key={warning} className="flex items-start gap-2">
+      {warnings.map((warning, index) => (
+        <li key={`w-${index}`} className="flex items-start gap-2">
           <AlertCircle className="mt-0.5 h-4 w-4" />
           {warning}
         </li>
@@ -364,8 +364,8 @@ export function AccountListConsole({ initialRuns }: Props) {
             {latestRun ? (
               <div className="space-y-4 text-sm text-slate-600">
                 <div className="flex flex-wrap gap-2">
-                  {(latestRun?.categories ?? []).map((category) => (
-                    <Badge key={category} variant="info">
+                  {(latestRun?.categories ?? []).map((category, index) => (
+                    <Badge key={`cat-${index}`} variant="info">
                       {categoryLabel(category)}
                     </Badge>
                   ))}
@@ -432,9 +432,9 @@ export function AccountListConsole({ initialRuns }: Props) {
               </tr>
             </thead>
             <tbody>
-              {runs.map((run) => (
+              {runs.map((run, index) => (
                 <tr
-                  key={run.request_id}
+                  key={`${run.request_id}-${index}`}
                   className="border-t border-slate-100 text-slate-700"
                 >
                   <td className="px-3 py-3 font-mono text-xs text-slate-500">
