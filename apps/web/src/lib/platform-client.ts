@@ -337,6 +337,10 @@ async function fetchCoreSearch(
     text: payload.query || undefined,
     classifications: classifications.length ? classifications : undefined,
     datasets: datasets.length ? datasets : undefined,
+    loss_buckets:
+      payload.lossBuckets && payload.lossBuckets.length
+        ? payload.lossBuckets
+        : undefined,
     entities: entities.length ? entities : undefined,
     limit,
     vector_limit: limit,

@@ -12,12 +12,13 @@
 
 2. **Config Discipline** – Always fetch settings via `i4g.settings.get_settings()`; nested sections (`api`, `storage`, `vector`, `llm`, `identity`, etc.) are mutated by `_apply_environment_overrides`, so override via env vars (`I4G_*`, double underscores) rather than hard-coded paths. Store builders live in `src/i4g/services/factories.py`; use them for structured/review/vector/intake/evidence stores.
 
-3. **Coding Conventions (TypeScript/React)** – Follow `core/.github/general-coding.instructions.md` for shared norms.
+3. **Coding Conventions (TypeScript/React)** – Follow `core/.github/general-coding.instructions.md` for all language-specific standards. Use each language's idiomatic conventions — do not invent project-specific patterns.
 
-   - **TypeScript:** Use for all new code. Favor functional patterns (pure helpers, composable hooks). Model data with interfaces mirroring FastAPI schemas. Use discriminated unions for status branching.
-   - **React:** Functional components with hooks only. Type components with `React.FC` only if children are required. Move derived state to custom hooks. Style via CSS modules or `@i4g/ui-kit`. Snapshot backend interactions in Storybook/Playwright.
-   - **Execution:** Debug and fix end-to-end in one request. Capture all runtime args in `settings.toml` (source of truth). Default to TOML-based settings workflow.
+   - **TypeScript:** Required for all new code. `camelCase` for variables/functions/properties, `PascalCase` for components/types/interfaces, `UPPER_SNAKE_CASE` for constants. Favor functional patterns (pure helpers, composable hooks). Use discriminated unions for status branching. Favor interfaces over `type` aliases for object shapes.
+   - **React:** Functional components with hooks only. Type components with `React.FC` only if children are required. Move derived state to custom hooks. Style via CSS modules or `@i4g/ui-kit`. Use Error boundaries for resilience.
+   - **Data modeling:** Interfaces should mirror FastAPI schemas with camelCase field names (matching the Pydantic `alias_generator` output). Never write manual `snake_case` to `camelCase` translation functions.
    - **Formatting:** ALWAYS run `pnpm format` in `ui/` after editing any file. The formatting must match Prettier rules exactly.
+   - **HTML/CSS:** Semantic HTML elements, keyboard accessibility, `alt` text on images. CSS Modules preferred; no `!important` unless overriding third-party CSS.
 
 4. **Core Architecture** – `src/i4g/api/app.py` wires FastAPI routers, middleware (rate limit + TASK_STATUS), and the report-generation lock. `src/i4g/api/review.py` orchestrates search + queue actions backed by `ReviewStore`, `HybridRetriever`, and audit logging via `store.log_action`. Background work executes through `src/i4g/worker/jobs/*` and `src/i4g/worker/tasks.py` (e.g., `generate_report_for_case`).
 

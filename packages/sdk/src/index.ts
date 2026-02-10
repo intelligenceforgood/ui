@@ -15,17 +15,19 @@ const scoredLabelSchema = z.object({
 
 export type ScoredLabel = z.infer<typeof scoredLabelSchema>;
 
-const fraudClassificationResultSchema = z.object({
-  intent: z.array(scoredLabelSchema),
-  channel: z.array(scoredLabelSchema),
-  techniques: z.array(scoredLabelSchema),
-  actions: z.array(scoredLabelSchema),
-  persona: z.array(scoredLabelSchema),
-  explanation: z.string().optional().nullable(),
-  few_shot_examples: z.array(z.record(z.unknown())).optional(),
-  risk_score: z.number().min(0).max(100),
-  taxonomy_version: z.string(),
-});
+const fraudClassificationResultSchema = z
+  .object({
+    intent: z.array(scoredLabelSchema),
+    channel: z.array(scoredLabelSchema),
+    techniques: z.array(scoredLabelSchema),
+    actions: z.array(scoredLabelSchema),
+    persona: z.array(scoredLabelSchema),
+    explanation: z.string().optional().nullable(),
+    few_shot_examples: z.array(z.record(z.unknown())).optional(),
+    risk_score: z.number().min(0).max(100),
+    taxonomy_version: z.string(),
+  })
+  .passthrough();
 
 export type FraudClassificationResult = z.infer<
   typeof fraudClassificationResultSchema
@@ -152,7 +154,7 @@ const searchResultSchema = z.object({
   snippet: z.string(),
   source: z.string(),
   tags: z.array(z.string()),
-  classification: fraudClassificationResultSchema.optional(),
+  classification: fraudClassificationResultSchema.nullable().optional(),
   score: z.number(),
   occurredAt: z.string(),
   confidence: z.number().optional(),
@@ -199,7 +201,7 @@ const caseSummarySchema = z.object({
   assignee: z.string().nullable().optional(),
   queue: z.string().nullable().optional(),
   tags: z.array(z.string()),
-  classification: fraudClassificationResultSchema.optional(),
+  classification: fraudClassificationResultSchema.nullable().optional(),
   progress: z.number().min(0).max(100).nullable().optional(),
   dueAt: z.string().nullable().optional(),
 });
@@ -686,12 +688,11 @@ export function createClient(config: ClientConfig): I4GClient {
     getDashboardOverview() {
       return request("/dashboard/overview", dashboardOverviewSchema);
     },
-    searchIntelligence(requestBody) {
-      const payload = searchRequestSchema.parse(requestBody);
-      return request("/search", searchResponseSchema, {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
+    searchIntelligence(_requestBody) {
+      throw new Error(
+        "searchIntelligence is not supported by createClient() when targeting the core API. " +
+          "Use createPlatformClient() from @/lib/platform-client instead.",
+      );
     },
     listCases(options) {
       const query = new URLSearchParams();
