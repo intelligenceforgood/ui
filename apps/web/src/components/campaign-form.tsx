@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button, Input } from "@i4g/ui-kit";
 import { createCampaign } from "@/lib/server/campaigns-service";
 import type { TaxonomyResponse } from "@i4g/sdk";
 
@@ -46,8 +47,7 @@ export function CampaignForm({
         <label className="block text-sm font-medium dark:text-slate-200">
           Name
         </label>
-        <input
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+        <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
@@ -58,7 +58,7 @@ export function CampaignForm({
           Description
         </label>
         <textarea
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+          className="flex w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400/30 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
@@ -90,13 +90,9 @@ export function CampaignForm({
         </div>
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-      >
+      <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Saving..." : "Create Campaign"}
-      </button>
+      </Button>
     </form>
   );
 }

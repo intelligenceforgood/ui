@@ -10,129 +10,31 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Button, Card, Input } from "@i4g/ui-kit";
-import type { SearchRequest, SearchResponse, TaxonomyResponse } from "@i4g/sdk";
-import type {
-  HybridSearchSchema,
-  SavedSearchDescriptor,
-} from "@/types/reviews";
+import type { SearchRequest, SearchResponse } from "@i4g/sdk";
+import type { SavedSearchDescriptor } from "@/types/reviews";
 import { deriveTimeRangeFromPreset } from "@/lib/search/filters";
 import { buildSearchHref } from "@/lib/search-links";
-import { TextWithTokens } from "@/components/text-with-tokens";
 import {
-  ArrowUpRight,
   BookmarkPlus,
-  Filter,
   Loader2,
-  Plus,
   RefreshCcw,
   Search,
   Sparkles,
-  X,
 } from "lucide-react";
 
-function getTaxonomyDescription(
-  taxonomy: TaxonomyResponse,
-  label: string,
-): string {
-  if (!taxonomy?.axes) return "";
-  for (const axis of taxonomy.axes) {
-    const item = axis.items.find((i) => i.code === label || i.label === label);
-    if (item) return item.description;
-  }
-  return "";
-}
-
-type MatchMode = "exact" | "prefix" | "contains";
-
-type EntityFilterRow = {
-  id: string;
-  type: string;
-  value: string;
-  matchMode: MatchMode;
-};
-
-type InitialEntityFilter = Omit<EntityFilterRow, "id"> & { id?: string };
-
-type InitialSelection = Partial<{
-  sources: string[];
-  taxonomy: string[];
-  indicatorTypes: string[];
-  datasets: string[];
-  timePreset: string | null;
-  entities: InitialEntityFilter[];
-}>;
-
-type FacetSelection = {
-  sources: string[];
-  taxonomy: string[];
-  indicatorTypes: string[];
-  datasets: string[];
-  timePreset: string | null;
-};
-
-type FacetField = "sources" | "taxonomy";
-
-type SearchOverrides = Partial<{
-  query: string;
-  sources: string[];
-  taxonomy: string[];
-  indicatorTypes: string[];
-  datasets: string[];
-  timePreset: string | null;
-  entities: EntityFilterRow[];
-}>;
-
-type BuildSearchRequestOptions = {
-  includeSavedSearchContext?: boolean;
-};
-
-type SearchExperienceProps = {
-  initialResults: SearchResponse;
-  taxonomy: TaxonomyResponse;
-  initialSelection?: InitialSelection;
-  initialSavedSearch?: SavedSearchDescriptor | null;
-  schema: HybridSearchSchema;
-};
-
-const facetFieldMap: Record<string, FacetField> = {
-  source: "sources",
-  taxonomy: "taxonomy",
-};
-
-// Mirrors core/src/i4g/classification/classifier.py HEURISTICS keys for cross-ui consistency.
-// Note: This is now dynamically populated via schema.classifications (backed by CampaignService)
-
-const sourceColors: Record<string, string> = {
-  customs: "text-amber-600 bg-amber-50",
-  intake: "text-emerald-600 bg-emerald-50",
-  "open-source": "text-sky-600 bg-sky-50",
-  financial: "text-purple-600 bg-purple-50",
-};
-
-const DEFAULT_ENTITY_TYPE = "bank_account";
-const MATCH_MODE_OPTIONS: MatchMode[] = ["exact", "prefix", "contains"];
-
-const generateEntityFilterId = (): string => {
-  if (
-    typeof crypto !== "undefined" &&
-    "randomUUID" in crypto &&
-    typeof crypto.randomUUID === "function"
-  ) {
-    return crypto.randomUUID();
-  }
-  return `entity-${Date.now()}-${Math.round(Math.random() * 1_000_000)}`;
-};
-
-const buildEntityFilterRows = (
-  entries: InitialEntityFilter[] | undefined,
-  fallbackType: string,
-): EntityFilterRow[] =>
-  (entries ?? []).map((filter) => ({
-    id: filter.id ?? generateEntityFilterId(),
-    type: filter.type || fallbackType,
-    value: filter.value ?? "",
-    matchMode: filter.matchMode ?? "exact",
-  }));
+import {
+  type BuildSearchRequestOptions,
+  type EntityFilterRow,
+  type FacetField,
+  type FacetSelection,
+  type SearchExperienceProps,
+  type SearchOverrides,
+  DEFAULT_ENTITY_TYPE,
+  buildEntityFilterRows,
+  generateEntityFilterId,
+} from "./search-types";
+import { SearchFilterSidebar } from "./search-filter-sidebar";
+import { SearchResultCard } from "./search-result-card";
 
 export default function SearchExperience({
   initialResults,
@@ -671,341 +573,26 @@ export default function SearchExperience({
         </form>
 
         <div className="mt-4 grid gap-4 lg:grid-cols-[260px_1fr]">
-          <aside className="space-y-6">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                <Filter className="h-3.5 w-3.5" /> Filters
-              </div>
-              <p className="text-[11px] text-slate-400">
-                {schemaSummary.indicatorTypes} indicator types -{" "}
-                {schemaSummary.datasets} datasets - {schemaSummary.timePresets}{" "}
-                time presets available
-              </p>
-              <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
-                <p className="text-xs font-semibold text-slate-500">
-                  Active Campaigns
-                </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  Filter by ongoing intelligence campaigns and taxonomy
-                  classifications.
-                </p>
-                <div className="mt-3 space-y-2">
-                  {schema.classifications.map((item) => {
-                    // Start of backward compatibility or if schema returns strings
-                    const value = item;
-                    const label = item;
-                    const description = null;
-
-                    const isSelected = selection.taxonomy.includes(value);
-                    return (
-                      <button
-                        key={value}
-                        type="button"
-                        onClick={() => toggleFacet("taxonomy", value)}
-                        className={
-                          "w-full rounded-xl border px-3 py-2 text-left transition " +
-                          (isSelected
-                            ? "border-teal-400 bg-white text-teal-700 shadow-sm"
-                            : "border-slate-200 bg-white text-slate-600 hover:border-teal-200")
-                        }
-                      >
-                        <p className="text-sm font-semibold">{label}</p>
-                        {description ? (
-                          <p className="text-xs text-slate-500">
-                            {description}
-                          </p>
-                        ) : null}
-                      </button>
-                    );
-                  })}
-                  {schema.classifications.length === 0 ? (
-                    <p className="text-xs text-slate-400 italic">
-                      No active campaigns found.
-                    </p>
-                  ) : null}
-                </div>
-                <p className="mt-3 text-[11px] text-slate-400">
-                  Synced with core/src/i4g/services/campaigns.py
-                </p>
-              </div>
-              {indicatorOptions.length ? (
-                <div className="space-y-3">
-                  <p className="text-xs font-semibold text-slate-500">
-                    Indicator types
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {indicatorOptions.map((indicator) => {
-                      const isSelected =
-                        selection.indicatorTypes.includes(indicator);
-                      return (
-                        <button
-                          key={indicator}
-                          type="button"
-                          onClick={() => toggleIndicatorType(indicator)}
-                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition ${
-                            isSelected
-                              ? "border-teal-400 bg-teal-50 text-teal-600"
-                              : "border-slate-200 bg-white text-slate-500 hover:border-teal-200 hover:text-teal-600"
-                          }`}
-                        >
-                          {indicator}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : null}
-              {schema.datasets.length ? (
-                <div className="space-y-3">
-                  <p className="text-xs font-semibold text-slate-500">
-                    Datasets
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {schema.datasets.map((dataset) => {
-                      const isSelected = selection.datasets.includes(dataset);
-                      return (
-                        <button
-                          key={dataset}
-                          type="button"
-                          onClick={() => toggleDataset(dataset)}
-                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition ${
-                            isSelected
-                              ? "border-teal-400 bg-teal-50 text-teal-600"
-                              : "border-slate-200 bg-white text-slate-500 hover:border-teal-200 hover:text-teal-600"
-                          }`}
-                        >
-                          {dataset}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : null}
-              {schema.timePresets.length ? (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-slate-500">
-                      Time range
-                    </p>
-                    {selection.timePreset ? (
-                      <button
-                        type="button"
-                        className="text-[11px] text-slate-500 hover:text-teal-600"
-                        onClick={() => toggleTimePreset(selection.timePreset!)}
-                      >
-                        Clear
-                      </button>
-                    ) : null}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {schema.timePresets.map((preset) => {
-                      const isSelected = selection.timePreset === preset;
-                      return (
-                        <button
-                          key={preset}
-                          type="button"
-                          onClick={() => toggleTimePreset(preset)}
-                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition ${
-                            isSelected
-                              ? "border-teal-400 bg-teal-50 text-teal-600"
-                              : "border-slate-200 bg-white text-slate-500 hover:border-teal-200 hover:text-teal-600"
-                          }`}
-                        >
-                          Last {preset}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : null}
-              {results.facets.map((facet, facetIndex) => {
-                const selectionKey = facetFieldMap[facet.field];
-                if (!selectionKey) {
-                  return null;
-                }
-
-                return (
-                  <div
-                    key={`${facet.field}-${facetIndex}`}
-                    className="space-y-3"
-                  >
-                    <p className="text-xs font-semibold text-slate-500">
-                      {facet.label}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {facet.options.map((option, optionIndex) => {
-                        const isSelected = selection[selectionKey]?.includes(
-                          option.value,
-                        );
-                        return (
-                          <button
-                            key={`${facet.field}-${option.value}-${optionIndex}`}
-                            type="button"
-                            onClick={() =>
-                              toggleFacet(selectionKey, option.value)
-                            }
-                            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition ${
-                              isSelected
-                                ? "border-teal-400 bg-teal-50 text-teal-600"
-                                : "border-slate-200 bg-white text-slate-500 hover:border-teal-200 hover:text-teal-600"
-                            }`}
-                          >
-                            {option.value}
-                            <span
-                              aria-hidden
-                              className="text-[10px] text-slate-400"
-                            >
-                              {option.count}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-              <div className="space-y-3 rounded-2xl border border-slate-100 bg-white p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-semibold text-slate-500">
-                      Entity filters
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      Match exact values or prefixes across structured stores.
-                    </p>
-                  </div>
-                  {entityFilters.length ? (
-                    <button
-                      type="button"
-                      className="text-[11px] text-slate-500 hover:text-rose-600"
-                      onClick={resetEntityFilters}
-                    >
-                      Clear
-                    </button>
-                  ) : null}
-                </div>
-                {entityFilters.length === 0 ? (
-                  <p className="text-xs text-slate-400">
-                    Add an entity filter to constrain bank accounts, wallets, or
-                    other indicators.
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {entityFilters.map((filter) => {
-                      const exampleValues = entityExampleMap[filter.type] ?? [];
-                      const placeholder = exampleValues.length
-                        ? `e.g., ${exampleValues[0]}`
-                        : "Value or prefix";
-                      return (
-                        <div
-                          key={filter.id}
-                          className="space-y-2 rounded-xl border border-slate-200 p-3"
-                        >
-                          <div className="flex flex-wrap gap-2">
-                            <select
-                              value={filter.type}
-                              onChange={(
-                                event: ChangeEvent<HTMLSelectElement>,
-                              ) =>
-                                updateEntityFilter(filter.id, {
-                                  type: event.target.value,
-                                })
-                              }
-                              className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 focus:border-teal-400 focus:outline-none"
-                            >
-                              {indicatorOptions.map((option) => (
-                                <option key={option} value={option}>
-                                  {option}
-                                </option>
-                              ))}
-                            </select>
-                            <select
-                              value={filter.matchMode}
-                              onChange={(
-                                event: ChangeEvent<HTMLSelectElement>,
-                              ) =>
-                                updateEntityFilter(filter.id, {
-                                  matchMode: event.target.value as MatchMode,
-                                })
-                              }
-                              className="w-32 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 focus:border-teal-400 focus:outline-none"
-                            >
-                              {MATCH_MODE_OPTIONS.map((mode) => (
-                                <option key={mode} value={mode}>
-                                  {mode}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="flex gap-2">
-                            <Input
-                              value={filter.value}
-                              onChange={(
-                                event: ChangeEvent<HTMLInputElement>,
-                              ) =>
-                                updateEntityFilter(filter.id, {
-                                  value: event.target.value,
-                                })
-                              }
-                              placeholder={placeholder}
-                              className="flex-1"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              className="text-slate-500 hover:text-rose-600"
-                              onClick={() => removeEntityFilter(filter.id)}
-                              aria-label="Remove entity filter"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          {exampleValues.length ? (
-                            <div className="flex flex-wrap gap-2 text-[11px] text-slate-400">
-                              <span>Examples:</span>
-                              {exampleValues.map((example) => (
-                                <button
-                                  key={`${filter.id}-${example}`}
-                                  type="button"
-                                  onClick={() =>
-                                    updateEntityFilter(filter.id, {
-                                      value: example,
-                                    })
-                                  }
-                                  className="rounded-full border border-slate-200 px-2 py-0.5 text-[11px] text-slate-500 transition hover:border-teal-200 hover:text-teal-600"
-                                >
-                                  {example}
-                                </button>
-                              ))}
-                            </div>
-                          ) : null}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-                <div className="flex flex-col gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={addEntityFilter}
-                    className="justify-center"
-                  >
-                    <Plus className="mr-2 h-4 w-4" /> Add entity filter
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="justify-center text-slate-500"
-                    disabled={activeEntityCount === 0 || isPending}
-                    onClick={applyEntityFilters}
-                  >
-                    Apply entity filters
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </aside>
+          <SearchFilterSidebar
+            schema={schema}
+            selection={selection}
+            entityFilters={entityFilters}
+            schemaSummary={schemaSummary}
+            results={results}
+            activeEntityCount={activeEntityCount}
+            isPending={isPending}
+            indicatorOptions={indicatorOptions}
+            entityExampleMap={entityExampleMap}
+            toggleFacet={toggleFacet}
+            toggleIndicatorType={toggleIndicatorType}
+            toggleDataset={toggleDataset}
+            toggleTimePreset={toggleTimePreset}
+            addEntityFilter={addEntityFilter}
+            updateEntityFilter={updateEntityFilter}
+            removeEntityFilter={removeEntityFilter}
+            resetEntityFilters={resetEntityFilters}
+            applyEntityFilters={applyEntityFilters}
+          />
 
           <div className="relative space-y-4" aria-busy={isPending}>
             {isPending ? (
@@ -1104,207 +691,16 @@ export default function SearchExperience({
             ) : null}
 
             <ul className="space-y-4">
-              {results.results.map((result, index) => {
-                const pillClasses =
-                  sourceColors[result.source] ?? "text-slate-600 bg-slate-100";
-                const occurred = new Intl.DateTimeFormat("en", {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                }).format(new Date(result.occurredAt));
-
-                return (
-                  <li key={`${result.id ?? "result"}-${index}`}>
-                    <Card className="group flex flex-col gap-4 p-6">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                            <span
-                              className={`rounded-full px-3 py-1 ${pillClasses}`}
-                            >
-                              {result.source}
-                            </span>
-                            <span suppressHydrationWarning>{occurred}</span>
-                          </div>
-                          <h3 className="mt-2 text-lg font-semibold text-slate-900">
-                            <TextWithTokens text={result.title} />
-                          </h3>
-                          <p className="mt-1 text-sm text-slate-500">
-                            <TextWithTokens text={result.snippet} />
-                          </p>
-                        </div>
-                        <div className="flex flex-col items-end gap-2 text-right">
-                          <Badge variant="default">
-                            Score {Math.round(result.score * 100)}%
-                          </Badge>
-                          {typeof result.confidence === "number" ? (
-                            <Badge variant="success">
-                              Confidence {Math.round(result.confidence * 100)}%
-                            </Badge>
-                          ) : null}
-                          <button
-                            type="button"
-                            className="inline-flex items-center gap-2 text-xs font-semibold text-teal-600 transition hover:text-teal-700"
-                            aria-expanded={expandedResultId === result.id}
-                            onClick={() => toggleDetails(result.id)}
-                          >
-                            {expandedResultId === result.id
-                              ? "Hide details"
-                              : "Open details"}
-                            <ArrowUpRight className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-                        {result.classification ? (
-                          <>
-                            {result.classification.intent.map((item, i) => (
-                              <Badge
-                                key={`intent-${i}`}
-                                variant="danger"
-                                title={
-                                  item.explanation ||
-                                  getTaxonomyDescription(taxonomy, item.label)
-                                }
-                              >
-                                Intent: {item.label}
-                              </Badge>
-                            ))}
-                            {result.classification.channel.map((item, i) => (
-                              <Badge
-                                key={`channel-${i}`}
-                                variant="info"
-                                title={
-                                  item.explanation ||
-                                  getTaxonomyDescription(taxonomy, item.label)
-                                }
-                              >
-                                Channel: {item.label}
-                              </Badge>
-                            ))}
-                            {result.classification.techniques.map((item, i) => (
-                              <Badge
-                                key={`tech-${i}`}
-                                variant="warning"
-                                title={
-                                  item.explanation ||
-                                  getTaxonomyDescription(taxonomy, item.label)
-                                }
-                              >
-                                Technique: {item.label}
-                              </Badge>
-                            ))}
-                            {result.classification.actions.map((item, i) => (
-                              <Badge
-                                key={`action-${i}`}
-                                variant="default"
-                                title={
-                                  item.explanation ||
-                                  getTaxonomyDescription(taxonomy, item.label)
-                                }
-                              >
-                                Action: {item.label}
-                              </Badge>
-                            ))}
-                            {result.classification.persona.map((item, i) => (
-                              <Badge
-                                key={`persona-${i}`}
-                                variant="default"
-                                title={
-                                  item.explanation ||
-                                  getTaxonomyDescription(taxonomy, item.label)
-                                }
-                              >
-                                Persona: {item.label}
-                              </Badge>
-                            ))}
-                          </>
-                        ) : (
-                          result.tags.map((tag, index) => (
-                            <Badge
-                              key={`${result.id}-tag-${tag}-${index}`}
-                              variant="default"
-                            >
-                              #{tag}
-                            </Badge>
-                          ))
-                        )}
-                      </div>
-                      {expandedResultId === result.id ? (
-                        <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-4 text-sm text-slate-600">
-                          <p>
-                            <TextWithTokens text={result.snippet} />
-                          </p>
-
-                          {result.classification?.explanation ? (
-                            <div className="mt-4 rounded-md bg-white p-3 shadow-sm ring-1 ring-slate-900/5">
-                              <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                Classification Analysis
-                              </h4>
-                              <p className="text-slate-700">
-                                {result.classification.explanation}
-                              </p>
-                            </div>
-                          ) : null}
-
-                          {result.classification?.few_shot_examples &&
-                          result.classification.few_shot_examples.length > 0 ? (
-                            <div className="mt-4 space-y-2">
-                              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                Reference Examples
-                              </h4>
-                              <div className="grid gap-2 sm:grid-cols-2">
-                                {result.classification.few_shot_examples.map(
-                                  (ex, idx) => (
-                                    <div
-                                      key={idx}
-                                      className="rounded border border-slate-200 bg-white p-2 text-xs"
-                                    >
-                                      <pre className="whitespace-pre-wrap break-all font-mono text-[10px] text-slate-500">
-                                        {JSON.stringify(ex, null, 2)}
-                                      </pre>
-                                    </div>
-                                  ),
-                                )}
-                              </div>
-                            </div>
-                          ) : null}
-
-                          <dl className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
-                            <div className="flex flex-col">
-                              <dt className="font-semibold uppercase tracking-[0.2em] text-slate-400">
-                                Occurred
-                              </dt>
-                              <dd>
-                                {new Date(result.occurredAt).toLocaleString()}
-                              </dd>
-                            </div>
-                            <div className="flex flex-col">
-                              <dt className="font-semibold uppercase tracking-[0.2em] text-slate-400">
-                                Source
-                              </dt>
-                              <dd className="capitalize">{result.source}</dd>
-                            </div>
-                            {typeof result.confidence === "number" ? (
-                              <div className="flex flex-col">
-                                <dt className="font-semibold uppercase tracking-[0.2em] text-slate-400">
-                                  Confidence
-                                </dt>
-                                <dd>{Math.round(result.confidence * 100)}%</dd>
-                              </div>
-                            ) : null}
-                            <div className="flex flex-col">
-                              <dt className="font-semibold uppercase tracking-[0.2em] text-slate-400">
-                                Score
-                              </dt>
-                              <dd>{Math.round(result.score * 100)}%</dd>
-                            </div>
-                          </dl>
-                        </div>
-                      ) : null}
-                    </Card>
-                  </li>
-                );
-              })}
+              {results.results.map((result, index) => (
+                <SearchResultCard
+                  key={`${result.id ?? "result"}-${index}`}
+                  result={result}
+                  index={index}
+                  taxonomy={taxonomy}
+                  isExpanded={expandedResultId === result.id}
+                  onToggleDetails={toggleDetails}
+                />
+              ))}
             </ul>
 
             {results.results.length === 0 ? (

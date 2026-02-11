@@ -1,7 +1,11 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import SearchExperience from "@/app/(console)/search/search-experience";
 import type { HybridSearchSchema } from "@/types/reviews";
-import { createMockClient, type SearchResponse } from "@i4g/sdk";
+import {
+  createMockClient,
+  type SearchResponse,
+  type TaxonomyResponse,
+} from "@i4g/sdk";
 import { useRouter } from "next/navigation";
 import {
   afterEach,
@@ -34,6 +38,13 @@ const mockSchema: HybridSearchSchema = {
     bank_account: [entityExampleValue],
     crypto_wallet: ["bc1qexample"],
   },
+};
+
+const mockTaxonomy: TaxonomyResponse = {
+  updatedAt: "2024-01-01T00:00:00Z",
+  version: "1.0",
+  steward: "test",
+  axes: [],
 };
 
 describe("SearchExperience", () => {
@@ -74,7 +85,11 @@ describe("SearchExperience", () => {
 
   it("renders initial search results", () => {
     render(
-      <SearchExperience initialResults={initialResults} schema={mockSchema} />,
+      <SearchExperience
+        initialResults={initialResults}
+        taxonomy={mockTaxonomy}
+        schema={mockSchema}
+      />,
     );
 
     const heading = screen.getByText(
@@ -85,7 +100,11 @@ describe("SearchExperience", () => {
 
   it("submits a new query", async () => {
     render(
-      <SearchExperience initialResults={initialResults} schema={mockSchema} />,
+      <SearchExperience
+        initialResults={initialResults}
+        taxonomy={mockTaxonomy}
+        schema={mockSchema}
+      />,
     );
 
     const input = screen.getByPlaceholderText(/search by entity/i);
@@ -102,7 +121,11 @@ describe("SearchExperience", () => {
 
   it("toggles source facet filters", async () => {
     render(
-      <SearchExperience initialResults={initialResults} schema={mockSchema} />,
+      <SearchExperience
+        initialResults={initialResults}
+        taxonomy={mockTaxonomy}
+        schema={mockSchema}
+      />,
     );
 
     const sourceFacetButton = screen.getByRole("button", { name: /customs/i });
@@ -117,7 +140,11 @@ describe("SearchExperience", () => {
 
   it("applies dataset filters from schema chips", async () => {
     render(
-      <SearchExperience initialResults={initialResults} schema={mockSchema} />,
+      <SearchExperience
+        initialResults={initialResults}
+        taxonomy={mockTaxonomy}
+        schema={mockSchema}
+      />,
     );
 
     const datasetButton = screen.getByRole("button", {
@@ -134,7 +161,11 @@ describe("SearchExperience", () => {
 
   it("prefills entity filter inputs from schema examples", () => {
     render(
-      <SearchExperience initialResults={initialResults} schema={mockSchema} />,
+      <SearchExperience
+        initialResults={initialResults}
+        taxonomy={mockTaxonomy}
+        schema={mockSchema}
+      />,
     );
 
     const addEntityButton = screen.getByRole("button", {
@@ -152,7 +183,11 @@ describe("SearchExperience", () => {
 
   it("updates query and filters when initial props change", async () => {
     const { rerender } = render(
-      <SearchExperience initialResults={initialResults} schema={mockSchema} />,
+      <SearchExperience
+        initialResults={initialResults}
+        taxonomy={mockTaxonomy}
+        schema={mockSchema}
+      />,
     );
 
     const updatedResults: SearchResponse = {
@@ -174,6 +209,7 @@ describe("SearchExperience", () => {
           timePreset: null,
           entities: [],
         }}
+        taxonomy={mockTaxonomy}
         schema={mockSchema}
       />,
     );
@@ -188,6 +224,7 @@ describe("SearchExperience", () => {
     render(
       <SearchExperience
         initialResults={initialResults}
+        taxonomy={mockTaxonomy}
         schema={mockSchema}
         initialSavedSearch={{
           id: "saved-123",

@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { getIapHeaders } from "./auth-helpers";
+import { apiFetch } from "./api-client";
 
 const apiRunSchema = z.object({
   request_id: z.string(),
@@ -54,51 +54,6 @@ const accountListResultSchema = z.object({
 export type AccountListRun = z.infer<typeof apiRunSchema>;
 export type AccountListResult = z.infer<typeof accountListResultSchema>;
 
-function resolveApiBase() {
-  return (
-    process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null
-  );
-}
-
-function resolveApiKey() {
-  return process.env.I4G_API_KEY ?? process.env.NEXT_PUBLIC_API_KEY ?? null;
-}
-
-async function fetchJson(url: URL, init?: RequestInit) {
-  const iapHeaders = await getIapHeaders();
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      ...(init?.headers ?? {}),
-      ...iapHeaders,
-      Accept: "application/json",
-    },
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(
-      `Account list request failed (${response.status}): ${text || "no payload"}`,
-    );
-  }
-
-  const text = await response.text();
-  if (!text) {
-    return null;
-  }
-  return JSON.parse(text) as unknown;
-}
-
-function buildUrl(path: string) {
-  const base = resolveApiBase();
-  if (!base) {
-    return null;
-  }
-  const url = new URL(path, base);
-  return url;
-}
-
 function sanitizeLimit(limit: number | undefined, fallback = 10) {
   if (!limit || Number.isNaN(limit)) {
     return fallback;
@@ -109,22 +64,9 @@ function sanitizeLimit(limit: number | undefined, fallback = 10) {
 export async function getAccountListRuns(
   limit?: number,
 ): Promise<AccountListRun[]> {
-  const url = buildUrl("/accounts/runs");
-  if (!url) {
-    throw new Error(
-      "I4G_API_URL is not configured. Cannot fetch account list runs.",
-    );
-  }
-
-  url.searchParams.set("limit", String(sanitizeLimit(limit)));
-
-  const apiKey = resolveApiKey();
-  const headers: Record<string, string> = {};
-  if (apiKey) {
-    headers["X-API-KEY"] = apiKey;
-  }
-
-  const payload = await fetchJson(url, { headers });
+  const payload = await apiFetch<unknown>("/accounts/runs", {
+    queryParams: { limit: String(sanitizeLimit(limit)) },
+  });
   const parsed = apiRunsResponseSchema.parse(payload);
   return parsed.runs;
 }
@@ -164,36 +106,11 @@ function buildRunPayload(input: AccountListRunRequest) {
 export async function triggerAccountListRun(
   input: AccountListRunRequest,
 ): Promise<AccountListResult> {
-  const url = buildUrl("/accounts/extract");
-  if (!url) {
-    throw new Error(
-      "I4G_API_URL is not configured. Cannot trigger account list run.",
-    );
-  }
-
   const payload = buildRunPayload(input);
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  const apiKey = resolveApiKey();
-  if (apiKey) {
-    headers["X-API-KEY"] = apiKey;
-  }
-  const iapHeaders = await getIapHeaders();
-  Object.assign(headers, iapHeaders);
-
-  const response = await fetch(url, {
+  const data = await apiFetch<unknown>("/accounts/extract", {
     method: "POST",
-    headers,
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-    cache: "no-store",
   });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(
-      `Account list run failed (${response.status}): ${text || "no payload"}`,
-    );
-  }
-  const data = (await response.json()) as unknown;
   return accountListResultSchema.parse(data);
 }

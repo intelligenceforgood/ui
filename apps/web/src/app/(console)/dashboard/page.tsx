@@ -76,10 +76,20 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button type="button" className="shadow-lg">
+          <Button
+            type="button"
+            className="shadow-lg"
+            disabled
+            title="Coming soon"
+          >
             Create incident report
           </Button>
-          <Button type="button" variant="secondary">
+          <Button
+            type="button"
+            variant="secondary"
+            disabled
+            title="Coming soon"
+          >
             Share status snapshot
           </Button>
         </div>

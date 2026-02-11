@@ -109,7 +109,12 @@ export default async function CasesPage(props: {
           >
             New case intake
           </Link>
-          <Button type="button" variant="secondary">
+          <Button
+            type="button"
+            variant="secondary"
+            disabled
+            title="Coming soon"
+          >
             Export status report
           </Button>
         </div>

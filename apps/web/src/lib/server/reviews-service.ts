@@ -6,7 +6,7 @@ import type {
   SavedSearchRecord,
   SearchHistoryEvent,
 } from "@/types/reviews";
-import { getIapHeaders } from "./auth-helpers";
+import { apiFetch } from "./api-client";
 import {
   isPlainObject,
   mapHistoryEvent,
@@ -14,59 +14,16 @@ import {
   mapSavedSearch,
 } from "./reviews-service.helpers";
 
-function resolveApiBase() {
-  return (
-    process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null
-  );
-}
-
-function resolveApiKey() {
-  return process.env.I4G_API_KEY ?? process.env.NEXT_PUBLIC_API_KEY ?? null;
-}
-
-async function fetchJson(path: string, params?: Record<string, string>) {
-  const baseUrl = resolveApiBase();
-  if (!baseUrl) {
-    return null;
-  }
-
-  const url = new URL(path, baseUrl);
-  Object.entries(params ?? {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      url.searchParams.set(key, value);
-    }
-  });
-
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-  };
-
-  const iapHeaders = await getIapHeaders();
-  Object.assign(headers, iapHeaders);
-
-  const apiKey = resolveApiKey();
-  if (apiKey) {
-    headers["X-API-KEY"] = apiKey;
-  }
-
-  const response = await fetch(url, { headers, cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(
-      `Review service request failed with status ${response.status}`,
-    );
-  }
-  return (await response.json()) as unknown;
-}
-
 const DEFAULT_SCHEMA: HybridSearchSchema = HYBRID_SEARCH_SCHEMA_SNAPSHOT;
 
 export async function getSearchHistory(
   limit = 10,
 ): Promise<SearchHistoryEvent[]> {
   try {
-    const payload = await fetchJson("/reviews/search/history", {
-      limit: String(limit),
-    });
+    const payload = await apiFetch<Record<string, unknown>>(
+      "/reviews/search/history",
+      { queryParams: { limit: String(limit) } },
+    );
     if (!payload || !isPlainObject(payload)) {
       return [];
     }
@@ -86,7 +43,9 @@ export async function getSearchHistory(
 
 export async function getHybridSearchSchema(): Promise<HybridSearchSchema> {
   try {
-    const payload = await fetchJson("/reviews/search/schema");
+    const payload = await apiFetch<Record<string, unknown>>(
+      "/reviews/search/schema",
+    );
     const mapped =
       payload && isPlainObject(payload)
         ? mapHybridSearchSchemaPayload(payload)
@@ -131,7 +90,10 @@ export async function listSavedSearches(options?: {
     if (options?.ownerOnly) {
       params.owner_only = "true";
     }
-    const payload = await fetchJson("/reviews/search/saved", params);
+    const payload = await apiFetch<Record<string, unknown>>(
+      "/reviews/search/saved",
+      { queryParams: params },
+    );
     if (!payload || !isPlainObject(payload)) {
       return [];
     }
