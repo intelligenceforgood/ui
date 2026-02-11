@@ -2,33 +2,12 @@ import type { Metadata } from "next";
 import { Badge, Card } from "@i4g/ui-kit";
 import { getTaxonomyTree } from "@/lib/server/taxonomy-service";
 import { ListTree } from "lucide-react";
+import type { TaxonomyAxis, TaxonomyResponse } from "@i4g/sdk";
 
 export const metadata: Metadata = {
   title: "Taxonomy",
   description: "Manage shared vocabularies and case tagging standards.",
 };
-
-// Updated Types matching the new 5-axis API response structure
-interface TaxonomyItem {
-  code: string;
-  label: string;
-  description: string;
-  examples?: string[];
-}
-
-interface TaxonomyAxis {
-  id: string;
-  label: string;
-  description: string;
-  items: TaxonomyItem[];
-}
-
-interface TaxonomyDefinitions {
-  version: string;
-  steward: string;
-  updatedAt: string;
-  axes: TaxonomyAxis[];
-}
 
 function TaxonomySection({ axis }: { axis: TaxonomyAxis }) {
   const items = axis.items || [];
@@ -93,7 +72,7 @@ function TaxonomySection({ axis }: { axis: TaxonomyAxis }) {
 
 export default async function TaxonomyPage() {
   // Cast the response to our new type
-  const taxonomy = (await getTaxonomyTree()) as unknown as TaxonomyDefinitions;
+  const taxonomy = (await getTaxonomyTree()) as unknown as TaxonomyResponse;
 
   // Format the update date if valid, otherwise fallback
   let formattedDate = "Unknown";

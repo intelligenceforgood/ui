@@ -58,7 +58,7 @@ export function VerificationPanel({
           {badgeVariant === "success" ? "Verified" : "Attention"}
         </Badge>
       </div>
-      {report.warnings.length > 0 && (
+      {report.warnings && report.warnings.length > 0 && (
         <ul className="list-disc space-y-1 pl-5 text-xs">
           {report.warnings.map((warning) => (
             <li key={warning}>{warning}</li>

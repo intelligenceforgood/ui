@@ -4,12 +4,12 @@ import { z } from "zod";
 import { apiFetch } from "./api-client";
 
 const apiRunSchema = z.object({
-  request_id: z.string(),
+  requestId: z.string(),
   actor: z.string().default("accounts_api"),
   source: z.string().default("api"),
-  generated_at: z.string(),
-  indicator_count: z.number().int().nonnegative().default(0),
-  source_count: z.number().int().nonnegative().default(0),
+  generatedAt: z.string(),
+  indicatorCount: z.number().int().nonnegative().default(0),
+  sourceCount: z.number().int().nonnegative().default(0),
   warnings: z.array(z.string()).default([]),
   artifacts: z.record(z.string()).default({}),
   categories: z.array(z.string()).default([]),

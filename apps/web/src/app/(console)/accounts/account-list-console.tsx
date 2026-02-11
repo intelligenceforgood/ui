@@ -372,20 +372,19 @@ export function AccountListConsole({ initialRuns }: Props) {
                 </div>
                 <p>
                   <span className="font-semibold text-slate-900">Run ID:</span>{" "}
-                  {latestRun.request_id}
+                  {latestRun.requestId}
                 </p>
                 <p>
                   <span className="font-semibold text-slate-900">
                     Generated:
                   </span>{" "}
-                  {formatDate(latestRun.generated_at)}
+                  {formatDate(latestRun.generatedAt)}
                 </p>
                 <p>
                   <span className="font-semibold text-slate-900">
                     Indicators:
                   </span>{" "}
-                  {latestRun.indicator_count} · Sources:{" "}
-                  {latestRun.source_count}
+                  {latestRun.indicatorCount} · Sources: {latestRun.sourceCount}
                 </p>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -434,18 +433,18 @@ export function AccountListConsole({ initialRuns }: Props) {
             <tbody>
               {runs.map((run, index) => (
                 <tr
-                  key={`${run.request_id}-${index}`}
+                  key={`${run.requestId}-${index}`}
                   className="border-t border-slate-100 text-slate-700"
                 >
                   <td className="px-3 py-3 font-mono text-xs text-slate-500">
-                    {run.request_id}
+                    {run.requestId}
                   </td>
-                  <td className="px-3 py-3">{formatDate(run.generated_at)}</td>
+                  <td className="px-3 py-3">{formatDate(run.generatedAt)}</td>
                   <td className="px-3 py-3">
                     <div className="flex flex-wrap gap-2">
                       {run.categories.map((category) => (
                         <Badge
-                          key={`${run.request_id}-${category}`}
+                          key={`${run.requestId}-${category}`}
                           variant="info"
                         >
                           {categoryLabel(category)}
@@ -455,11 +454,11 @@ export function AccountListConsole({ initialRuns }: Props) {
                   </td>
                   <td className="px-3 py-3">
                     <span className="font-semibold text-slate-900">
-                      {run.indicator_count}
+                      {run.indicatorCount}
                     </span>
                     <span className="text-xs text-slate-400">
                       {" "}
-                      · {run.source_count} sources
+                      · {run.sourceCount} sources
                     </span>
                   </td>
                   <td className="px-3 py-3">

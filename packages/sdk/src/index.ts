@@ -1,11 +1,4 @@
 import { z } from "zod";
-import {
-  ScamIntent,
-  DeliveryChannel,
-  SocialEngineeringTechnique,
-  RequestedAction,
-  ClaimedPersona,
-} from "../../../types/taxonomy";
 
 const scoredLabelSchema = z.object({
   label: z.string(),
@@ -267,8 +260,8 @@ export const caseDetailSchema = caseSummarySchema.extend({
   description: z.string().optional(),
   artifacts: z.array(caseArtifactSchema),
   timeline: z.array(caseTimelineEventSchema),
-  graph_nodes: z.array(caseGraphNodeSchema),
-  graph_links: z.array(caseGraphLinkSchema),
+  graphNodes: z.array(caseGraphNodeSchema),
+  graphLinks: z.array(caseGraphLinkSchema),
 });
 export type CaseDetail = z.infer<typeof caseDetailSchema>;
 
@@ -479,82 +472,34 @@ const dossierListRequestSchema = z.object({
 
 export type DossierListOptions = z.input<typeof dossierListRequestSchema>;
 
-const dossierVerificationArtifactWireSchema = z.object({
+const dossierVerificationArtifactSchema = z.object({
   label: z.string(),
   path: z.string().nullable().optional(),
-  expected_hash: z.string().nullable().optional(),
-  actual_hash: z.string().nullable().optional(),
+  expectedHash: z.string().nullable().optional(),
+  actualHash: z.string().nullable().optional(),
   exists: z.boolean().optional(),
   matches: z.boolean().optional(),
-  size_bytes: z.number().nullable().optional(),
+  sizeBytes: z.number().nullable().optional(),
   error: z.string().nullable().optional(),
 });
 
-type DossierVerificationArtifactWire = z.infer<
-  typeof dossierVerificationArtifactWireSchema
+export type DossierVerificationArtifact = z.infer<
+  typeof dossierVerificationArtifactSchema
 >;
 
-export type DossierVerificationArtifact = {
-  label: string;
-  path: string | null;
-  expectedHash: string | null;
-  actualHash: string | null;
-  exists: boolean;
-  matches: boolean;
-  sizeBytes: number | null;
-  error: string | null;
-};
-
-function normalizeVerificationArtifact(
-  artifact: DossierVerificationArtifactWire,
-): DossierVerificationArtifact {
-  return {
-    label: artifact.label,
-    path: artifact.path ?? null,
-    expectedHash: artifact.expected_hash ?? null,
-    actualHash: artifact.actual_hash ?? null,
-    exists: Boolean(artifact.exists),
-    matches: Boolean(artifact.matches),
-    sizeBytes: artifact.size_bytes ?? null,
-    error: artifact.error ?? null,
-  } satisfies DossierVerificationArtifact;
-}
-
-const dossierVerificationWireSchema = z.object({
-  plan_id: z.string(),
+const dossierVerificationSchema = z.object({
+  planId: z.string(),
   algorithm: z.string(),
   warnings: z.array(z.string()).optional(),
-  missing_count: z.number().int(),
-  mismatch_count: z.number().int(),
-  all_verified: z.boolean(),
-  artifacts: z.array(dossierVerificationArtifactWireSchema),
+  missingCount: z.number().int(),
+  mismatchCount: z.number().int(),
+  allVerified: z.boolean(),
+  artifacts: z.array(dossierVerificationArtifactSchema),
 });
 
-type DossierVerificationWire = z.infer<typeof dossierVerificationWireSchema>;
-
-export type DossierVerificationReport = {
-  planId: string;
-  algorithm: string;
-  warnings: string[];
-  missingCount: number;
-  mismatchCount: number;
-  allVerified: boolean;
-  artifacts: DossierVerificationArtifact[];
-};
-
-function normalizeDossierVerification(
-  payload: DossierVerificationWire,
-): DossierVerificationReport {
-  return {
-    planId: payload.plan_id,
-    algorithm: payload.algorithm,
-    warnings: payload.warnings ?? [],
-    missingCount: payload.missing_count,
-    mismatchCount: payload.mismatch_count,
-    allVerified: payload.all_verified,
-    artifacts: payload.artifacts.map(normalizeVerificationArtifact),
-  } satisfies DossierVerificationReport;
-}
+export type DossierVerificationReport = z.infer<
+  typeof dossierVerificationSchema
+>;
 
 const planIdSchema = z.string().min(1, "planId is required");
 
@@ -605,11 +550,11 @@ export interface I4GClient {
 const detokenizeResponseSchema = z.object({
   token: z.string(),
   prefix: z.string(),
-  canonical_value: z.string(),
-  pepper_version: z.string(),
-  case_id: z.string().nullable().optional(),
+  canonicalValue: z.string(),
+  pepperVersion: z.string(),
+  caseId: z.string().nullable().optional(),
   detector: z.string().nullable().optional(),
-  created_at: z.string().nullable().optional(),
+  createdAt: z.string().nullable().optional(),
 });
 
 export type DetokenizeResponse = z.infer<typeof detokenizeResponseSchema>;
@@ -734,14 +679,14 @@ export function createClient(config: ClientConfig): I4GClient {
       const encoded = encodeURIComponent(value);
       return request(
         `/reports/dossiers/${encoded}/verify`,
-        dossierVerificationWireSchema,
+        dossierVerificationSchema,
         {
           method: "POST",
         },
-      ).then(normalizeDossierVerification);
+      );
     },
     detokenize(token, caseId) {
-      const payload = { token, case_id: caseId };
+      const payload = { token, caseId };
       return request("/tokenization/detokenize", detokenizeResponseSchema, {
         method: "POST",
         body: JSON.stringify(payload),
@@ -1363,8 +1308,8 @@ export function createMockClient(): I4GClient {
             type: "system",
           },
         ],
-        graph_nodes: [],
-        graph_links: [],
+        graphNodes: [],
+        graphLinks: [],
       };
     },
     async getTaxonomy() {
@@ -1411,11 +1356,11 @@ export function createMockClient(): I4GClient {
       return {
         token,
         prefix: token.split("-")[0] || "UNK",
-        canonical_value: `[REVEALED: ${token}]`,
-        pepper_version: "mock-v1",
-        case_id: caseId || null,
+        canonicalValue: `[REVEALED: ${token}]`,
+        pepperVersion: "mock-v1",
+        caseId: caseId || null,
         detector: "mock-detector",
-        created_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
       };
     },
   };

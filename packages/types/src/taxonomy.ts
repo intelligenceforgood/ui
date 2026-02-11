@@ -1,27 +1,13 @@
 /**
- * Fraud Taxonomy Interfaces
- * Version: fraud-taxonomy.v1.0
+ * Fraud Taxonomy Types
  *
- * Auto-generated from definitions.yaml. DO NOT EDIT.
+ * Re-exported from @i4g/sdk (canonical source).
+ * The SDK Zod schemas are the single source of truth; these re-exports
+ * are provided for convenience so that consumers can import from either
+ * @i4g/sdk or @i4g/types.
  */
-
-export interface TaxonomyItem {
-  code: string;
-  label: string;
-  description: string;
-  examples: string[];
-}
-
-export interface TaxonomyAxis {
-  id: string;
-  label: string;
-  description: string;
-  items: TaxonomyItem[];
-}
-
-export interface TaxonomyDefinitions {
-  version: string;
-  steward: string;
-  updatedAt: string;
-  axes: TaxonomyAxis[];
-}
+export type {
+  TaxonomyItem,
+  TaxonomyAxis,
+  TaxonomyResponse as TaxonomyDefinitions,
+} from "@i4g/sdk";
