@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   SignalHigh,
 } from "lucide-react";
-import { Badge, Button, Card } from "@i4g/ui-kit";
+import { Badge, Card } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
 import type { DashboardReminder } from "@i4g/sdk";
 
@@ -74,24 +74,6 @@ export default async function DashboardPage() {
             Track investigations, monitor alerts, and jump back into workstreams
             across the analyst console.
           </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Button
-            type="button"
-            className="shadow-lg"
-            disabled
-            title="Coming soon"
-          >
-            Create incident report
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled
-            title="Coming soon"
-          >
-            Share status snapshot
-          </Button>
         </div>
       </section>
 

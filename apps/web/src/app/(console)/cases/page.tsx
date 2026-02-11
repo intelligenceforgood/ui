@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Badge, Button, Card } from "@i4g/ui-kit";
+import { Badge, Card } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
 import type { CaseSummary } from "@i4g/sdk";
 import {
@@ -109,14 +109,6 @@ export default async function CasesPage(props: {
           >
             New case intake
           </Link>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled
-            title="Coming soon"
-          >
-            Export status report
-          </Button>
         </div>
       </header>
 

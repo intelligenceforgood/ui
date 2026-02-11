@@ -1,13 +1,12 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getI4GClient } from "@/lib/i4g-client";
-import { Badge, Button, Card } from "@i4g/ui-kit";
+import { Badge, Card } from "@i4g/ui-kit";
 import {
   ArrowLeft,
   Clock,
   ExternalLink,
   Paperclip,
-  Share2,
   ShieldAlert,
 } from "lucide-react";
 import Link from "next/link";
@@ -50,13 +49,6 @@ async function CaseDetailView({ id }: { id: string }) {
             <span>•</span>
             <span className="capitalize">Status: {caseData.status}</span>
           </div>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="secondary">
-            <Share2 className="w-4 h-4 mr-2" />
-            Share
-          </Button>
-          <Button>Close Case</Button>
         </div>
       </div>
 
