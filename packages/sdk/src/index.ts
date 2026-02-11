@@ -138,6 +138,7 @@ const searchRequestSchema = z
   );
 
 export type SearchRequest = z.infer<typeof searchRequestSchema>;
+export type SearchRequestInput = z.input<typeof searchRequestSchema>;
 export type SearchEntityFilter = z.infer<typeof searchEntityFilterSchema>;
 export type SearchTimeRange = z.infer<typeof searchTimeRangeSchema>;
 
@@ -537,7 +538,7 @@ export interface CasesListOptions {
 
 export interface I4GClient {
   getDashboardOverview(): Promise<DashboardOverview>;
-  searchIntelligence(request: SearchRequest): Promise<SearchResponse>;
+  searchIntelligence(request: SearchRequestInput): Promise<SearchResponse>;
   listCases(options?: CasesListOptions): Promise<CasesResponse>;
   getCase(id: string): Promise<CaseDetail>;
   getTaxonomy(): Promise<TaxonomyResponse>;

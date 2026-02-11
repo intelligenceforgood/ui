@@ -3,7 +3,7 @@ import {
   I4GClientError,
   searchRequestSchema,
   type I4GClient,
-  type SearchRequest,
+  type SearchRequestInput,
   type SearchResponse,
   type SearchResult,
 } from "@i4g/sdk";
@@ -301,7 +301,7 @@ function createAuthenticatedFetch(iapClientId: string) {
 
 async function fetchCoreSearch(
   config: PlatformClientConfig,
-  request: SearchRequest,
+  request: SearchRequestInput,
 ): Promise<SearchResponse> {
   const payload = searchRequestSchema.parse(request);
   const limit = payload.pageSize ?? 10;
