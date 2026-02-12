@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getIapHeaders } from "@/lib/server/auth-helpers";
+import { resolveApiBase, resolveApiKey } from "@/lib/server/api-client";
 
 const requestSchema = z.object({
   query: z.string().trim().min(1, "Query is required"),
@@ -13,16 +14,6 @@ const requestSchema = z.object({
   filterExpression: z.string().optional(),
   boostJson: z.string().optional(),
 });
-
-function resolveApiBase() {
-  return (
-    process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null
-  );
-}
-
-function resolveApiKey() {
-  return process.env.I4G_API_KEY ?? process.env.NEXT_PUBLIC_API_KEY ?? null;
-}
 
 type DiscoveryResult = {
   rank: number;

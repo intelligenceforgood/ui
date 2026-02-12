@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIapToken } from "@/lib/iap-token";
+import { resolveApiBase, resolveApiKey } from "@/lib/server/api-client";
 
 type RouteContext = {
   params: Promise<{ searchId: string }>;
@@ -12,16 +13,6 @@ const updateSchema = z.object({
   favorite: z.boolean().optional(),
   tags: z.array(z.string()).optional(),
 });
-
-function resolveApiBase() {
-  return (
-    process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null
-  );
-}
-
-function resolveApiKey() {
-  return process.env.I4G_API_KEY ?? process.env.NEXT_PUBLIC_API_KEY ?? null;
-}
 
 async function buildHeaders() {
   const headers: Record<string, string> = { Accept: "application/json" };

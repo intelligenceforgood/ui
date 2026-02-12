@@ -13,7 +13,7 @@ export function resolveApiBase(): string | null {
  * Resolve the optional API key from environment variables.
  */
 export function resolveApiKey(): string | null {
-  return process.env.I4G_API_KEY ?? process.env.NEXT_PUBLIC_API_KEY ?? null;
+  return process.env.I4G_API_KEY ?? null;
 }
 
 export interface ApiFetchOptions extends Omit<RequestInit, "headers"> {

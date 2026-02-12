@@ -20,8 +20,6 @@ export async function GET(
   // Get Auth Headers (IAP support)
   const headers = await getIapHeaders();
 
-  console.log(`[Proxy] Fetching ${targetUrl}`);
-
   try {
     const response = await fetch(targetUrl, {
       headers: {
@@ -32,8 +30,8 @@ export async function GET(
     });
 
     if (!response.ok) {
-      console.error(
-        `[Proxy] Failed: ${response.status} ${response.statusText}`,
+      console.warn(
+        `[Proxy] Failed: ${response.status} ${response.statusText} for /${path}`,
       );
       return new NextResponse(`Proxy Error: ${response.statusText}`, {
         status: response.status,
@@ -51,7 +49,10 @@ export async function GET(
       headers: newHeaders,
     });
   } catch (error) {
-    console.error("[Proxy] Error:", error);
+    console.error(
+      "[Proxy] Error:",
+      error instanceof Error ? error.message : "Unknown error",
+    );
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
@@ -110,8 +111,6 @@ async function proxyRequest(
     clientHeaders.set(key, value);
   }
 
-  console.log(`[Proxy] ${request.method} ${targetUrl}`);
-
   try {
     const response = await fetch(targetUrl, {
       method: request.method,
@@ -131,7 +130,10 @@ async function proxyRequest(
       headers: newHeaders,
     });
   } catch (e) {
-    console.error(`[Proxy] Error:`, e);
+    console.error(
+      "[Proxy] Error:",
+      e instanceof Error ? e.message : "Unknown error",
+    );
     return new NextResponse("Internal Proxy Error", { status: 500 });
   }
 }

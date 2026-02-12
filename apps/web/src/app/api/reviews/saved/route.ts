@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getIapToken } from "@/lib/iap-token";
+import { resolveApiBase, resolveApiKey } from "@/lib/server/api-client";
 
 const requestSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
@@ -9,16 +10,6 @@ const requestSchema = z.object({
   tags: z.array(z.string()).optional(),
   searchId: z.string().optional(),
 });
-
-function resolveApiBase() {
-  return (
-    process.env.I4G_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? null
-  );
-}
-
-function resolveApiKey() {
-  return process.env.I4G_API_KEY ?? process.env.NEXT_PUBLIC_API_KEY ?? null;
-}
 
 export async function POST(request: Request) {
   try {
