@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Badge, Button, Card, Input } from "@i4g/ui-kit";
+import {
+  Badge,
+  Button,
+  Card,
+  Input,
+  SectionLabel,
+  Textarea,
+} from "@i4g/ui-kit";
 import { AlertCircle, CheckCircle2, Loader2, UploadCloud } from "lucide-react";
 
 const sourceOptions = [
@@ -139,12 +146,9 @@ export default function CaseIntakeForm() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1">
-            <label
-              htmlFor="reporterName"
-              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
-            >
+            <SectionLabel as="label" htmlFor="reporterName">
               Reporter name
-            </label>
+            </SectionLabel>
             <Input
               id="reporterName"
               name="reporterName"
@@ -155,12 +159,9 @@ export default function CaseIntakeForm() {
             />
           </div>
           <div className="space-y-1">
-            <label
-              htmlFor="source"
-              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
-            >
+            <SectionLabel as="label" htmlFor="source">
               Source
-            </label>
+            </SectionLabel>
             <select
               id="source"
               name="source"
@@ -178,12 +179,9 @@ export default function CaseIntakeForm() {
         </div>
 
         <div className="space-y-1">
-          <label
-            htmlFor="summary"
-            className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
-          >
+          <SectionLabel as="label" htmlFor="summary">
             Summary
-          </label>
+          </SectionLabel>
           <Input
             id="summary"
             name="summary"
@@ -195,32 +193,25 @@ export default function CaseIntakeForm() {
         </div>
 
         <div className="space-y-1">
-          <label
-            htmlFor="details"
-            className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
-          >
+          <SectionLabel as="label" htmlFor="details">
             Details
-          </label>
-          <textarea
+          </SectionLabel>
+          <Textarea
             id="details"
             name="details"
             required
             value={form.details}
             onChange={handleChange}
             rows={6}
-            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
             placeholder="Describe what happened, include links, wallet ids, or other signals."
           />
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-1">
-            <label
-              htmlFor="contactEmail"
-              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
-            >
+            <SectionLabel as="label" htmlFor="contactEmail">
               Contact email
-            </label>
+            </SectionLabel>
             <Input
               id="contactEmail"
               name="contactEmail"
@@ -230,12 +221,9 @@ export default function CaseIntakeForm() {
             />
           </div>
           <div className="space-y-1">
-            <label
-              htmlFor="contactPhone"
-              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
-            >
+            <SectionLabel as="label" htmlFor="contactPhone">
               Contact phone
-            </label>
+            </SectionLabel>
             <Input
               id="contactPhone"
               name="contactPhone"
@@ -244,12 +232,9 @@ export default function CaseIntakeForm() {
             />
           </div>
           <div className="space-y-1">
-            <label
-              htmlFor="contactHandle"
-              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
-            >
+            <SectionLabel as="label" htmlFor="contactHandle">
               Handle / chat id
-            </label>
+            </SectionLabel>
             <Input
               id="contactHandle"
               name="contactHandle"
@@ -261,12 +246,9 @@ export default function CaseIntakeForm() {
 
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-1">
-            <label
-              htmlFor="preferredContact"
-              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
-            >
+            <SectionLabel as="label" htmlFor="preferredContact">
               Preferred contact
-            </label>
+            </SectionLabel>
             <select
               id="preferredContact"
               name="preferredContact"
@@ -282,12 +264,9 @@ export default function CaseIntakeForm() {
             </select>
           </div>
           <div className="space-y-1">
-            <label
-              htmlFor="incidentDate"
-              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
-            >
+            <SectionLabel as="label" htmlFor="incidentDate">
               Incident date
-            </label>
+            </SectionLabel>
             <Input
               id="incidentDate"
               name="incidentDate"
@@ -297,12 +276,9 @@ export default function CaseIntakeForm() {
             />
           </div>
           <div className="space-y-1">
-            <label
-              htmlFor="lossAmount"
-              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
-            >
+            <SectionLabel as="label" htmlFor="lossAmount">
               Estimated loss (USD)
-            </label>
+            </SectionLabel>
             <Input
               id="lossAmount"
               name="lossAmount"
@@ -316,9 +292,7 @@ export default function CaseIntakeForm() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-            Evidence attachments
-          </label>
+          <SectionLabel as="label">Evidence attachments</SectionLabel>
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-4 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
             <UploadCloud className="mx-auto mb-2 h-5 w-5 text-teal-500" />
             <p>Upload screenshots, PDFs, or logs (5 files max).</p>

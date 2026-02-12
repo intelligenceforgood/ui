@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import nextDynamic from "next/dynamic";
 import { Badge, Card } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
 import type { AnalyticsMetric } from "@i4g/sdk";
 import { Activity, TrendingDown, TrendingUp } from "lucide-react";
-import AnalyticsCharts from "./analytics-charts";
+
+const AnalyticsCharts = nextDynamic(() => import("./analytics-charts"), {
+  loading: () => (
+    <div className="h-96 animate-pulse rounded-2xl bg-slate-100" />
+  ),
+});
 
 export const dynamic = "force-dynamic";
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Badge, Card } from "@i4g/ui-kit";
+import { Badge, Card, SectionLabel } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
 import type { CaseSummary } from "@i4g/sdk";
 import {
@@ -12,19 +12,8 @@ import {
   Users,
 } from "lucide-react";
 import { TextWithTokens } from "@/components/text-with-tokens";
-import type { TaxonomyResponse } from "@i4g/sdk";
-
-function getTaxonomyDescription(
-  taxonomy: TaxonomyResponse,
-  label: string,
-): string {
-  if (!taxonomy?.axes) return "";
-  for (const axis of taxonomy.axes) {
-    const item = axis.items.find((i) => i.code === label || i.label === label);
-    if (item) return item.description;
-  }
-  return "";
-}
+import { ClassificationBadges } from "@/components/classification-badges";
+import { formatDate } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Cases & Tasks",
@@ -46,17 +35,6 @@ const priorityStyles: Record<CaseSummary["priority"], string> = {
   medium: "bg-sky-100 text-sky-600",
   low: "bg-slate-100 text-slate-600",
 };
-
-function formatDate(value: string | null | undefined) {
-  if (!value) {
-    return "—";
-  }
-
-  return new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
 
 export default async function CasesPage(props: {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -91,9 +69,7 @@ export default async function CasesPage(props: {
     <div className="space-y-8">
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
-            Case pipeline
-          </p>
+          <SectionLabel>Case pipeline</SectionLabel>
           <h1 className="mt-2 text-3xl font-semibold text-slate-900">
             Coordinate investigations and follow-ups
           </h1>
@@ -206,83 +182,17 @@ export default async function CasesPage(props: {
                     {formatDate(caseItem.updatedAt)}
                   </p>
                   <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-                    {caseItem.classification ? (
-                      <>
-                        {caseItem.classification.intent.map((item, i) => (
-                          <Badge
-                            key={`intent-${i}`}
-                            variant="danger"
-                            title={
-                              item.explanation ||
-                              getTaxonomyDescription(taxonomy, item.label)
-                            }
-                          >
-                            Intent: {item.label}
-                          </Badge>
-                        ))}
-                        {caseItem.classification.channel.map((item, i) => (
-                          <Badge
-                            key={`channel-${i}`}
-                            variant="info"
-                            title={
-                              item.explanation ||
-                              getTaxonomyDescription(taxonomy, item.label)
-                            }
-                          >
-                            Channel: {item.label}
-                          </Badge>
-                        ))}
-                        {caseItem.classification.techniques.map((item, i) => (
-                          <Badge
-                            key={`tech-${i}`}
-                            variant="warning"
-                            title={
-                              item.explanation ||
-                              getTaxonomyDescription(taxonomy, item.label)
-                            }
-                          >
-                            Technique: {item.label}
-                          </Badge>
-                        ))}
-                        {caseItem.classification.actions.map((item, i) => (
-                          <Badge
-                            key={`action-${i}`}
-                            variant="default"
-                            title={
-                              item.explanation ||
-                              getTaxonomyDescription(taxonomy, item.label)
-                            }
-                          >
-                            Action: {item.label}
-                          </Badge>
-                        ))}
-                        {caseItem.classification.persona.map((item, i) => (
-                          <Badge
-                            key={`persona-${i}`}
-                            variant="default"
-                            title={
-                              item.explanation ||
-                              getTaxonomyDescription(taxonomy, item.label)
-                            }
-                          >
-                            Persona: {item.label}
-                          </Badge>
-                        ))}
-                      </>
-                    ) : (
-                      caseItem.tags.map((tag) => (
-                        <Badge key={`${caseItem.id}-${tag}`} variant="default">
-                          #{tag}
-                        </Badge>
-                      ))
-                    )}
+                    <ClassificationBadges
+                      classification={caseItem.classification}
+                      taxonomy={taxonomy}
+                      tags={caseItem.tags}
+                      keyPrefix={`${caseItem.id}-`}
+                    />
                   </div>
                 </div>
                 <div className="flex w-full flex-col gap-3 sm:max-w-[220px]">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                      Progress
-                    </p>
+                    <SectionLabel>Progress</SectionLabel>
                     <div className="mt-2 h-2 w-full rounded-full bg-slate-100">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-sky-500 to-teal-400"

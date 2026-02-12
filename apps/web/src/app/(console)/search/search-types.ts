@@ -6,17 +6,7 @@ import type {
 
 /* ─── helper ─── */
 
-export function getTaxonomyDescription(
-  taxonomy: TaxonomyResponse,
-  label: string,
-): string {
-  if (!taxonomy?.axes) return "";
-  for (const axis of taxonomy.axes) {
-    const item = axis.items.find((i) => i.code === label || i.label === label);
-    if (item) return item.description;
-  }
-  return "";
-}
+export { getTaxonomyDescription } from "@/lib/taxonomy";
 
 /* ─── types ─── */
 

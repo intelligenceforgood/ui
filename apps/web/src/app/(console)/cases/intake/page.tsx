@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { ShieldPlus } from "lucide-react";
-import CaseIntakeForm from "./case-intake-form";
+
+const CaseIntakeForm = dynamic(() => import("./case-intake-form"), {
+  loading: () => (
+    <div className="h-96 animate-pulse rounded-2xl bg-slate-100" />
+  ),
+});
 
 export const metadata: Metadata = {
   title: "New Case Intake",

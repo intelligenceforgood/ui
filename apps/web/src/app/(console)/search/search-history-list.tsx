@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { Badge, Button, Card } from "@i4g/ui-kit";
 import { Clock4, History, RefreshCcw } from "lucide-react";
 import { buildSearchHref } from "@/lib/search-links";
@@ -11,6 +11,7 @@ import {
   toStringArray,
 } from "@/lib/search/filters";
 import type { SearchHistoryEvent } from "@/types/reviews";
+import { formatDate } from "@/lib/format";
 
 const timeRangeFormatter = new Intl.DateTimeFormat("en", {
   dateStyle: "medium",
@@ -173,23 +174,12 @@ function summarizeHistoryParams(
   };
 }
 
-function formatDate(value: string) {
-  try {
-    return new Intl.DateTimeFormat("en", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(value));
-  } catch {
-    return value;
-  }
-}
-
 type SearchHistoryListProps = {
   events: SearchHistoryEvent[];
   pageSize?: number;
 };
 
-export function SearchHistoryList({
+export const SearchHistoryList = memo(function SearchHistoryList({
   events: initialEvents,
   pageSize = 6,
 }: SearchHistoryListProps) {
@@ -369,7 +359,9 @@ export function SearchHistoryList({
       ) : null}
     </Card>
   );
-}
+});
+
+SearchHistoryList.displayName = "SearchHistoryList";
 
 function LoaderIndicator() {
   return (

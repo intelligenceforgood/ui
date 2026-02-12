@@ -1,11 +1,13 @@
 "use client";
 
+import { memo } from "react";
 import { Badge, Card } from "@i4g/ui-kit";
 import type { SearchResult, TaxonomyResponse } from "@i4g/sdk";
 import { TextWithTokens } from "@/components/text-with-tokens";
+import { ClassificationBadges } from "@/components/classification-badges";
 import { ArrowUpRight } from "lucide-react";
 
-import { getTaxonomyDescription, sourceColors } from "./search-types";
+import { sourceColors } from "./search-types";
 
 export type SearchResultCardProps = {
   result: SearchResult;
@@ -15,7 +17,7 @@ export type SearchResultCardProps = {
   onToggleDetails: (id: string) => void;
 };
 
-export function SearchResultCard({
+export const SearchResultCard = memo(function SearchResultCard({
   result,
   index,
   taxonomy,
@@ -70,76 +72,12 @@ export function SearchResultCard({
 
         {/* Classification badges */}
         <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-          {result.classification ? (
-            <>
-              {result.classification.intent.map((item, i) => (
-                <Badge
-                  key={`intent-${i}`}
-                  variant="danger"
-                  title={
-                    item.explanation ||
-                    getTaxonomyDescription(taxonomy, item.label)
-                  }
-                >
-                  Intent: {item.label}
-                </Badge>
-              ))}
-              {result.classification.channel.map((item, i) => (
-                <Badge
-                  key={`channel-${i}`}
-                  variant="info"
-                  title={
-                    item.explanation ||
-                    getTaxonomyDescription(taxonomy, item.label)
-                  }
-                >
-                  Channel: {item.label}
-                </Badge>
-              ))}
-              {result.classification.techniques.map((item, i) => (
-                <Badge
-                  key={`tech-${i}`}
-                  variant="warning"
-                  title={
-                    item.explanation ||
-                    getTaxonomyDescription(taxonomy, item.label)
-                  }
-                >
-                  Technique: {item.label}
-                </Badge>
-              ))}
-              {result.classification.actions.map((item, i) => (
-                <Badge
-                  key={`action-${i}`}
-                  variant="default"
-                  title={
-                    item.explanation ||
-                    getTaxonomyDescription(taxonomy, item.label)
-                  }
-                >
-                  Action: {item.label}
-                </Badge>
-              ))}
-              {result.classification.persona.map((item, i) => (
-                <Badge
-                  key={`persona-${i}`}
-                  variant="default"
-                  title={
-                    item.explanation ||
-                    getTaxonomyDescription(taxonomy, item.label)
-                  }
-                >
-                  Persona: {item.label}
-                </Badge>
-              ))}
-            </>
-          ) : (
-            result.tags.map((tag, idx) => (
-              <Badge key={`${result.id}-tag-${tag}-${idx}`} variant="default">
-                #{tag}
-              </Badge>
-            ))
-          )}
+          <ClassificationBadges
+            classification={result.classification}
+            taxonomy={taxonomy}
+            tags={result.tags}
+            keyPrefix={`${result.id}-`}
+          />
         </div>
 
         {/* Expanded details */}
@@ -214,4 +152,6 @@ export function SearchResultCard({
       </Card>
     </li>
   );
-}
+});
+
+SearchResultCard.displayName = "SearchResultCard";

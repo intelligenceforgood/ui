@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Input } from "@i4g/ui-kit";
+import { Button, Input, Textarea } from "@i4g/ui-kit";
 import { createCampaign } from "@/lib/server/campaigns-service";
 import type { TaxonomyResponse } from "@i4g/sdk";
 
@@ -57,8 +57,7 @@ export function CampaignForm({
         <label className="block text-sm font-medium dark:text-slate-200">
           Description
         </label>
-        <textarea
-          className="flex w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400/30 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-500"
+        <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}

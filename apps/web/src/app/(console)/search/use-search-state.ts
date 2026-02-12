@@ -24,8 +24,9 @@ import {
   type SearchOverrides,
   DEFAULT_ENTITY_TYPE,
   buildEntityFilterRows,
-  generateEntityFilterId,
 } from "./search-types";
+import { useEntityFilters } from "./use-entity-filters";
+import { useSavedSearch } from "./use-saved-search";
 
 /* ─── hook input ─── */
 
@@ -65,12 +66,6 @@ export function useSearchState({
     [initialSelection],
   );
 
-  const normalizedInitialEntityFilters = useMemo(
-    () =>
-      buildEntityFilterRows(initialSelection?.entities, defaultIndicatorType),
-    [initialSelection, defaultIndicatorType],
-  );
-
   const normalizedInitialSavedSearch =
     useMemo<SavedSearchDescriptor | null>(() => {
       if (!initialSavedSearch) {
@@ -100,16 +95,19 @@ export function useSearchState({
   const [selection, setSelection] = useState<FacetSelection>(
     normalizedInitialSelection,
   );
-  const [entityFilters, setEntityFilters] = useState<EntityFilterRow[]>(
-    normalizedInitialEntityFilters,
-  );
   const [savedSearchContext, setSavedSearchContext] =
     useState<SavedSearchDescriptor | null>(normalizedInitialSavedSearch);
 
+  const normalizedInitialEntityFilters = useMemo(
+    () =>
+      buildEntityFilterRows(initialSelection?.entities, defaultIndicatorType),
+    [initialSelection, defaultIndicatorType],
+  );
+  const [entityFilters, setEntityFilters] = useState<EntityFilterRow[]>(
+    normalizedInitialEntityFilters,
+  );
+
   const [error, setError] = useState<string | null>(null);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [isSavingSearch, setIsSavingSearch] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [expandedResultId, setExpandedResultId] = useState<string | null>(null);
   const router = useRouter();
@@ -137,7 +135,6 @@ export function useSearchState({
       options?: BuildSearchRequestOptions,
     ): SearchRequest => {
       const effectiveSelection = appliedSelection ?? selection;
-      const effectiveEntities = appliedEntities ?? entityFilters;
       const nextQuery = overrides?.query ?? query;
       const trimmedQuery =
         typeof nextQuery === "string" ? nextQuery.trim() : "";
@@ -151,7 +148,8 @@ export function useSearchState({
         Object.prototype.hasOwnProperty.call(overrides, "timePreset")
           ? overrides.timePreset ?? null
           : effectiveSelection.timePreset;
-      const nextEntities = overrides?.entities ?? effectiveEntities;
+      const nextEntities =
+        overrides?.entities ?? appliedEntities ?? entityFilters;
       const timeRange = deriveTimeRangeFromPreset(nextTimePreset ?? undefined);
       const entityPayload = nextEntities
         .filter((filter) => filter.value.trim().length > 0)
@@ -229,12 +227,12 @@ export function useSearchState({
   }, [normalizedInitialSelection]);
 
   useEffect(() => {
-    setEntityFilters(normalizedInitialEntityFilters);
-  }, [normalizedInitialEntityFilters]);
-
-  useEffect(() => {
     setSavedSearchContext(normalizedInitialSavedSearch);
   }, [normalizedInitialSavedSearch]);
+
+  useEffect(() => {
+    setEntityFilters(normalizedInitialEntityFilters);
+  }, [normalizedInitialEntityFilters]);
 
   /* ─── search trigger ─── */
 
@@ -270,6 +268,34 @@ export function useSearchState({
     },
     [buildSearchRequestPayload, router],
   );
+
+  /* ─── clear saved search context helper (passed to sub-hooks) ─── */
+
+  const clearSavedSearchContext = useCallback(() => {
+    setSavedSearchContext(null);
+  }, []);
+
+  /* ─── entity filters (extracted hook) ─── */
+
+  const {
+    addEntityFilter,
+    updateEntityFilter,
+    removeEntityFilter,
+    resetEntityFilters,
+    applyEntityFilters,
+    activeEntityCount,
+  } = useEntityFilters({
+    entityFilters,
+    setEntityFilters,
+    defaultIndicatorType,
+    onClearSavedSearch: clearSavedSearchContext,
+    triggerSearch,
+  });
+
+  /* ─── saved search (extracted hook) ─── */
+
+  const { isSavingSearch, saveMessage, saveError, handleSaveSearch } =
+    useSavedSearch({ buildSearchRequestPayload });
 
   /* ─── event handlers ─── */
 
@@ -367,50 +393,6 @@ export function useSearchState({
     [selection, triggerSearch],
   );
 
-  /* ─── entity filter actions ─── */
-
-  const addEntityFilter = useCallback(() => {
-    setSavedSearchContext(null);
-    setEntityFilters((current) => [
-      ...current,
-      {
-        id: generateEntityFilterId(),
-        type: defaultIndicatorType,
-        value: "",
-        matchMode: "exact",
-      },
-    ]);
-  }, [defaultIndicatorType]);
-
-  const updateEntityFilter = useCallback(
-    (id: string, patch: Partial<EntityFilterRow>) => {
-      setSavedSearchContext(null);
-      setEntityFilters((current) =>
-        current.map((entry) =>
-          entry.id === id ? { ...entry, ...patch } : entry,
-        ),
-      );
-    },
-    [],
-  );
-
-  const removeEntityFilter = useCallback((id: string) => {
-    setSavedSearchContext(null);
-    setEntityFilters((current) => current.filter((entry) => entry.id !== id));
-  }, []);
-
-  const resetEntityFilters = useCallback(() => {
-    setSavedSearchContext(null);
-    setEntityFilters([]);
-    triggerSearch({ entities: [] }, undefined, [], {
-      includeSavedSearchContext: false,
-    });
-  }, [triggerSearch]);
-
-  const applyEntityFilters = useCallback(() => {
-    triggerSearch({ entities: entityFilters }, undefined, entityFilters);
-  }, [entityFilters, triggerSearch]);
-
   /* ─── clear all ─── */
 
   const clearFilters = useCallback(() => {
@@ -423,21 +405,8 @@ export function useSearchState({
       timePreset: null,
     };
     setSelection(cleared);
-    setEntityFilters([]);
-    triggerSearch(
-      {
-        sources: [],
-        taxonomy: [],
-        indicatorTypes: [],
-        datasets: [],
-        timePreset: null,
-        entities: [],
-      },
-      cleared,
-      [],
-      { includeSavedSearchContext: false },
-    );
-  }, [triggerSearch]);
+    resetEntityFilters();
+  }, [resetEntityFilters]);
 
   /* ─── toggle result details ─── */
 
@@ -445,80 +414,7 @@ export function useSearchState({
     setExpandedResultId((current) => (current === id ? null : id));
   }, []);
 
-  /* ─── save search ─── */
-
-  const handleSaveSearch = useCallback(() => {
-    setSaveError(null);
-    setSaveMessage(null);
-    const requestPayload = buildSearchRequestPayload(
-      undefined,
-      undefined,
-      undefined,
-      { includeSavedSearchContext: false },
-    );
-    const trimmedQuery =
-      typeof requestPayload.query === "string"
-        ? requestPayload.query.trim()
-        : "";
-    const hasFilters =
-      Boolean(trimmedQuery) ||
-      Boolean(requestPayload.sources && requestPayload.sources.length) ||
-      Boolean(requestPayload.taxonomy && requestPayload.taxonomy.length) ||
-      Boolean(
-        requestPayload.indicatorTypes && requestPayload.indicatorTypes.length,
-      ) ||
-      Boolean(requestPayload.datasets && requestPayload.datasets.length) ||
-      Boolean(requestPayload.timePreset) ||
-      Boolean(requestPayload.timeRange) ||
-      Boolean(requestPayload.entities && requestPayload.entities.length);
-    if (!hasFilters) {
-      setSaveError("Provide a query or filters before saving.");
-      return;
-    }
-
-    const suggestedName = trimmedQuery || "Untitled search";
-    const name =
-      typeof window !== "undefined"
-        ? window.prompt("Name this search", suggestedName)
-        : suggestedName;
-    if (!name) {
-      return;
-    }
-
-    setIsSavingSearch(true);
-    void fetch("/api/reviews/saved", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, params: requestPayload }),
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          const details = await response.json().catch(() => ({}));
-          const message =
-            typeof details.error === "string"
-              ? details.error
-              : "Unable to save search";
-          throw new Error(message);
-        }
-        setSaveMessage(`Saved "${name}"`);
-        router.refresh();
-        setTimeout(() => setSaveMessage(null), 6000);
-      })
-      .catch((saveErr: Error) => {
-        setSaveError(saveErr.message || "Unable to save search");
-      })
-      .finally(() => {
-        setIsSavingSearch(false);
-      });
-  }, [buildSearchRequestPayload, router]);
-
   /* ─── derived state ─── */
-
-  const activeEntityCount = useMemo(
-    () =>
-      entityFilters.filter((filter) => filter.value.trim().length > 0).length,
-    [entityFilters],
-  );
 
   const hasActiveFilters = useMemo(
     () =>

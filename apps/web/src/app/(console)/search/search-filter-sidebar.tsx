@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChangeEvent } from "react";
+import { type ChangeEvent, memo } from "react";
 import { Button, Input } from "@i4g/ui-kit";
 import type { SearchResponse } from "@i4g/sdk";
 import type { HybridSearchSchema } from "@/types/reviews";
@@ -39,7 +39,7 @@ export type SearchFilterSidebarProps = {
   applyEntityFilters: () => void;
 };
 
-export function SearchFilterSidebar({
+export const SearchFilterSidebar = memo(function SearchFilterSidebar({
   schema,
   selection,
   entityFilters,
@@ -384,4 +384,6 @@ export function SearchFilterSidebar({
       </div>
     </aside>
   );
-}
+});
+
+SearchFilterSidebar.displayName = "SearchFilterSidebar";

@@ -1,6 +1,15 @@
 import type { Metadata } from "next";
+import nextDynamic from "next/dynamic";
 import { getAccountListRuns } from "@/lib/server/account-list-service";
-import { AccountListConsole } from "./account-list-console";
+
+const AccountListConsole = nextDynamic(
+  () => import("./account-list-console").then((mod) => mod.AccountListConsole),
+  {
+    loading: () => (
+      <div className="h-96 animate-pulse rounded-2xl bg-slate-100" />
+    ),
+  },
+);
 
 export const metadata: Metadata = {
   title: "Account List",

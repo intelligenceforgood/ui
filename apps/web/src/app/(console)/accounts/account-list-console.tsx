@@ -9,8 +9,9 @@ import {
   Loader2,
   RefreshCcw,
 } from "lucide-react";
-import { Badge, Button, Card } from "@i4g/ui-kit";
+import { Badge, Button, Card, Input } from "@i4g/ui-kit";
 import type { AccountListRun } from "@/lib/server/account-list-service";
+import { formatDate } from "@/lib/format";
 
 type Props = {
   initialRuns: AccountListRun[];
@@ -23,17 +24,6 @@ type StatusState = {
 
 const DEFAULT_CATEGORIES = ["bank", "crypto", "payments"];
 const DEFAULT_FORMATS = ["xlsx", "pdf"];
-
-function formatDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
 
 function categoryLabel(key: string) {
   switch (key) {
@@ -221,19 +211,11 @@ export function AccountListConsole({ initialRuns }: Props) {
             <div className="grid gap-4 md:grid-cols-2">
               <label className="space-y-1 text-sm text-slate-600">
                 <span className="font-medium text-slate-900">Start date</span>
-                <input
-                  type="date"
-                  name="startDate"
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                />
+                <Input type="date" name="startDate" />
               </label>
               <label className="space-y-1 text-sm text-slate-600">
                 <span className="font-medium text-slate-900">End date</span>
-                <input
-                  type="date"
-                  name="endDate"
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                />
+                <Input type="date" name="endDate" />
               </label>
             </div>
 
@@ -265,13 +247,12 @@ export function AccountListConsole({ initialRuns }: Props) {
                 <span className="font-medium text-slate-900">
                   Top K per category
                 </span>
-                <input
+                <Input
                   type="number"
                   name="topK"
                   min={5}
                   max={250}
                   defaultValue={100}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                 />
               </label>
               <label className="space-y-1 text-sm text-slate-600">

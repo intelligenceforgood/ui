@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { Sparkles } from "lucide-react";
 import { Badge, Card } from "@i4g/ui-kit";
 import type { SearchRequest, SearchTimeRange } from "@i4g/sdk";
@@ -9,8 +10,6 @@ import {
   getSearchHistory,
   listSavedSearches,
 } from "@/lib/server/reviews-service";
-import { SearchHistoryList } from "./search-history-list";
-import { SavedSearchesList } from "./saved-searches-list";
 import {
   deriveTimeRangeFromPreset,
   normalizeEntityFilters,
@@ -19,6 +18,13 @@ import {
   toStringArray,
 } from "@/lib/search/filters";
 import type { SavedSearchDescriptor } from "@/types/reviews";
+
+const SearchHistoryList = dynamic(() =>
+  import("./search-history-list").then((mod) => mod.SearchHistoryList),
+);
+const SavedSearchesList = dynamic(() =>
+  import("./saved-searches-list").then((mod) => mod.SavedSearchesList),
+);
 
 export const metadata: Metadata = {
   title: "Search",

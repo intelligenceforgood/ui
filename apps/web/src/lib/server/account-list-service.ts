@@ -13,7 +13,7 @@ const apiRunSchema = z.object({
   warnings: z.array(z.string()).default([]),
   artifacts: z.record(z.string()).default({}),
   categories: z.array(z.string()).default([]),
-  metadata: z.record(z.any()).default({}),
+  metadata: z.record(z.unknown()).default({}),
 });
 
 const apiRunsResponseSchema = z.object({
@@ -27,7 +27,7 @@ const indicatorSchema = z.object({
   type: z.string(),
   number: z.string(),
   source_case_id: z.string().nullable().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 const sourceSchema = z.object({
@@ -47,7 +47,7 @@ const accountListResultSchema = z.object({
   indicators: z.array(indicatorSchema),
   sources: z.array(sourceSchema),
   warnings: z.array(z.string()).default([]),
-  metadata: z.record(z.any()).default({}),
+  metadata: z.record(z.unknown()).default({}),
   artifacts: z.record(z.string()).default({}),
 });
 

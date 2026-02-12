@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Badge, Button, Card } from "@i4g/ui-kit";
+import { Badge, Button, Card, Input } from "@i4g/ui-kit";
 import { ArrowUpRight, Layers3 } from "lucide-react";
 
 import { getI4GClient } from "@/lib/i4g-client";
@@ -130,13 +130,13 @@ export default async function EvidenceDossiersPage({
           </label>
           <label className="flex flex-col gap-2 text-sm font-semibold text-white">
             Rows to load
-            <input
+            <Input
               type="number"
               name="limit"
               min={5}
               max={200}
               defaultValue={filters.limit}
-              className="h-12 rounded-2xl border border-white/10 bg-white/90 px-4 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-300"
+              className="h-12 rounded-2xl border-white/10 bg-white/90 font-semibold text-slate-900"
             />
           </label>
           <label className="flex flex-col gap-2 text-sm font-semibold text-white">

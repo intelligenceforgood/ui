@@ -1,24 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Card } from "@i4g/ui-kit";
 import { Bookmark, RefreshCcw, Star, StarOff, Trash2 } from "lucide-react";
 import { buildSearchHref } from "@/lib/search-links";
 import { isPlainObject, toStringArray } from "@/lib/search/filters";
 import type { SavedSearchRecord } from "@/types/reviews";
-
-function formatDate(value: string) {
-  try {
-    return new Intl.DateTimeFormat("en", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(value));
-  } catch {
-    return value;
-  }
-}
+import { formatDate } from "@/lib/format";
 
 type SavedSearchesListProps = {
   items: SavedSearchRecord[];
@@ -89,7 +79,7 @@ function buildSavedSearchRunParams(
   return payload;
 }
 
-export function SavedSearchesList({
+export const SavedSearchesList = memo(function SavedSearchesList({
   items: initialItems,
 }: SavedSearchesListProps) {
   const [items, setItems] = useState(initialItems);
@@ -275,4 +265,6 @@ export function SavedSearchesList({
       )}
     </Card>
   );
-}
+});
+
+SavedSearchesList.displayName = "SavedSearchesList";

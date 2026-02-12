@@ -49,19 +49,7 @@ export const statusVariantMap: Record<
 
 /* ---------- Formatters ---------- */
 
-export function formatDate(value?: string | null) {
-  if (!value) {
-    return "—";
-  }
-  try {
-    return new Intl.DateTimeFormat("en", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(value));
-  } catch {
-    return value;
-  }
-}
+export { formatDate } from "@/lib/format";
 
 export function formatCurrency(value?: unknown) {
   if (typeof value !== "number") {
