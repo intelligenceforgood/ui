@@ -8,15 +8,20 @@ import {
   ExternalLink,
   Paperclip,
   ShieldAlert,
+  Tag,
 } from "lucide-react";
 import Link from "next/link";
+import { ClassificationBadges } from "@/components/classification-badges";
 
 // Force dynamic since we are fetching a specific ID
 export const dynamic = "force-dynamic";
 
 async function CaseDetailView({ id }: { id: string }) {
   const client = getI4GClient();
-  const caseData = await client.getCase(id);
+  const [caseData, taxonomy] = await Promise.all([
+    client.getCase(id),
+    client.getTaxonomy(),
+  ]);
 
   if (!caseData) {
     notFound();
@@ -96,8 +101,49 @@ async function CaseDetailView({ id }: { id: string }) {
           </Card>
         </div>
 
-        {/* Right Column: Artifacts & Metadata */}
+        {/* Right Column: Classification, Artifacts & Metadata */}
         <div className="space-y-6">
+          <Card className="p-6">
+            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+              <Tag className="w-5 h-5 text-slate-400" />
+              Classification
+            </h3>
+            {caseData.classification ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-slate-600">
+                    Risk Score
+                  </span>
+                  <Badge
+                    variant={
+                      caseData.classification.risk_score >= 75
+                        ? "danger"
+                        : caseData.classification.risk_score >= 40
+                          ? "warning"
+                          : "default"
+                    }
+                  >
+                    {caseData.classification.risk_score.toFixed(1)}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <ClassificationBadges
+                    classification={caseData.classification}
+                    taxonomy={taxonomy}
+                    keyPrefix={`case-${id}-`}
+                  />
+                </div>
+                <p className="text-xs text-slate-400">
+                  Taxonomy v{caseData.classification.taxonomy_version}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 italic">
+                Not yet classified
+              </p>
+            )}
+          </Card>
+
           <Card className="p-6">
             <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
               <Paperclip className="w-5 h-5 text-slate-400" />
