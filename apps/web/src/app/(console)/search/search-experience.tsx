@@ -13,6 +13,7 @@ import type { SearchExperienceProps } from "./search-types";
 import { SearchFilterSidebar } from "./search-filter-sidebar";
 import { SearchResultCard } from "./search-result-card";
 import { useSearchState } from "./use-search-state";
+import { FieldHelp } from "@/components/help";
 
 export default function SearchExperience({
   initialResults,
@@ -77,6 +78,9 @@ export default function SearchExperience({
               className="pl-9"
               autoComplete="off"
             />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <FieldHelp helpKey="search.query" side="bottom" />
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={isPending}>

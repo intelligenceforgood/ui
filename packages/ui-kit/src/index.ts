@@ -5,3 +5,5 @@ export * from "./components/input";
 export * from "./components/textarea";
 export * from "./components/section-label";
 export * from "./components/error-fallback";
+export * from "./components/help-tooltip";
+export * from "./components/info-popover";

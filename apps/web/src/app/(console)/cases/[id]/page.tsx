@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { ClassificationBadges } from "@/components/classification-badges";
+import { FieldHelp, SectionHelp } from "@/components/help";
 
 // Force dynamic since we are fetching a specific ID
 export const dynamic = "force-dynamic";
@@ -50,9 +51,15 @@ async function CaseDetailView({ id }: { id: string }) {
               {caseData.id}
             </span>
             <span>•</span>
-            <span className="capitalize">Priority: {caseData.priority}</span>
+            <span className="capitalize flex items-center gap-1">
+              Priority: {caseData.priority}
+              <FieldHelp helpKey="case.priority" side="bottom" />
+            </span>
             <span>•</span>
-            <span className="capitalize">Status: {caseData.status}</span>
+            <span className="capitalize flex items-center gap-1">
+              Status: {caseData.status}
+              <FieldHelp helpKey="case.status" side="bottom" />
+            </span>
           </div>
         </div>
       </div>
@@ -62,7 +69,10 @@ async function CaseDetailView({ id }: { id: string }) {
         {/* Left Column: Context & Timeline */}
         <div className="col-span-2 space-y-6">
           <Card className="p-6">
-            <h3 className="text-lg font-medium mb-4">Case Narrative</h3>
+            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+              Case Narrative
+              <FieldHelp helpKey="case.narrative" />
+            </h3>
             <p className="text-slate-600 leading-relaxed">
               {caseData.description || "No description provided."}
             </p>
@@ -72,6 +82,7 @@ async function CaseDetailView({ id }: { id: string }) {
             <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
               <Clock className="w-5 h-5 text-slate-400" />
               Timeline
+              <FieldHelp helpKey="case.timeline" />
             </h3>
             <div className="space-y-4">
               {caseData.timeline.length === 0 && (
@@ -107,12 +118,14 @@ async function CaseDetailView({ id }: { id: string }) {
             <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
               <Tag className="w-5 h-5 text-slate-400" />
               Classification
+              <SectionHelp helpKey="case.classification" />
             </h3>
             {caseData.classification ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-600">
+                  <span className="text-sm font-medium text-slate-600 flex items-center gap-1">
                     Risk Score
+                    <FieldHelp helpKey="case.classification.riskScore" />
                   </span>
                   <Badge
                     variant={
@@ -133,8 +146,9 @@ async function CaseDetailView({ id }: { id: string }) {
                     keyPrefix={`case-${id}-`}
                   />
                 </div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-400 flex items-center gap-1">
                   Taxonomy v{caseData.classification.taxonomy_version}
+                  <FieldHelp helpKey="case.classification.taxonomyVersion" />
                 </p>
               </div>
             ) : (
@@ -148,6 +162,7 @@ async function CaseDetailView({ id }: { id: string }) {
             <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
               <Paperclip className="w-5 h-5 text-slate-400" />
               Artifacts ({caseData.artifacts.length})
+              <FieldHelp helpKey="case.artifacts" />
             </h3>
             <ul className="space-y-3">
               {caseData.artifacts.map((art) => (

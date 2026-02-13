@@ -5,6 +5,7 @@ import { Button, Input } from "@i4g/ui-kit";
 import type { SearchResponse } from "@i4g/sdk";
 import type { HybridSearchSchema } from "@/types/reviews";
 import { Filter, Plus, X } from "lucide-react";
+import { FieldHelp } from "@/components/help";
 
 import type {
   EntityFilterRow,
@@ -64,6 +65,7 @@ export const SearchFilterSidebar = memo(function SearchFilterSidebar({
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
           <Filter className="h-3.5 w-3.5" /> Filters
+          <FieldHelp helpKey="search.filters" side="right" />
         </div>
         <p className="text-[11px] text-slate-400">
           {schemaSummary.indicatorTypes} indicator types -{" "}
@@ -119,8 +121,9 @@ export const SearchFilterSidebar = memo(function SearchFilterSidebar({
         {/* Indicator types */}
         {indicatorOptions.length ? (
           <div className="space-y-3">
-            <p className="text-xs font-semibold text-slate-500">
+            <p className="text-xs font-semibold text-slate-500 flex items-center gap-1">
               Indicator types
+              <FieldHelp helpKey="search.filters.indicators" side="right" />
             </p>
             <div className="flex flex-wrap gap-2">
               {indicatorOptions.map((indicator) => {
@@ -250,8 +253,9 @@ export const SearchFilterSidebar = memo(function SearchFilterSidebar({
         <div className="space-y-3 rounded-2xl border border-slate-100 bg-white p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500">
+              <p className="text-xs font-semibold text-slate-500 flex items-center gap-1">
                 Entity filters
+                <FieldHelp helpKey="search.filters.entities" side="right" />
               </p>
               <p className="text-[11px] text-slate-400">
                 Match exact values or prefixes across structured stores.
