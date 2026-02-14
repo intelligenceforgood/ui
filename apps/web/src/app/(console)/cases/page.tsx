@@ -22,6 +22,7 @@ export const metadata: Metadata = {
 
 const statusStyles: Record<CaseSummary["status"], string> = {
   new: "bg-slate-100 text-slate-600",
+  queued: "bg-violet-50 text-violet-600",
   in_review: "bg-blue-50 text-blue-600",
   awaiting_input: "bg-amber-50 text-amber-600",
   closed: "bg-slate-200 text-slate-600",

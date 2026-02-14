@@ -185,6 +185,7 @@ const caseSummarySchema = z.object({
   priority: z.enum(["critical", "high", "medium", "low"]),
   status: z.enum([
     "new",
+    "queued",
     "in_review",
     "awaiting_input",
     "closed",

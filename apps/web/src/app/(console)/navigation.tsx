@@ -16,28 +16,65 @@ import {
   Globe,
   ListChecks,
   FileCheck2,
+  Shield,
+  Users,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useAuth, type UserRole } from "@/lib/auth-context";
 
-const navItems = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  /** Minimum role required to see this item. Omit for all authenticated users. */
+  minRole?: UserRole;
+}
+
+const navItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/search", label: "Search", icon: Search },
   { href: "/accounts", label: "Account list", icon: ListChecks },
   { href: "/discovery", label: "Discovery", icon: Globe },
   { href: "/cases", label: "Cases & Tasks", icon: CaseSensitive },
-  { href: "/reports/dossiers", label: "Evidence dossiers", icon: FileCheck2 },
-  { href: "/campaigns", label: "Campaigns", icon: Layers },
+  {
+    href: "/reports/dossiers",
+    label: "Evidence dossiers",
+    icon: FileCheck2,
+    minRole: "analyst",
+  },
+  {
+    href: "/campaigns",
+    label: "Campaigns",
+    icon: Layers,
+    minRole: "admin",
+  },
   { href: "/taxonomy", label: "Taxonomy", icon: Layers },
-  { href: "/analytics", label: "Analytics", icon: LineChart },
+  {
+    href: "/analytics",
+    label: "Analytics",
+    icon: LineChart,
+    minRole: "analyst",
+  },
+  {
+    href: "/admin/users",
+    label: "User management",
+    icon: Users,
+    minRole: "admin",
+  },
 ];
 
 export function Navigation() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, hasRole } = useAuth();
+
+  const visibleItems = navItems.filter(
+    (item) => !item.minRole || hasRole(item.minRole),
+  );
 
   const navLinks = (
     <ul className="space-y-2">
-      {navItems.map(({ href, label, icon: Icon }) => (
+      {visibleItems.map(({ href, label, icon: Icon }) => (
         <li key={href}>
           <Link
             className={clsx(
@@ -69,7 +106,7 @@ export function Navigation() {
       </button>
       <aside
         className={clsx(
-          "fixed inset-y-0 left-0 z-30 w-64 border-r border-slate-100 bg-white/90 backdrop-blur transition-transform duration-300 dark:border-slate-900 dark:bg-slate-950/80 lg:static lg:translate-x-0 lg:flex lg:flex-col",
+          "fixed inset-y-0 left-0 z-30 w-64 border-r border-slate-100 bg-white/90 backdrop-blur transition-transform duration-300 dark:border-slate-900 dark:bg-slate-950/80 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:flex lg:flex-col",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >
@@ -95,6 +132,20 @@ export function Navigation() {
         </div>
         <nav className="flex-1 px-4 py-8 overflow-y-auto">{navLinks}</nav>
         <div className="px-6 pb-8 space-y-4">
+          {/* User identity badge */}
+          {user && (
+            <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-900/60">
+              <Shield className="h-4 w-4 text-slate-400" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-medium text-slate-700 dark:text-slate-300">
+                  {user.displayName || user.email}
+                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  {user.role}
+                </p>
+              </div>
+            </div>
+          )}
           <ThemeToggle />
           <Link
             href="https://docs.intelligenceforgood.org/book/guides"
