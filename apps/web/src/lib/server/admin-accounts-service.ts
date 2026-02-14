@@ -60,3 +60,14 @@ export async function deactivateAccount(
     method: "PUT",
   });
 }
+
+/**
+ * Reactivate a deactivated user account (admin-only).
+ */
+export async function reactivateAccount(
+  email: string,
+): Promise<{ email: string; reactivated: boolean }> {
+  return apiFetch(`/accounts/${encodeURIComponent(email)}/reactivate`, {
+    method: "PUT",
+  });
+}
