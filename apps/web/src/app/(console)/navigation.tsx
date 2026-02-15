@@ -16,10 +16,9 @@ import {
   Globe,
   ListChecks,
   FileCheck2,
-  Shield,
   Users,
 } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { UserPreferences } from "@/components/user-preferences";
 import { useAuth, type UserRole } from "@/lib/auth-context";
 
 interface NavItem {
@@ -66,7 +65,7 @@ const navItems: NavItem[] = [
 export function Navigation() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, hasRole } = useAuth();
+  const { hasRole } = useAuth();
 
   const visibleItems = navItems.filter(
     (item) => !item.minRole || hasRole(item.minRole),
@@ -132,21 +131,7 @@ export function Navigation() {
         </div>
         <nav className="flex-1 px-4 py-8 overflow-y-auto">{navLinks}</nav>
         <div className="px-6 pb-8 space-y-4">
-          {/* User identity badge */}
-          {user && (
-            <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-900/60">
-              <Shield className="h-4 w-4 text-slate-400" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-medium text-slate-700 dark:text-slate-300">
-                  {user.displayName || user.email}
-                </p>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  {user.role}
-                </p>
-              </div>
-            </div>
-          )}
-          <ThemeToggle />
+          <UserPreferences />
           <Link
             href="https://docs.intelligenceforgood.org/book/guides"
             className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-teal-300 hover:text-teal-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"

@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   },
   description:
     "Operational dashboard, search, and analytics console for Intelligence for Good analysts.",
+  icons: {
+    icon: "/ifg-logomark.svg",
+  },
 };
 
 export default function RootLayout({
