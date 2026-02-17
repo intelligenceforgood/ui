@@ -7,9 +7,9 @@ import type { DiscoveryResult } from "./discovery-types";
 import {
   formatDocumentId,
   formatDocumentName,
-  redactJsonForDisplay,
-  redactSensitiveText,
+  formatJsonForDisplay,
 } from "./discovery-types";
+import { PiiHighlightedPre, PiiHighlightedText } from "./pii-highlighted-text";
 
 export type DiscoveryResultCardProps = {
   result: DiscoveryResult;
@@ -20,24 +20,11 @@ export const DiscoveryResultCard = memo(function DiscoveryResultCard({
   result,
   showRaw,
 }: DiscoveryResultCardProps) {
-  const friendlyDocumentName = redactSensitiveText(
-    formatDocumentName(result.documentName),
-  );
+  const friendlyDocumentName = formatDocumentName(result.documentName);
   const hasSummary = Boolean(result.summary && result.summary.trim());
-  const redactedSummary = hasSummary
-    ? redactSensitiveText(result.summary)
-    : null;
-  const displayTitle = redactedSummary ?? friendlyDocumentName;
-  const redactedDocumentTitle = redactSensitiveText(result.documentName);
-  const redactedSource = result.source
-    ? redactSensitiveText(result.source)
-    : null;
-  const redactedIndexType = result.indexType
-    ? redactSensitiveText(result.indexType)
-    : null;
-  const redactedLabel = result.label ? redactSensitiveText(result.label) : null;
-  const redactedStruct = redactJsonForDisplay(result.struct);
-  const redactedRawPayload = redactJsonForDisplay(result.raw);
+  const displayTitle = hasSummary ? result.summary! : friendlyDocumentName;
+  const formattedStruct = formatJsonForDisplay(result.struct);
+  const formattedRawPayload = formatJsonForDisplay(result.raw);
 
   return (
     <Card key={`${result.rank}-${result.documentId}`} className="space-y-3">
@@ -47,44 +34,49 @@ export const DiscoveryResultCard = memo(function DiscoveryResultCard({
             <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">
               #{result.rank}
             </span>
-            {redactedSource ? (
+            {result.source ? (
               <span className="rounded-full bg-sky-50 px-3 py-1 text-sky-600">
-                {redactedSource}
+                {result.source}
               </span>
             ) : null}
-            {redactedIndexType && redactedIndexType !== redactedSource ? (
+            {result.indexType && result.indexType !== result.source ? (
               <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-500">
-                {redactedIndexType}
+                {result.indexType}
               </span>
             ) : null}
           </div>
           <h3
             className="mt-2 text-lg font-semibold text-slate-900"
-            title={redactedDocumentTitle}
+            title={result.documentName ?? undefined}
           >
-            {displayTitle}
+            <PiiHighlightedText text={displayTitle} />
           </h3>
-          <p className="text-sm text-slate-500" title={redactedDocumentTitle}>
-            Case: {friendlyDocumentName}
+          <p
+            className="text-sm text-slate-500"
+            title={result.documentName ?? undefined}
+          >
+            Case: <PiiHighlightedText text={friendlyDocumentName} />
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {redactedLabel ? (
-            <Badge variant="info">Label: {redactedLabel}</Badge>
+          {result.label ? (
+            <Badge variant="info">Label: {result.label}</Badge>
           ) : null}
           <Badge variant="default">
             ID {formatDocumentId(result.documentId)}
           </Badge>
         </div>
       </div>
-      {redactedSummary ? (
-        <p className="text-sm text-slate-600">{redactedSummary}</p>
+      {hasSummary ? (
+        <p className="text-sm text-slate-600">
+          <PiiHighlightedText text={result.summary!} />
+        </p>
       ) : null}
       {result.tags.length ? (
         <div className="flex flex-wrap gap-2 text-xs text-slate-500">
           {result.tags.map((tag) => (
             <Badge key={`${result.documentId}-${tag}`} variant="default">
-              #{redactSensitiveText(tag)}
+              #<PiiHighlightedText text={tag} />
             </Badge>
           ))}
         </div>
@@ -116,7 +108,7 @@ export const DiscoveryResultCard = memo(function DiscoveryResultCard({
             Structured fields
           </summary>
           <pre className="mt-3 whitespace-pre-wrap break-all text-[11px] text-slate-500">
-            {redactedStruct}
+            <PiiHighlightedPre text={formattedStruct} />
           </pre>
         </details>
       ) : null}
@@ -126,7 +118,7 @@ export const DiscoveryResultCard = memo(function DiscoveryResultCard({
             Raw payload
           </summary>
           <pre className="mt-3 whitespace-pre-wrap break-all text-[11px] text-slate-500">
-            {redactedRawPayload}
+            <PiiHighlightedPre text={formattedRawPayload} />
           </pre>
         </details>
       ) : null}

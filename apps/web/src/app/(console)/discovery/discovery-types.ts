@@ -77,30 +77,11 @@ export function formatDocumentId(documentId?: string | null) {
   return `${segment.slice(0, 10)}…${segment.slice(-6)}`;
 }
 
-/* ─── Redaction helpers ─── */
+/* ─── JSON display helper ─── */
 
-const EMAIL_REGEX = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
-const FULL_NAME_REGEX = /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/g;
-const ADDRESS_REGEX = /\b\d{1,5}\s+[A-Z0-9][A-Z0-9\s]+\b/g;
-
-function maskWithBlocks(match: string) {
-  return "█".repeat(match.length);
-}
-
-export function redactSensitiveText(value?: string | null) {
-  if (!value) {
-    return value ?? "";
-  }
-
-  return value
-    .replace(EMAIL_REGEX, maskWithBlocks)
-    .replace(FULL_NAME_REGEX, maskWithBlocks)
-    .replace(ADDRESS_REGEX, maskWithBlocks);
-}
-
-export function redactJsonForDisplay(payload: unknown) {
+export function formatJsonForDisplay(payload: unknown) {
   try {
-    return redactSensitiveText(JSON.stringify(payload, null, 2));
+    return JSON.stringify(payload, null, 2);
   } catch {
     return "[unavailable]";
   }
