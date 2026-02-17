@@ -4,6 +4,7 @@ import { useState } from "react";
 import { EyeOff, Loader2, Lock } from "lucide-react";
 import { detokenizeAction } from "@/actions/tokenization";
 import { Button } from "@i4g/ui-kit";
+import { PII_LABELS } from "@/lib/pii-labels";
 
 interface TokenRevealProps {
   token: string;
@@ -42,17 +43,27 @@ export function TokenReveal({ token, caseId, className }: TokenRevealProps) {
     return <span className={className}>{token}</span>;
   }
 
-  const containerClass = `inline-flex items-center gap-1.5 ${className || ""}`;
-  const codeClass = `px-1.5 py-0.5 rounded text-xs font-mono transition-colors ${
-    isOpen
-      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-      : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-  }`;
+  const prefix = token.slice(0, 3);
+  const hex = token.slice(4);
+  const piiLabel = PII_LABELS[prefix] ?? "Protected Data";
 
   return (
-    <span className={containerClass}>
+    <span
+      className={`mx-0.5 inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 py-0.5 pl-1.5 pr-0.5 font-mono text-[0.85em] leading-tight text-amber-800 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-300 ${className ?? ""}`}
+      title={`${piiLabel} (tokenized)`}
+    >
       <span className="relative group">
-        <code className={codeClass}>{isOpen ? revealedValue : token}</code>
+        {isOpen ? (
+          <span className="rounded bg-green-100 px-1 py-0.5 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+            {revealedValue}
+          </span>
+        ) : (
+          <>
+            <span className="opacity-75">{prefix}</span>
+            <span className="mx-0.5">·</span>
+            <span>{hex.slice(0, 4)}</span>
+          </>
+        )}
         {error && (
           <span className="absolute -bottom-5 left-0 text-[10px] text-red-500 whitespace-nowrap">
             {error}
@@ -63,19 +74,21 @@ export function TokenReveal({ token, caseId, className }: TokenRevealProps) {
       <Button
         variant="ghost"
         size="sm"
-        className="h-5 w-5 p-0 hover:bg-slate-100 dark:hover:bg-slate-800"
+        className="h-5 w-5 p-0 hover:bg-amber-100 dark:hover:bg-amber-900/40"
         onClick={handleReveal}
         disabled={isLoading}
-        title={isOpen ? "Hide value" : "Reveal original value"}
+        title={isOpen ? "Hide value" : `Reveal ${piiLabel}`}
       >
         {isLoading ? (
-          <Loader2 className="h-3 w-3 animate-spin text-slate-400" />
+          <Loader2 className="h-3 w-3 animate-spin text-amber-500/70" />
         ) : isOpen ? (
-          <EyeOff className="h-3 w-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
+          <EyeOff className="h-3 w-3 text-amber-600/70 hover:text-amber-700 dark:hover:text-amber-400" />
         ) : (
           <Lock className="h-3 w-3 text-amber-500/70 hover:text-amber-600" />
         )}
-        <span className="sr-only">{isOpen ? "Hide value" : "Reveal PII"}</span>
+        <span className="sr-only">
+          {isOpen ? "Hide value" : `Reveal ${piiLabel}`}
+        </span>
       </Button>
     </span>
   );

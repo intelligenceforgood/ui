@@ -15,6 +15,7 @@ import {
 import { Badge, Card } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
 import type { DashboardReminder } from "@i4g/sdk";
+import { TextWithTokens } from "@/components/text-with-tokens";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -112,9 +113,11 @@ export default async function DashboardPage() {
               >
                 <div>
                   <p className="text-sm font-medium text-slate-900">
-                    {alert.title}
+                    <TextWithTokens text={alert.title} />
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">{alert.detail}</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    <TextWithTokens text={alert.detail} />
+                  </p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <Badge variant={alert.variant}>{alert.time}</Badge>
@@ -147,7 +150,7 @@ export default async function DashboardPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">
-                      {item.title}
+                      <TextWithTokens text={item.title} />
                     </p>
                     <p className="text-xs text-slate-500">
                       {item.actor} · {item.when}

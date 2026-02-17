@@ -11,6 +11,7 @@ import {
   formatPathPreview,
   isHttpUrl,
 } from "./dossier-utils";
+import { PreWithTokens } from "@/components/pre-with-tokens";
 
 /* ---------- StatsRow ---------- */
 
@@ -43,7 +44,7 @@ export function ManifestPreview({
         Manifest JSON
       </summary>
       <pre className="mt-3 max-h-64 overflow-auto rounded-xl bg-slate-900/90 p-4 text-xs text-white">
-        {JSON.stringify(data, null, 2)}
+        <PreWithTokens text={JSON.stringify(data, null, 2)} />
       </pre>
     </details>
   );

@@ -40,6 +40,8 @@ import {
   ClientVerificationPanel,
   VerificationPanel,
 } from "./dossier-verification";
+import { TextWithTokens } from "@/components/text-with-tokens";
+import { PreWithTokens } from "@/components/pre-with-tokens";
 
 export function DossierList({ response, includeManifest }: DossierListProps) {
   const [verifications, setVerifications] = useState<
@@ -248,14 +250,14 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
                   (warning) => (
                     <p key={warning} className="flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4" />
-                      {warning}
+                      <TextWithTokens text={warning} />
                     </p>
                   ),
                 )}
                 {record.error && (
                   <p className="flex items-center gap-2 text-rose-600 dark:text-rose-200">
                     <FileWarning className="h-4 w-4" />
-                    {record.error}
+                    <TextWithTokens text={record.error} />
                   </p>
                 )}
               </div>
@@ -358,7 +360,9 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
                 Dossier plan payload
               </summary>
               <pre className="mt-3 max-h-80 overflow-auto rounded-xl bg-slate-900/90 p-4 text-xs text-white">
-                {JSON.stringify(record.payload ?? {}, null, 2)}
+                <PreWithTokens
+                  text={JSON.stringify(record.payload ?? {}, null, 2)}
+                />
               </pre>
             </details>
           </Card>

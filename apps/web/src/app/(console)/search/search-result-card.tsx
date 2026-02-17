@@ -4,6 +4,7 @@ import { memo } from "react";
 import { Badge, Card } from "@i4g/ui-kit";
 import type { SearchResult, TaxonomyResponse } from "@i4g/sdk";
 import { TextWithTokens } from "@/components/text-with-tokens";
+import { PreWithTokens } from "@/components/pre-with-tokens";
 import { ClassificationBadges } from "@/components/classification-badges";
 import { ArrowUpRight } from "lucide-react";
 
@@ -93,7 +94,7 @@ export const SearchResultCard = memo(function SearchResultCard({
                   Classification Analysis
                 </h4>
                 <p className="text-slate-700">
-                  {result.classification.explanation}
+                  <TextWithTokens text={result.classification.explanation} />
                 </p>
               </div>
             ) : null}
@@ -111,7 +112,7 @@ export const SearchResultCard = memo(function SearchResultCard({
                       className="rounded border border-slate-200 bg-white p-2 text-xs"
                     >
                       <pre className="whitespace-pre-wrap break-all font-mono text-[10px] text-slate-500">
-                        {JSON.stringify(ex, null, 2)}
+                        <PreWithTokens text={JSON.stringify(ex, null, 2)} />
                       </pre>
                     </div>
                   ))}

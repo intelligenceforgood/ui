@@ -13,6 +13,7 @@ import {
 import Link from "next/link";
 import { ClassificationBadges } from "@/components/classification-badges";
 import { FieldHelp, SectionHelp } from "@/components/help";
+import { TextWithTokens } from "@/components/text-with-tokens";
 
 // Force dynamic since we are fetching a specific ID
 export const dynamic = "force-dynamic";
@@ -43,7 +44,7 @@ async function CaseDetailView({ id }: { id: string }) {
             </Link>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-            {caseData.title}
+            <TextWithTokens text={caseData.title} caseId={id} />
           </h1>
           <div className="flex items-center gap-3 mt-2 text-sm text-slate-500">
             <span className="flex items-center gap-1">
@@ -74,7 +75,11 @@ async function CaseDetailView({ id }: { id: string }) {
               <FieldHelp helpKey="case.narrative" />
             </h3>
             <p className="text-slate-600 leading-relaxed">
-              {caseData.description || "No description provided."}
+              {caseData.description ? (
+                <TextWithTokens text={caseData.description} caseId={id} />
+              ) : (
+                "No description provided."
+              )}
             </p>
           </Card>
 
@@ -100,7 +105,7 @@ async function CaseDetailView({ id }: { id: string }) {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">
-                      {evt.description}
+                      <TextWithTokens text={evt.description} caseId={id} />
                     </p>
                     <p className="text-xs text-slate-500 capitalize">
                       {evt.type} • {evt.actor || "System"}

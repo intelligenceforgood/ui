@@ -9,7 +9,8 @@ import {
   formatDocumentName,
   formatJsonForDisplay,
 } from "./discovery-types";
-import { PiiHighlightedPre, PiiHighlightedText } from "./pii-highlighted-text";
+import { TextWithTokens } from "@/components/text-with-tokens";
+import { PreWithTokens } from "@/components/pre-with-tokens";
 
 export type DiscoveryResultCardProps = {
   result: DiscoveryResult;
@@ -49,13 +50,13 @@ export const DiscoveryResultCard = memo(function DiscoveryResultCard({
             className="mt-2 text-lg font-semibold text-slate-900"
             title={result.documentName ?? undefined}
           >
-            <PiiHighlightedText text={displayTitle} />
+            <TextWithTokens text={displayTitle} />
           </h3>
           <p
             className="text-sm text-slate-500"
             title={result.documentName ?? undefined}
           >
-            Case: <PiiHighlightedText text={friendlyDocumentName} />
+            Case: <TextWithTokens text={friendlyDocumentName} />
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -69,14 +70,14 @@ export const DiscoveryResultCard = memo(function DiscoveryResultCard({
       </div>
       {hasSummary ? (
         <p className="text-sm text-slate-600">
-          <PiiHighlightedText text={result.summary!} />
+          <TextWithTokens text={result.summary!} />
         </p>
       ) : null}
       {result.tags.length ? (
         <div className="flex flex-wrap gap-2 text-xs text-slate-500">
           {result.tags.map((tag) => (
             <Badge key={`${result.documentId}-${tag}`} variant="default">
-              #<PiiHighlightedText text={tag} />
+              #<TextWithTokens text={tag} />
             </Badge>
           ))}
         </div>
@@ -108,7 +109,7 @@ export const DiscoveryResultCard = memo(function DiscoveryResultCard({
             Structured fields
           </summary>
           <pre className="mt-3 whitespace-pre-wrap break-all text-[11px] text-slate-500">
-            <PiiHighlightedPre text={formattedStruct} />
+            <PreWithTokens text={formattedStruct} />
           </pre>
         </details>
       ) : null}
@@ -118,7 +119,7 @@ export const DiscoveryResultCard = memo(function DiscoveryResultCard({
             Raw payload
           </summary>
           <pre className="mt-3 whitespace-pre-wrap break-all text-[11px] text-slate-500">
-            <PiiHighlightedPre text={formattedRawPayload} />
+            <PreWithTokens text={formattedRawPayload} />
           </pre>
         </details>
       ) : null}

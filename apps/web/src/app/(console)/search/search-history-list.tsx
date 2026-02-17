@@ -12,6 +12,7 @@ import {
 } from "@/lib/search/filters";
 import type { SearchHistoryEvent } from "@/types/reviews";
 import { formatDate } from "@/lib/format";
+import { TextWithTokens } from "@/components/text-with-tokens";
 
 const timeRangeFormatter = new Intl.DateTimeFormat("en", {
   dateStyle: "medium",
@@ -277,7 +278,7 @@ export const SearchHistoryList = memo(function SearchHistoryList({
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="text-sm font-semibold text-slate-900">
-                      {displayTitle}
+                      <TextWithTokens text={displayTitle} />
                     </p>
                     <p className="text-xs text-slate-500">
                       <span className="inline-flex items-center gap-1">
