@@ -14,6 +14,7 @@ import { SearchFilterSidebar } from "./search-filter-sidebar";
 import { SearchResultCard } from "./search-result-card";
 import { useSearchState } from "./use-search-state";
 import { FieldHelp } from "@/components/help";
+import { getTaxonomyLabel } from "@/lib/taxonomy";
 
 export default function SearchExperience({
   initialResults,
@@ -121,6 +122,7 @@ export default function SearchExperience({
             schema={schema}
             selection={selection}
             entityFilters={entityFilters}
+            taxonomy={taxonomy}
             schemaSummary={schemaSummary}
             results={results}
             activeEntityCount={activeEntityCount}
@@ -167,8 +169,8 @@ export default function SearchExperience({
                 </Badge>
               ))}
               {selection.taxonomy.map((tag) => (
-                <Badge key={`tax-${tag}`} variant="warning">
-                  Tag: {tag}
+                <Badge key={`tax-${tag}`} variant="warning" title={tag}>
+                  Tag: {getTaxonomyLabel(taxonomy, tag)}
                 </Badge>
               ))}
               {selection.indicatorTypes.map((indicator) => (

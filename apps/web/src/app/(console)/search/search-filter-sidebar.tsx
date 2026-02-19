@@ -2,10 +2,11 @@
 
 import { type ChangeEvent, memo } from "react";
 import { Button, Input } from "@i4g/ui-kit";
-import type { SearchResponse } from "@i4g/sdk";
+import type { SearchResponse, TaxonomyResponse } from "@i4g/sdk";
 import type { HybridSearchSchema } from "@/types/reviews";
 import { Filter, Plus, X } from "lucide-react";
 import { FieldHelp } from "@/components/help";
+import { getTaxonomyLabel } from "@/lib/taxonomy";
 
 import type {
   EntityFilterRow,
@@ -19,6 +20,7 @@ export type SearchFilterSidebarProps = {
   schema: HybridSearchSchema;
   selection: FacetSelection;
   entityFilters: EntityFilterRow[];
+  taxonomy: TaxonomyResponse;
   schemaSummary: {
     indicatorTypes: number;
     datasets: number;
@@ -44,6 +46,7 @@ export const SearchFilterSidebar = memo(function SearchFilterSidebar({
   schema,
   selection,
   entityFilters,
+  taxonomy,
   schemaSummary,
   results,
   activeEntityCount,
@@ -85,7 +88,7 @@ export const SearchFilterSidebar = memo(function SearchFilterSidebar({
           <div className="mt-3 space-y-2">
             {schema.classifications.map((item) => {
               const value = item;
-              const label = item;
+              const label = getTaxonomyLabel(taxonomy, item);
               const description = null;
               const isSelected = selection.taxonomy.includes(value);
               return (

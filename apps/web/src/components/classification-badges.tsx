@@ -2,7 +2,7 @@
 
 import { Badge } from "@i4g/ui-kit";
 import type { FraudClassificationResult, TaxonomyResponse } from "@i4g/sdk";
-import { getTaxonomyDescription } from "@/lib/taxonomy";
+import { getTaxonomyDescription, getTaxonomyLabel } from "@/lib/taxonomy";
 
 /** Maps each classification axis to a Badge variant. */
 const axisConfig = [
@@ -27,6 +27,10 @@ export interface ClassificationBadgesProps {
 /**
  * Renders fraud-classification badges per axis with tooltip descriptions,
  * falling back to `#tag` badges when no classification is present.
+ *
+ * Badge text shows the human-friendly label (e.g. "Intent: Investment").
+ * The tooltip shows the machine-readable code and description so analysts
+ * can reference it when needed.
  */
 export function ClassificationBadges({
   classification,
@@ -42,18 +46,23 @@ export function ClassificationBadges({
             (
               item: { label: string; explanation?: string | null },
               i: number,
-            ) => (
-              <Badge
-                key={`${keyPrefix}${key}-${i}`}
-                variant={variant}
-                title={
-                  item.explanation ||
-                  getTaxonomyDescription(taxonomy, item.label)
-                }
-              >
-                {prefix}: {item.label}
-              </Badge>
-            ),
+            ) => {
+              const displayLabel = getTaxonomyLabel(taxonomy, item.label);
+              const description = getTaxonomyDescription(taxonomy, item.label);
+              const tooltip = [item.label, item.explanation || description]
+                .filter(Boolean)
+                .join(" — ");
+
+              return (
+                <Badge
+                  key={`${keyPrefix}${key}-${i}`}
+                  variant={variant}
+                  title={tooltip}
+                >
+                  {prefix}: {displayLabel}
+                </Badge>
+              );
+            },
           ),
         )}
       </>

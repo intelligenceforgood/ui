@@ -217,7 +217,7 @@ describe("SearchExperience", () => {
     await waitFor(() =>
       expect(screen.getByDisplayValue("romance")).toBeInTheDocument(),
     );
-    expect(screen.getByText(/Tag: romance_scam/i)).toBeInTheDocument();
+    expect(screen.getByText(/Tag: Romance Scam/i)).toBeInTheDocument();
   });
 
   it("forwards saved search metadata until filters change", async () => {
