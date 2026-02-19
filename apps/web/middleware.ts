@@ -18,7 +18,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 /** Routes that bypass the auth guard entirely. */
-const PUBLIC_PREFIXES = ["/api/", "/_next/", "/favicon.ico"];
+const PUBLIC_PREFIXES = ["/api/", "/_next/", "/favicon.ico", "/ssi"];
 
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));

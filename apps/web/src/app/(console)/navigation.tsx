@@ -17,6 +17,7 @@ import {
   ListChecks,
   FileCheck2,
   Users,
+  ShieldAlert,
 } from "lucide-react";
 import { UserPreferences } from "@/components/user-preferences";
 import { useAuth, type UserRole } from "@/lib/auth-context";
@@ -53,6 +54,11 @@ const navItems: NavItem[] = [
     label: "Analytics",
     icon: LineChart,
     minRole: "analyst",
+  },
+  {
+    href: "/ssi",
+    label: "Scam Investigator",
+    icon: ShieldAlert,
   },
   {
     href: "/admin/users",
