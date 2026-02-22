@@ -18,6 +18,8 @@ import {
   FileCheck2,
   Users,
   ShieldAlert,
+  History,
+  Wallet,
 } from "lucide-react";
 import { UserPreferences } from "@/components/user-preferences";
 import { useAuth, type UserRole } from "@/lib/auth-context";
@@ -28,6 +30,8 @@ interface NavItem {
   icon: typeof LayoutDashboard;
   /** Minimum role required to see this item. Omit for all authenticated users. */
   minRole?: UserRole;
+  /** Optional child routes shown when the parent section is active. */
+  children?: NavItem[];
 }
 
 const navItems: NavItem[] = [
@@ -59,6 +63,15 @@ const navItems: NavItem[] = [
     href: "/ssi",
     label: "Scam Investigator",
     icon: ShieldAlert,
+    children: [
+      { href: "/ssi", label: "Investigate", icon: ShieldAlert },
+      {
+        href: "/ssi/investigations",
+        label: "Investigations",
+        icon: History,
+      },
+      { href: "/ssi/wallets", label: "Wallets", icon: Wallet },
+    ],
   },
   {
     href: "/admin/users",
@@ -79,23 +92,54 @@ export function Navigation() {
 
   const navLinks = (
     <ul className="space-y-2">
-      {visibleItems.map(({ href, label, icon: Icon }) => (
-        <li key={href}>
-          <Link
-            className={clsx(
-              "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition",
-              pathname.startsWith(href)
-                ? "bg-slate-900 text-white shadow-lg dark:bg-slate-100 dark:text-slate-900"
-                : "text-slate-500 hover:text-slate-900 hover:bg-slate-100/70 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-900/60",
+      {visibleItems.map(({ href, label, icon: Icon, children }) => {
+        const sectionActive = pathname.startsWith(href);
+        return (
+          <li key={href}>
+            <Link
+              className={clsx(
+                "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition",
+                sectionActive
+                  ? "bg-slate-900 text-white shadow-lg dark:bg-slate-100 dark:text-slate-900"
+                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-100/70 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-900/60",
+              )}
+              href={children ? children[0].href : href}
+              onClick={() => setMobileOpen(false)}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </Link>
+            {children && sectionActive && (
+              <ul className="mt-1 ml-4 space-y-1">
+                {children.map(
+                  ({ href: childHref, label: childLabel, icon: ChildIcon }) => {
+                    const childActive =
+                      pathname === childHref ||
+                      (childHref !== href && pathname.startsWith(childHref));
+                    return (
+                      <li key={childHref}>
+                        <Link
+                          className={clsx(
+                            "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition",
+                            childActive
+                              ? "text-slate-900 bg-slate-100 dark:text-white dark:bg-slate-800"
+                              : "text-slate-400 hover:text-slate-700 hover:bg-slate-50 dark:text-slate-500 dark:hover:text-slate-200 dark:hover:bg-slate-900/40",
+                          )}
+                          href={childHref}
+                          onClick={() => setMobileOpen(false)}
+                        >
+                          <ChildIcon className="h-3.5 w-3.5" />
+                          {childLabel}
+                        </Link>
+                      </li>
+                    );
+                  },
+                )}
+              </ul>
             )}
-            href={href}
-            onClick={() => setMobileOpen(false)}
-          >
-            <Icon className="h-4 w-4" />
-            {label}
-          </Link>
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ul>
   );
 
