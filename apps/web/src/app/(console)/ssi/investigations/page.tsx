@@ -38,10 +38,12 @@ function riskBadgeVariant(
   return "default";
 }
 
-function formatDuration(seconds: number | null | undefined): string {
+function formatDuration(seconds: number | string | null | undefined): string {
   if (seconds == null) return "—";
-  if (seconds < 60) return `${seconds.toFixed(0)}s`;
-  return `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`;
+  const n = Number(seconds);
+  if (Number.isNaN(n)) return "—";
+  if (n < 60) return `${n.toFixed(0)}s`;
+  return `${Math.floor(n / 60)}m ${Math.round(n % 60)}s`;
 }
 
 function formatDate(iso: string | null | undefined): string {

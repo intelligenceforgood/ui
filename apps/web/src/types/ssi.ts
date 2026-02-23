@@ -189,8 +189,10 @@ export interface InvestigationDetailResponse {
 // ---------------------------------------------------------------------------
 
 export interface WalletRecord {
-  wallet_id: string;
-  scan_id: string;
+  /** Present only when deduplicate=false. */
+  wallet_id?: string;
+  /** Present only when deduplicate=false. */
+  scan_id?: string;
   token_symbol: string;
   token_label?: string;
   network_short: string;
@@ -200,7 +202,14 @@ export interface WalletRecord {
   confidence?: number;
   site_url?: string;
   case_id?: string | null;
-  created_at: string;
+  /** Present only when deduplicate=false. */
+  created_at?: string;
+  /** Earliest harvest time (deduplicate=true). */
+  first_seen_at?: string;
+  /** Latest harvest time (deduplicate=true). */
+  last_seen_at?: string;
+  /** Number of times this address was harvested (deduplicate=true). */
+  seen_count?: number;
 }
 
 export interface WalletsSearchResponse {

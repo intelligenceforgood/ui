@@ -1,10 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Badge, Card, SectionLabel } from "@i4g/ui-kit";
-import { ArrowUpRight, Search, Wallet } from "lucide-react";
+import { Search, Wallet } from "lucide-react";
 import type { WalletRecord, WalletsSearchResponse } from "@/types/ssi";
 
 // ---------------------------------------------------------------------------
@@ -43,6 +42,7 @@ export default function WalletsPage() {
     const params = new URLSearchParams();
     if (addr) params.set("address", addr);
     if (token) params.set("token_symbol", token);
+    params.set("deduplicate", "true");
     const qs = params.toString();
 
     try {
@@ -163,14 +163,15 @@ export default function WalletsPage() {
                   <th className="px-4 py-3">Source</th>
                   <th className="px-4 py-3">Confidence</th>
                   <th className="px-4 py-3">Site</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3" />
+                  <th className="px-4 py-3">First Seen</th>
+                  <th className="px-4 py-3">Last Seen</th>
+                  <th className="px-4 py-3">Seen</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {wallets.map((w: WalletRecord) => (
                   <tr
-                    key={w.wallet_id}
+                    key={`${w.wallet_address}-${w.token_symbol}-${w.network_short}`}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                   >
                     <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-200">
@@ -194,16 +195,17 @@ export default function WalletsPage() {
                       {w.site_url ?? "—"}
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                      {formatDate(w.created_at)}
+                      {formatDate(w.first_seen_at)}
                     </td>
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/ssi/investigations/${w.scan_id}`}
-                        className="text-blue-600 hover:text-blue-500 dark:text-blue-400"
-                        title="View investigation"
-                      >
-                        <ArrowUpRight className="w-4 h-4" />
-                      </Link>
+                    <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                      {formatDate(w.last_seen_at)}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {w.seen_count != null && w.seen_count > 1 ? (
+                        <Badge>{w.seen_count}×</Badge>
+                      ) : (
+                        <span className="text-slate-400">1</span>
+                      )}
                     </td>
                   </tr>
                 ))}
