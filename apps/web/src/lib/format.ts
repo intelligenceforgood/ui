@@ -12,6 +12,16 @@ const dateFormatter = new Intl.DateTimeFormat("en", {
 });
 
 /**
+ * Parse an ISO-8601 string into a `Date`, treating bare timestamps (no `Z` or
+ * offset) as UTC.  API timestamps are stored in UTC but often lack the `Z`
+ * suffix, so `new Date(raw)` would otherwise interpret them as local time.
+ */
+export function parseUTCDate(value: string): Date {
+  const hasTimezone = /Z|[+-]\d{2}:\d{2}$/.test(value);
+  return new Date(hasTimezone ? value : value + "Z");
+}
+
+/**
  * Format an ISO-8601 date string into a human-readable "medium date + short
  * time" string (e.g. "Nov 18, 2025, 1:04 PM").
  *
@@ -23,7 +33,7 @@ export function formatDate(value?: string | null): string {
     return "—";
   }
   try {
-    return dateFormatter.format(new Date(value));
+    return dateFormatter.format(parseUTCDate(value));
   } catch {
     return value;
   }

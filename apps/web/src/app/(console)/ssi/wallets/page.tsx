@@ -10,16 +10,7 @@ import type { WalletRecord, WalletsSearchResponse } from "@/types/ssi";
 // Helpers
 // ---------------------------------------------------------------------------
 
-function formatDate(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { formatDate } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 // Main page

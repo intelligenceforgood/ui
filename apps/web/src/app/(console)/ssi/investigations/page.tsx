@@ -9,6 +9,7 @@ import {
   ShieldAlert,
   ShieldCheck,
 } from "lucide-react";
+import { LocalTime } from "@/components/local-time";
 import type { InvestigationsListResponse, ScanSummary } from "@/types/ssi";
 
 export const metadata: Metadata = {
@@ -44,17 +45,6 @@ function formatDuration(seconds: number | string | null | undefined): string {
   if (Number.isNaN(n)) return "—";
   if (n < 60) return `${n.toFixed(0)}s`;
   return `${Math.floor(n / 60)}m ${Math.round(n % 60)}s`;
-}
-
-function formatDate(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 async function fetchInvestigations(
@@ -103,7 +93,7 @@ function InvestigationRow({ scan }: { scan: ScanSummary }) {
             <div className="flex items-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
-                {formatDate(scan.created_at)}
+                <LocalTime value={scan.created_at} />
               </span>
               {scan.duration_seconds != null && (
                 <span>{formatDuration(scan.duration_seconds)}</span>

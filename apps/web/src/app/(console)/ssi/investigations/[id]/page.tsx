@@ -45,16 +45,7 @@ const TABS: Array<{ id: TabId; label: string; icon: typeof Shield }> = [
 // Helper functions
 // ---------------------------------------------------------------------------
 
-function formatDate(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { formatDate, parseUTCDate } from "@/lib/format";
 
 function riskVariant(
   score: number | null | undefined,
@@ -377,7 +368,7 @@ function EventRow({ event }: { event: SSIEvent }) {
   return (
     <div className="flex items-start gap-2 text-xs">
       <span className="text-slate-400 flex-shrink-0 w-14">
-        {new Date(event.timestamp).toLocaleTimeString("en-US", {
+        {parseUTCDate(event.timestamp).toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
