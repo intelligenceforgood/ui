@@ -394,7 +394,7 @@ function ResultsTab({ data }: { data: InvestigationDetailResponse }) {
   const scan = data.scan;
   const classification = scan.classification_result;
   const wallets = data.wallets;
-  const piiExposures = data.pii_exposures;
+  const piiExposures = data.piiExposures;
 
   return (
     <div className="space-y-6">

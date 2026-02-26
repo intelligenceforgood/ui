@@ -1,9 +1,9 @@
 /**
  * SSI (Scam Site Investigator) type definitions.
  *
- * These mirror the Pydantic models from the SSI backend. Field names use
- * camelCase to match the Python models' `alias_generator = to_camel` output,
- * except where the backend returns snake_case (SSI doesn't use alias_generator).
+ * Top-level response fields use camelCase to match core's CamelModel
+ * `alias_generator = to_camel` output. Nested dict fields (scan, wallets,
+ * piiExposures, agentActions) retain snake_case keys from the database.
  */
 
 // ---------------------------------------------------------------------------
@@ -128,12 +128,20 @@ export interface InvestigationResult {
   // Analysis
   classification?: ScamClassification;
   taxonomy_result?: FraudTaxonomyResult;
+  /** Top-level risk score (set by task-status reporter in core path). */
+  risk_score?: number;
   brand_impersonation?: string;
   threat_indicators?: ThreatIndicator[];
 
   // Evidence
   pdf_report_path?: string;
   evidence_zip_path?: string;
+
+  // Core integration
+  /** Core case ID (set when the investigation was pushed to core). */
+  case_id?: string | null;
+  /** SSI-internal investigation/scan ID (distinct from the task ID). */
+  ssi_investigation_id?: string | null;
 
   // Meta
   warnings?: string[];
@@ -180,8 +188,8 @@ export interface InvestigationsListResponse {
 export interface InvestigationDetailResponse {
   scan: ScanSummary;
   wallets: WalletRecord[];
-  pii_exposures: PIIExposure[];
-  agent_actions: AgentAction[];
+  piiExposures: PIIExposure[];
+  agentActions: AgentAction[];
 }
 
 // ---------------------------------------------------------------------------

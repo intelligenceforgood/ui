@@ -1,10 +1,11 @@
 /**
- * Server-side proxy for the SSI `/investigations/{id}` detail endpoint.
+ * Server-side proxy for the SSI investigation detail endpoint.
+ *
+ * Forwards to core's `GET /investigations/ssi/{id}` via `apiFetch`.
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-
-const SSI_API_URL = process.env.SSI_API_URL ?? "http://localhost:8100";
+import { apiFetch } from "@/lib/server/api-client";
 
 export async function GET(
   _request: NextRequest,
@@ -12,16 +13,14 @@ export async function GET(
 ): Promise<NextResponse> {
   const { id } = await params;
   try {
-    const upstream = await fetch(`${SSI_API_URL}/investigations/${id}`, {
-      signal: AbortSignal.timeout(15_000),
-    });
-    const data: unknown = await upstream.json();
-    return NextResponse.json(data, { status: upstream.status });
+    const data = await apiFetch<unknown>(`/investigations/ssi/${id}`);
+    return NextResponse.json(data, { status: 200 });
   } catch (err) {
     console.error("[ssi proxy] GET /investigations/:id error:", err);
+    const status = String(err).includes("404") ? 404 : 502;
     return NextResponse.json(
-      { error: "Failed to reach SSI service." },
-      { status: 502 },
+      { error: "Failed to load investigation." },
+      { status },
     );
   }
 }

@@ -90,10 +90,16 @@ test.describe("search smoke", () => {
       }
     }
 
-    const datasetChip = page.getByRole("button", { name: /network_smoke/i });
-    await datasetChip.click();
+    // Dynamically select the first available dataset chip
+    const datasetsLabel = page.getByText("Datasets", { exact: true });
+    await expect(datasetsLabel).toBeVisible();
+    const datasetsSection = datasetsLabel.locator("xpath=..");
+    const firstDatasetChip = datasetsSection.getByRole("button").first();
+    await expect(firstDatasetChip).toBeVisible();
+    const datasetName = await firstDatasetChip.textContent();
+    await firstDatasetChip.click();
     await expect(
-      page.getByText(/Dataset: network_smoke/i).first(),
+      page.getByText(new RegExp(`Dataset: ${datasetName}`, "i")).first(),
     ).toBeVisible();
 
     const savedSearchName = `Playwright smoke ${Date.now()}`;

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
+  Briefcase,
   CheckCircle2,
   Clock,
   Download,
@@ -188,10 +189,12 @@ export default function SsiInvestigatePage() {
   const [url, setUrl] = useState("");
   const [scanType, setScanType] = useState<ScanType>("passive");
   const [phase, setPhase] = useState<Phase>("idle");
-  const [investigationId, setInvestigationId] = useState<string | null>(null);
+  const [, setInvestigationId] = useState<string | null>(null);
+  const [scanId, setScanId] = useState<string | null>(null);
   const [apiStatus, setApiStatus] = useState<string>("pending");
   const [result, setResult] = useState<InvestigationResult | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [caseId, setCaseId] = useState<string | null>(null);
 
   const pollCount = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -206,8 +209,10 @@ export default function SsiInvestigatePage() {
   const stepAnalyzing: StepProps["state"] =
     phase === "idle" || phase === "submitting"
       ? "pending"
-      : (phase === "polling" && apiStatus === "pending") ||
-          apiStatus === "running"
+      : phase === "polling" &&
+          (apiStatus === "pending" ||
+            apiStatus === "queued" ||
+            apiStatus === "running")
         ? "active"
         : phase === "failed" && apiStatus !== "pending"
           ? "error"
@@ -222,7 +227,8 @@ export default function SsiInvestigatePage() {
         ? "error"
         : phase === "polling" &&
             apiStatus !== "running" &&
-            apiStatus !== "pending"
+            apiStatus !== "pending" &&
+            apiStatus !== "queued"
           ? "active"
           : "pending";
 
@@ -257,10 +263,14 @@ export default function SsiInvestigatePage() {
         if (data.status === "completed") {
           stopPolling();
           setResult(data.result ?? null);
+          setCaseId(data.result?.case_id ?? null);
+          setScanId(data.result?.ssi_investigation_id ?? null);
           setPhase("done");
         } else if (data.status === "failed") {
           stopPolling();
           setResult(data.result ?? null);
+          setCaseId(data.result?.case_id ?? null);
+          setScanId(data.result?.ssi_investigation_id ?? null);
           setPhase("failed");
           setErrorMsg(
             data.result?.error ??
@@ -329,14 +339,20 @@ export default function SsiInvestigatePage() {
     setPhase("idle");
     setUrl("");
     setInvestigationId(null);
+    setScanId(null);
     setApiStatus("pending");
     setResult(null);
     setErrorMsg(null);
+    setCaseId(null);
   }
 
-  const riskScore = result?.taxonomy_result?.risk_score;
-  const hasPdf = Boolean(result?.pdf_report_path);
+  const riskScore =
+    result?.taxonomy_result?.risk_score ?? result?.risk_score ?? undefined;
+  // A completed investigation always generates a PDF report — don't gate
+  // on pdf_report_path which is absent from the core proxy result shape.
+  const reportId = scanId ?? result?.ssi_investigation_id ?? null;
   const threatCount = result?.threat_indicators?.length ?? 0;
+  const resolvedCaseId = caseId ?? result?.case_id ?? null;
 
   return (
     <div className="space-y-8">
@@ -570,18 +586,40 @@ export default function SsiInvestigatePage() {
               </div>
             )}
 
-            {hasPdf && investigationId ? (
+            {/* Case link (evidence is attached to the case via CoreBridge) */}
+            {resolvedCaseId && (
+              <div className="flex items-start gap-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-3">
+                <Briefcase className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                    Linked to core case
+                  </p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
+                    Evidence files are attached to this case record.
+                  </p>
+                </div>
+                <Link
+                  href={`/cases/${resolvedCaseId}`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-colors text-xs whitespace-nowrap"
+                >
+                  <Briefcase className="w-3.5 h-3.5" />
+                  View Case
+                </Link>
+              </div>
+            )}
+
+            {reportId ? (
               <div className="pt-2 flex flex-col sm:flex-row gap-3">
                 <a
-                  href={`/api/ssi/report/${investigationId}`}
-                  download={`ssi_report_${investigationId.slice(0, 8)}.pdf`}
+                  href={`/api/ssi/report/${reportId}`}
+                  download={`ssi_report_${reportId.slice(0, 8)}.pdf`}
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-colors text-sm"
                 >
                   <Download className="w-4 h-4" />
                   Download PDF report
                 </a>
                 <a
-                  href={`/api/ssi/report/${investigationId}?action=inline`}
+                  href={`/api/ssi/report/${reportId}?action=inline`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-colors text-sm dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200"
@@ -590,15 +628,7 @@ export default function SsiInvestigatePage() {
                   Open in browser
                 </a>
               </div>
-            ) : (
-              <div className="pt-2 flex items-start gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3">
-                <AlertTriangle className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
-                <p className="text-slate-500 dark:text-slate-400 text-sm">
-                  PDF report not available — the SSI service may not have
-                  weasyprint installed.
-                </p>
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
       )}

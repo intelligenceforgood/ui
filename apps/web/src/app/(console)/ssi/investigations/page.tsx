@@ -10,6 +10,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { LocalTime } from "@/components/local-time";
+import { apiFetch } from "@/lib/server/api-client";
 import type { InvestigationsListResponse, ScanSummary } from "@/types/ssi";
 
 export const metadata: Metadata = {
@@ -18,8 +19,6 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = "force-dynamic";
-
-const SSI_API_URL = process.env.SSI_API_URL ?? "http://localhost:8100";
 
 const statusStyles: Record<string, string> = {
   completed:
@@ -50,15 +49,11 @@ function formatDuration(seconds: number | string | null | undefined): string {
 async function fetchInvestigations(
   params: Record<string, string>,
 ): Promise<InvestigationsListResponse> {
-  const qs = new URLSearchParams(params).toString();
-  const url = `${SSI_API_URL}/investigations${qs ? `?${qs}` : ""}`;
   try {
-    const res = await fetch(url, {
-      next: { revalidate: 30 },
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!res.ok) return { items: [], count: 0, limit: 50, offset: 0 };
-    return (await res.json()) as InvestigationsListResponse;
+    return await apiFetch<InvestigationsListResponse>(
+      "/investigations/ssi/history",
+      { queryParams: params },
+    );
   } catch {
     return { items: [], count: 0, limit: 50, offset: 0 };
   }
