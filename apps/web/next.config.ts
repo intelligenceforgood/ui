@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["google-auth-library"],
   async rewrites() {
     return [
       // Rewrite artifacts request to the internal catch-all API route to handle proxying + Auth

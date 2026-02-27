@@ -59,8 +59,16 @@ async function fetchInvestigations(
   }
 }
 
+function safeDomain(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
+
 function InvestigationRow({ scan }: { scan: ScanSummary }) {
-  const domain = scan.domain ?? new URL(scan.url).hostname;
+  const domain = scan.domain ?? safeDomain(scan.url);
   return (
     <Link href={`/ssi/investigations/${scan.scan_id}`}>
       <Card className="p-4 transition hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800">
