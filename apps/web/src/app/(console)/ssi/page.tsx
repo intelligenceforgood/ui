@@ -33,6 +33,16 @@ import type {
 
 const POLL_INTERVAL_MS = 3_000;
 const MAX_POLLS = 200;
+const SESSION_KEY = "ssi-active-investigation";
+const MAX_STALE_MS = 15 * 60 * 1000; // 15 min — discard stale sessions
+
+/** Serialisable shape written to sessionStorage. */
+interface PersistedInvestigation {
+  investigationId: string;
+  url: string;
+  scanType: ScanType;
+  startedAt: number;
+}
 
 // ---------------------------------------------------------------------------
 // Helper components
@@ -198,6 +208,7 @@ export default function SsiInvestigatePage() {
 
   const pollCount = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const restoredRef = useRef(false);
 
   const stepQueued: StepProps["state"] =
     phase === "idle" || phase === "submitting"
@@ -239,10 +250,44 @@ export default function SsiInvestigatePage() {
     }
   }, []);
 
+  // -- Investigation state persistence (Phase 2) ---------------------------
+
+  const persistInvestigation = useCallback(
+    (id: string, targetUrl: string, type: ScanType) => {
+      try {
+        const state: PersistedInvestigation = {
+          investigationId: id,
+          url: targetUrl,
+          scanType: type,
+          startedAt: Date.now(),
+        };
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(state));
+      } catch {
+        /* sessionStorage may be unavailable */
+      }
+      const u = new URL(window.location.href);
+      u.searchParams.set("investigationId", id);
+      window.history.replaceState({}, "", u.toString());
+    },
+    [],
+  );
+
+  const clearPersistedInvestigation = useCallback(() => {
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch {}
+    const u = new URL(window.location.href);
+    if (u.searchParams.has("investigationId")) {
+      u.searchParams.delete("investigationId");
+      window.history.replaceState({}, "", u.toString());
+    }
+  }, []);
+
   const poll = useCallback(
     async (id: string) => {
       if (pollCount.current >= MAX_POLLS) {
         stopPolling();
+        clearPersistedInvestigation();
         setPhase("failed");
         setErrorMsg("Investigation timed out. Please try again.");
         return;
@@ -253,6 +298,7 @@ export default function SsiInvestigatePage() {
         const res = await fetch(`/api/ssi/investigate/${id}`);
         if (!res.ok) {
           stopPolling();
+          clearPersistedInvestigation();
           setPhase("failed");
           setErrorMsg("Failed to fetch investigation status.");
           return;
@@ -262,12 +308,14 @@ export default function SsiInvestigatePage() {
 
         if (data.status === "completed") {
           stopPolling();
+          clearPersistedInvestigation();
           setResult(data.result ?? null);
           setCaseId(data.result?.case_id ?? null);
           setScanId(data.result?.ssi_investigation_id ?? null);
           setPhase("done");
         } else if (data.status === "failed") {
           stopPolling();
+          clearPersistedInvestigation();
           setResult(data.result ?? null);
           setCaseId(data.result?.case_id ?? null);
           setScanId(data.result?.ssi_investigation_id ?? null);
@@ -281,7 +329,7 @@ export default function SsiInvestigatePage() {
         // transient — keep polling
       }
     },
-    [stopPolling],
+    [stopPolling, clearPersistedInvestigation],
   );
 
   const startPolling = useCallback(
@@ -297,6 +345,32 @@ export default function SsiInvestigatePage() {
   useEffect(() => {
     return () => stopPolling();
   }, [stopPolling]);
+
+  // Restore persisted investigation on mount (navigate-back / refresh)
+  useEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+
+    try {
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      if (!raw) return;
+      const saved: PersistedInvestigation = JSON.parse(raw);
+      if (Date.now() - saved.startedAt > MAX_STALE_MS) {
+        sessionStorage.removeItem(SESSION_KEY);
+        return;
+      }
+      // Restore UI state and resume polling
+      setUrl(saved.url);
+      setScanType(saved.scanType);
+      setInvestigationId(saved.investigationId);
+      setPhase("polling");
+      setApiStatus("running");
+      startPolling(saved.investigationId);
+    } catch {
+      sessionStorage.removeItem(SESSION_KEY);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -324,6 +398,7 @@ export default function SsiInvestigatePage() {
       }
       const data: InvestigateResponse = await res.json();
       setInvestigationId(data.investigation_id);
+      persistInvestigation(data.investigation_id, trimmed, scanType);
       setPhase("polling");
       startPolling(data.investigation_id);
     } catch (err) {
@@ -336,6 +411,7 @@ export default function SsiInvestigatePage() {
 
   function handleReset() {
     stopPolling();
+    clearPersistedInvestigation();
     setPhase("idle");
     setUrl("");
     setInvestigationId(null);
