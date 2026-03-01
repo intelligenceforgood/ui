@@ -170,31 +170,41 @@ async function CaseDetailView({ id }: { id: string }) {
               <FieldHelp helpKey="case.artifacts" />
             </h3>
             <ul className="space-y-3">
-              {caseData.artifacts.map((art) => (
-                <li
-                  key={art.id}
-                  className="flex items-center justify-between p-2 bg-slate-50 rounded text-sm transition-colors hover:bg-slate-100"
-                >
-                  {art.url ? (
-                    <a
-                      href={art.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-blue-600 hover:text-blue-800 hover:underline truncate max-w-[180px]"
-                    >
-                      {art.name}
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  ) : (
-                    <span className="truncate max-w-[180px] text-slate-700">
-                      {art.name}
-                    </span>
-                  )}
-                  <Badge variant="default" className="text-xs">
-                    {art.type}
-                  </Badge>
-                </li>
-              ))}
+              {caseData.artifacts.map((art) => {
+                // API-relative paths need /api prefix so the browser
+                // routes through the Next.js catch-all proxy to core.
+                const href =
+                  art.url &&
+                  art.url.startsWith("/") &&
+                  !art.url.startsWith("/api")
+                    ? `/api${art.url}`
+                    : art.url;
+                return (
+                  <li
+                    key={art.id}
+                    className="flex items-center justify-between p-2 bg-slate-50 rounded text-sm transition-colors hover:bg-slate-100"
+                  >
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-blue-600 hover:text-blue-800 hover:underline truncate max-w-[180px]"
+                      >
+                        {art.name}
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    ) : (
+                      <span className="truncate max-w-[180px] text-slate-700">
+                        {art.name}
+                      </span>
+                    )}
+                    <Badge variant="default" className="text-xs">
+                      {art.type}
+                    </Badge>
+                  </li>
+                );
+              })}
               {caseData.artifacts.length === 0 && (
                 <li className="text-sm text-slate-500 italic">
                   No artifacts attached
