@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { TextWithTokens } from "@/components/text-with-tokens";
 import { ClassificationBadges } from "@/components/classification-badges";
-import { formatDate } from "@/lib/format";
+import { LocalTime } from "@/components/local-time";
 
 export const metadata: Metadata = {
   title: "Cases & Tasks",
@@ -180,7 +180,7 @@ export default async function CasesPage(props: {
                   </h3>
                   <p className="text-xs text-slate-500">
                     Owner {caseItem.assignee} · Updated{" "}
-                    {formatDate(caseItem.updatedAt)}
+                    <LocalTime value={caseItem.updatedAt} />
                   </p>
                   <div className="flex flex-wrap gap-2 text-xs text-slate-500">
                     <ClassificationBadges
@@ -202,7 +202,11 @@ export default async function CasesPage(props: {
                     </div>
                   </div>
                   <div className="text-xs text-slate-500">
-                    Due {formatDate(caseItem.dueAt)}
+                    Due{" "}
+                    <LocalTime
+                      value={caseItem.dueAt}
+                      options={{ dateStyle: "medium" }}
+                    />
                   </div>
                   <Link
                     href={`/cases/${caseItem.id}`}
