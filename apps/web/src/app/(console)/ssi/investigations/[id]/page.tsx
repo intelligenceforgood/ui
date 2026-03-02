@@ -60,6 +60,21 @@ function riskVariant(
 // Recon Tab
 // ---------------------------------------------------------------------------
 
+/** True when every own value is null, undefined, empty string, or an empty array. */
+function isEmptyRecord(rec: Record<string, unknown>): boolean {
+  return Object.values(rec).every(
+    (v) => v == null || v === "" || (Array.isArray(v) && v.length === 0),
+  );
+}
+
+function EmptyState({ message }: { message: string }) {
+  return (
+    <p className="text-sm italic text-slate-400 dark:text-slate-500">
+      {message}
+    </p>
+  );
+}
+
 function ReconTab({ data }: { data: InvestigationDetailResponse }) {
   const passive = (data.scan.passive_result ?? {}) as Record<string, unknown>;
   const whois = (passive.whois ?? {}) as Record<string, unknown>;
@@ -75,22 +90,26 @@ function ReconTab({ data }: { data: InvestigationDetailResponse }) {
           <Globe className="w-4 h-4 text-blue-500" />
           WHOIS
         </h3>
-        <dl className="space-y-2 text-sm">
-          <InfoRow label="Domain" value={whois.domain} />
-          <InfoRow label="Registrar" value={whois.registrar} />
-          <InfoRow label="Created" value={whois.creation_date} />
-          <InfoRow label="Expires" value={whois.expiration_date} />
-          <InfoRow label="Country" value={whois.registrant_country} />
-          <InfoRow label="Registrant" value={whois.registrant_name} />
-          <InfoRow label="Organization" value={whois.registrant_org} />
-          {Array.isArray(whois.name_servers) &&
-            whois.name_servers.length > 0 && (
-              <InfoRow
-                label="Name servers"
-                value={(whois.name_servers as string[]).join(", ")}
-              />
-            )}
-        </dl>
+        {isEmptyRecord(whois) ? (
+          <EmptyState message="No WHOIS data found. Domain may be unregistered or privacy-protected." />
+        ) : (
+          <dl className="space-y-2 text-sm">
+            <InfoRow label="Domain" value={whois.domain} />
+            <InfoRow label="Registrar" value={whois.registrar} />
+            <InfoRow label="Created" value={whois.creation_date} />
+            <InfoRow label="Expires" value={whois.expiration_date} />
+            <InfoRow label="Country" value={whois.registrant_country} />
+            <InfoRow label="Registrant" value={whois.registrant_name} />
+            <InfoRow label="Organization" value={whois.registrant_org} />
+            {Array.isArray(whois.name_servers) &&
+              whois.name_servers.length > 0 && (
+                <InfoRow
+                  label="Name servers"
+                  value={(whois.name_servers as string[]).join(", ")}
+                />
+              )}
+          </dl>
+        )}
       </Card>
 
       {/* DNS */}
@@ -99,28 +118,32 @@ function ReconTab({ data }: { data: InvestigationDetailResponse }) {
           <Server className="w-4 h-4 text-purple-500" />
           DNS Records
         </h3>
-        <dl className="space-y-2 text-sm">
-          {Array.isArray(dns.a) && (
-            <InfoRow label="A" value={(dns.a as string[]).join(", ")} />
-          )}
-          {Array.isArray(dns.aaaa) && (
-            <InfoRow label="AAAA" value={(dns.aaaa as string[]).join(", ")} />
-          )}
-          {Array.isArray(dns.mx) && (
-            <InfoRow
-              label="MX"
-              value={(dns.mx as Array<Record<string, unknown>>)
-                .map((r) => String(r.value ?? r))
-                .join(", ")}
-            />
-          )}
-          {Array.isArray(dns.ns) && (
-            <InfoRow label="NS" value={(dns.ns as string[]).join(", ")} />
-          )}
-          {Array.isArray(dns.txt) && (
-            <InfoRow label="TXT" value={(dns.txt as string[]).join("; ")} />
-          )}
-        </dl>
+        {isEmptyRecord(dns) ? (
+          <EmptyState message="No DNS records found. Domain may be unregistered or offline." />
+        ) : (
+          <dl className="space-y-2 text-sm">
+            {Array.isArray(dns.a) && (
+              <InfoRow label="A" value={(dns.a as string[]).join(", ")} />
+            )}
+            {Array.isArray(dns.aaaa) && (
+              <InfoRow label="AAAA" value={(dns.aaaa as string[]).join(", ")} />
+            )}
+            {Array.isArray(dns.mx) && (
+              <InfoRow
+                label="MX"
+                value={(dns.mx as Array<Record<string, unknown>>)
+                  .map((r) => String(r.value ?? r))
+                  .join(", ")}
+              />
+            )}
+            {Array.isArray(dns.ns) && (
+              <InfoRow label="NS" value={(dns.ns as string[]).join(", ")} />
+            )}
+            {Array.isArray(dns.txt) && (
+              <InfoRow label="TXT" value={(dns.txt as string[]).join("; ")} />
+            )}
+          </dl>
+        )}
       </Card>
 
       {/* SSL */}
@@ -129,25 +152,29 @@ function ReconTab({ data }: { data: InvestigationDetailResponse }) {
           <Lock className="w-4 h-4 text-emerald-500" />
           SSL Certificate
         </h3>
-        <dl className="space-y-2 text-sm">
-          <InfoRow label="Issuer" value={ssl.issuer} />
-          <InfoRow label="Subject" value={ssl.subject} />
-          <InfoRow label="Valid from" value={ssl.not_before} />
-          <InfoRow label="Valid to" value={ssl.not_after} />
-          <InfoRow
-            label="Self-signed"
-            value={
-              ssl.self_signed === true
-                ? "Yes"
-                : ssl.self_signed === false
-                  ? "No"
-                  : undefined
-            }
-          />
-          {Array.isArray(ssl.sans) && (
-            <InfoRow label="SANs" value={(ssl.sans as string[]).join(", ")} />
-          )}
-        </dl>
+        {isEmptyRecord(ssl) ? (
+          <EmptyState message="No SSL certificate found. Host may not support HTTPS or is unreachable." />
+        ) : (
+          <dl className="space-y-2 text-sm">
+            <InfoRow label="Issuer" value={ssl.issuer} />
+            <InfoRow label="Subject" value={ssl.subject} />
+            <InfoRow label="Valid from" value={ssl.not_before} />
+            <InfoRow label="Valid to" value={ssl.not_after} />
+            <InfoRow
+              label="Self-signed"
+              value={
+                ssl.self_signed === true
+                  ? "Yes"
+                  : ssl.self_signed === false
+                    ? "No"
+                    : undefined
+              }
+            />
+            {Array.isArray(ssl.sans) && (
+              <InfoRow label="SANs" value={(ssl.sans as string[]).join(", ")} />
+            )}
+          </dl>
+        )}
       </Card>
 
       {/* GeoIP */}
@@ -156,15 +183,19 @@ function ReconTab({ data }: { data: InvestigationDetailResponse }) {
           <MapPin className="w-4 h-4 text-rose-500" />
           GeoIP
         </h3>
-        <dl className="space-y-2 text-sm">
-          <InfoRow label="IP" value={geoip.ip} />
-          <InfoRow label="Hostname" value={geoip.hostname} />
-          <InfoRow label="City" value={geoip.city} />
-          <InfoRow label="Region" value={geoip.region} />
-          <InfoRow label="Country" value={geoip.country} />
-          <InfoRow label="Organization" value={geoip.org} />
-          <InfoRow label="ASN" value={geoip.asn} />
-        </dl>
+        {isEmptyRecord(geoip) ? (
+          <EmptyState message="Unable to resolve host to an IP address." />
+        ) : (
+          <dl className="space-y-2 text-sm">
+            <InfoRow label="IP" value={geoip.ip} />
+            <InfoRow label="Hostname" value={geoip.hostname} />
+            <InfoRow label="City" value={geoip.city} />
+            <InfoRow label="Region" value={geoip.region} />
+            <InfoRow label="Country" value={geoip.country} />
+            <InfoRow label="Organization" value={geoip.org} />
+            <InfoRow label="ASN" value={geoip.asn} />
+          </dl>
+        )}
       </Card>
     </div>
   );
