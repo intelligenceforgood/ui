@@ -60,6 +60,10 @@ export function useInvestigationMonitor({
   const wsRef = useRef<WebSocket | null>(null);
   const onEventRef = useRef(onEvent);
   const onSnapshotRef = useRef(onSnapshot);
+  const retryCountRef = useRef(0);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const MAX_RETRIES = 10;
+  const BASE_DELAY_MS = 1_000;
 
   // Keep callback refs current without triggering reconnections
   useEffect(() => {
@@ -88,6 +92,7 @@ export function useInvestigationMonitor({
 
     ws.onopen = () => {
       setState("connected");
+      retryCountRef.current = 0;
     };
 
     ws.onmessage = (evt) => {
@@ -138,21 +143,54 @@ export function useInvestigationMonitor({
     };
 
     ws.onerror = () => {
-      setState("error");
+      // Error state is transient — onclose will fire next and handle retry
     };
 
-    ws.onclose = () => {
-      setState("disconnected");
+    ws.onclose = (evt) => {
+      // Guard against stale closures (React Strict Mode double-invokes effects,
+      // causing ws1.onclose to fire after ws2 has already replaced it).
+      // Only run teardown logic when this ws is still the active one, or when
+      // the ref was already cleared by an intentional disconnect() call.
+      if (wsRef.current !== ws && wsRef.current !== null) return;
       wsRef.current = null;
+
+      // Auto-retry with exponential backoff when the investigation bus
+      // isn't registered yet (code 4004) or on unexpected disconnects.
+      // Don't retry normal closures (code 1000) or after max retries.
+      if (
+        evt.code !== 1000 &&
+        retryCountRef.current < MAX_RETRIES &&
+        investigationId
+      ) {
+        const delay = Math.min(
+          BASE_DELAY_MS * 2 ** retryCountRef.current,
+          10_000,
+        );
+        retryCountRef.current += 1;
+        setState("connecting");
+        retryTimerRef.current = setTimeout(connect, delay);
+      } else {
+        setState("disconnected");
+      }
     };
   }, [investigationId, guidance]);
 
   const disconnect = useCallback(() => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
     if (wsRef.current) {
-      wsRef.current.close();
+      wsRef.current.close(1000);
       wsRef.current = null;
     }
-    setState("disconnected");
+    retryCountRef.current = 0;
+    // Do NOT call setState here. Setting "disconnected" synchronously in cleanup
+    // causes a brief "Live view unavailable" flash in React Strict Mode
+    // (cleanup fires before the re-mount connect() can set "connecting").
+    // The ws.onclose handler is the single source of truth for state — it fires
+    // immediately after close() and correctly sets "disconnected" only for
+    // intentional disconnects (wsRef already null → guard lets it through).
   }, []);
 
   const reconnect = useCallback(() => {

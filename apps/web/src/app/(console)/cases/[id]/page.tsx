@@ -5,6 +5,7 @@ import { Badge, Card } from "@i4g/ui-kit";
 import {
   ArrowLeft,
   Clock,
+  Download,
   ExternalLink,
   Paperclip,
   ShieldAlert,
@@ -164,11 +165,22 @@ async function CaseDetailView({ id }: { id: string }) {
           </Card>
 
           <Card className="p-6">
-            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-              <Paperclip className="w-5 h-5 text-slate-400" />
-              Artifacts ({caseData.artifacts.length})
-              <FieldHelp helpKey="case.artifacts" />
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <Paperclip className="w-5 h-5 text-slate-400" />
+                Artifacts ({caseData.artifacts.length})
+                <FieldHelp helpKey="case.artifacts" />
+              </h3>
+              {caseData.artifacts.length > 0 && (
+                <a
+                  href={`/api/cases/${id}/evidence/export`}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded px-2.5 py-1 bg-blue-50 hover:bg-blue-100 transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Download Bundle
+                </a>
+              )}
+            </div>
             <ul className="space-y-3">
               {caseData.artifacts.map((art) => {
                 // API-relative paths need /api prefix so the browser

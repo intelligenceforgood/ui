@@ -26,14 +26,22 @@ async function proxyToSsi(
   body: Record<string, unknown>,
 ): Promise<NextResponse> {
   const baseUrl = SSI_API_URL ?? "http://localhost:8100";
-  const upstream = await fetch(`${baseUrl}/investigate`, {
+  const upstream = await fetch(`${baseUrl}/trigger/investigate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(15_000),
   });
-  const data: unknown = await upstream.json();
-  return NextResponse.json(data, { status: upstream.status });
+  const data = (await upstream.json()) as Record<string, unknown>;
+  // SSI returns { scan_id, status }. Normalise to { investigation_id, status }
+  // so the client page can use the same field regardless of backend path.
+  return NextResponse.json(
+    {
+      investigation_id: data.scan_id,
+      status: data.status ?? "accepted",
+    },
+    { status: upstream.status },
+  );
 }
 
 /**

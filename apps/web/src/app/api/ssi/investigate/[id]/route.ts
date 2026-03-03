@@ -22,25 +22,76 @@ export const runtime = "nodejs";
 /** SSI service URL — set only in local dev. */
 const SSI_API_URL = process.env.SSI_API_URL;
 
-/** Direct proxy to standalone SSI service (local dev). */
+/** Direct proxy to standalone SSI service (local dev).
+ *
+ * Queries `/investigations/{id}` on the SSI service (the scan detail
+ * endpoint backed by the SQLite scan store) and normalises the response
+ * to the shape the client page expects:
+ *   `{ investigation_id, status, ssi_investigation_id, result? }`
+ */
 async function proxyToSsi(id: string): Promise<NextResponse> {
   const baseUrl = SSI_API_URL ?? "http://localhost:8100";
-  const upstream = await fetch(`${baseUrl}/investigate/${id}`, {
-    signal: AbortSignal.timeout(10_000),
-  });
-  const data = (await upstream.json()) as Record<string, unknown>;
 
-  // Normalise: SSI returns the scan ID as `result.investigation_id`.
-  // Map it to `result.ssi_investigation_id` so the client page always
-  // finds the scan ID under the same key regardless of backend path.
-  if (data.result && typeof data.result === "object") {
-    const result = data.result as Record<string, unknown>;
-    if (result.investigation_id && !result.ssi_investigation_id) {
-      result.ssi_investigation_id = result.investigation_id;
-    }
+  let upstream: Response;
+  try {
+    upstream = await fetch(`${baseUrl}/investigations/${id}`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch {
+    // SSI service unreachable — return running status so client keeps polling
+    return NextResponse.json(
+      { investigation_id: id, status: "running", ssi_investigation_id: id },
+      { status: 200 },
+    );
   }
 
-  return NextResponse.json(data, { status: upstream.status });
+  if (upstream.status === 404) {
+    // Scan not yet written to DB — investigation is still starting
+    return NextResponse.json(
+      { investigation_id: id, status: "running", ssi_investigation_id: id },
+      { status: 200 },
+    );
+  }
+
+  const data = (await upstream.json()) as Record<string, unknown>;
+  const scan = (data.scan ?? {}) as Record<string, unknown>;
+  const status = String(scan.status ?? "running");
+
+  // Always surface the scan ID so the UI can open the WebSocket monitor.
+  const ssiScanId = String(scan.scan_id ?? id);
+
+  let result: Record<string, unknown> | undefined;
+  if (status === "completed" || status === "failed") {
+    // SSI's SQLite store persists numeric columns (risk_score, duration_seconds)
+    // as TEXT. Parse them to numbers so the UI receives proper JS numbers.
+    const parseNum = (v: unknown): number | null => {
+      const n = parseFloat(String(v ?? ""));
+      return isFinite(n) ? n : null;
+    };
+    result = {
+      status,
+      success: status === "completed",
+      risk_score: parseNum(scan.risk_score),
+      duration_seconds: parseNum(scan.duration_seconds),
+      case_id: scan.case_id ?? null,
+      ssi_investigation_id: ssiScanId,
+      pdf_report_path: status === "completed" ? "generated" : undefined,
+      error:
+        status === "failed"
+          ? scan.error_message ?? "Investigation failed"
+          : undefined,
+    };
+  }
+
+  return NextResponse.json(
+    {
+      investigation_id: id,
+      status,
+      ssi_investigation_id: ssiScanId,
+      result: result ?? null,
+    },
+    { status: 200 },
+  );
 }
 
 /**
@@ -77,10 +128,17 @@ async function proxyToCore(taskId: string): Promise<NextResponse> {
     };
   }
 
+  // Surface the SSI scan ID at the top level so the client can use it
+  // for WebSocket/SSE monitoring even while the investigation is running.
+  const ssiScanId = (data.investigationId ?? data.investigation_id ?? null) as
+    | string
+    | null;
+
   return NextResponse.json(
     {
       investigation_id: taskId,
       status,
+      ssi_investigation_id: ssiScanId,
       result: result ?? null,
     },
     { status: 200 },

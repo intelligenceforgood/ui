@@ -33,6 +33,8 @@ export interface InvestigateResponse {
 export interface StatusResponse {
   investigation_id: string;
   status: string;
+  /** SSI scan ID — available during running status (not just on completion). */
+  ssi_investigation_id?: string | null;
   result?: InvestigationResult | null;
 }
 

@@ -320,10 +320,16 @@ function LiveMonitorTab({ investigationId }: { investigationId: string }) {
           <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
             Send Guidance
           </h4>
+          {wsState !== "connected" && (
+            <p className="text-xs text-slate-400 italic">
+              Connect to a live investigation to send guidance commands.
+            </p>
+          )}
           <select
             value={guidanceAction}
             onChange={(e) => setGuidanceAction(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+            disabled={wsState !== "connected"}
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-800 dark:text-white"
           >
             <option value="click">Click</option>
             <option value="type">Type</option>
@@ -337,6 +343,7 @@ function LiveMonitorTab({ investigationId }: { investigationId: string }) {
             <input
               value={guidanceValue}
               onChange={(e) => setGuidanceValue(e.target.value)}
+              disabled={wsState !== "connected"}
               placeholder={
                 guidanceAction === "click"
                   ? "CSS selector"
@@ -344,14 +351,15 @@ function LiveMonitorTab({ investigationId }: { investigationId: string }) {
                     ? "https://..."
                     : "selector|text"
               }
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-800 dark:text-white"
             />
           )}
           <input
             value={guidanceReason}
             onChange={(e) => setGuidanceReason(e.target.value)}
+            disabled={wsState !== "connected"}
             placeholder="Reason (optional)"
-            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-800 dark:text-white"
           />
           <button
             onClick={handleSendGuidance}

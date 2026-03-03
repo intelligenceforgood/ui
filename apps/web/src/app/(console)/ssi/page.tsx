@@ -6,12 +6,16 @@ import {
   AlertTriangle,
   Briefcase,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Clock,
   Download,
   ExternalLink,
   FileSearch,
   Globe,
   Loader2,
+  Monitor,
+  Radio,
   Search,
   Shield,
   ShieldAlert,
@@ -19,11 +23,14 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
-import { SectionLabel } from "@i4g/ui-kit";
+import { Badge, SectionLabel } from "@i4g/ui-kit";
+import { useInvestigationMonitor } from "@/lib/use-investigation-monitor";
+import { parseUTCDate } from "@/lib/format";
 import type {
   InvestigateResponse,
   InvestigationResult,
   ScanType,
+  SSIEvent,
   StatusResponse,
 } from "@/types/ssi";
 
@@ -163,6 +170,39 @@ function MetricCard({
 // Scan type selector
 // ---------------------------------------------------------------------------
 
+const EVENT_COLORS: Record<string, string> = {
+  state_changed: "text-blue-600 dark:text-blue-400",
+  wallet_found: "text-emerald-600 dark:text-emerald-400",
+  error: "text-red-600 dark:text-red-400",
+  guidance_needed: "text-amber-600 dark:text-amber-400",
+  site_completed: "text-emerald-600 dark:text-emerald-400",
+  screenshot_update: "text-slate-500",
+  action_executed: "text-purple-600 dark:text-purple-400",
+};
+
+function LiveEventRow({ event }: { event: SSIEvent }) {
+  const color = EVENT_COLORS[event.event_type] ?? "text-slate-500";
+  return (
+    <div className="flex items-start gap-2 text-xs">
+      <span className="text-slate-400 flex-shrink-0 w-14">
+        {parseUTCDate(event.timestamp).toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })}
+      </span>
+      <span className={`font-medium ${color}`}>
+        {event.event_type.replace(/_/g, " ")}
+      </span>
+      {event.data.message != null && (
+        <span className="text-slate-500 dark:text-slate-400 truncate">
+          {String(event.data.message as string)}
+        </span>
+      )}
+    </div>
+  );
+}
+
 const SCAN_TYPE_OPTIONS: Array<{
   value: ScanType;
   label: string;
@@ -199,16 +239,31 @@ export default function SsiInvestigatePage() {
   const [url, setUrl] = useState("");
   const [scanType, setScanType] = useState<ScanType>("passive");
   const [phase, setPhase] = useState<Phase>("idle");
-  const [, setInvestigationId] = useState<string | null>(null);
   const [scanId, setScanId] = useState<string | null>(null);
+  const [ssiScanId, setSsiScanId] = useState<string | null>(null);
   const [apiStatus, setApiStatus] = useState<string>("pending");
   const [result, setResult] = useState<InvestigationResult | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [caseId, setCaseId] = useState<string | null>(null);
+  const [liveViewOpen, setLiveViewOpen] = useState(false);
 
   const pollCount = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const restoredRef = useRef(false);
+
+  // The monitor hook uses the SSI scan ID (UUID) which matches the
+  // EventBus registration key on the SSI service.  Don't attempt
+  // connection until the scan ID is available from the first status poll.
+  const monitorId = phase === "polling" && ssiScanId ? ssiScanId : null;
+  const {
+    state: wsState,
+    screenshot,
+    events: monitorEvents,
+    snapshot: monitorSnapshot,
+  } = useInvestigationMonitor({
+    investigationId: monitorId,
+    guidance: false,
+  });
 
   const stepQueued: StepProps["state"] =
     phase === "idle" || phase === "submitting"
@@ -306,6 +361,11 @@ export default function SsiInvestigatePage() {
         const data: StatusResponse = await res.json();
         setApiStatus(data.status);
 
+        // Track the SSI scan ID as soon as it appears (even during running).
+        if (data.ssi_investigation_id) {
+          setSsiScanId(data.ssi_investigation_id);
+        }
+
         if (data.status === "completed") {
           stopPolling();
           clearPersistedInvestigation();
@@ -362,7 +422,6 @@ export default function SsiInvestigatePage() {
       // Restore UI state and resume polling
       setUrl(saved.url);
       setScanType(saved.scanType);
-      setInvestigationId(saved.investigationId);
       setPhase("polling");
       setApiStatus("running");
       startPolling(saved.investigationId);
@@ -380,7 +439,6 @@ export default function SsiInvestigatePage() {
     setPhase("submitting");
     setErrorMsg(null);
     setResult(null);
-    setInvestigationId(null);
     setApiStatus("pending");
 
     try {
@@ -397,7 +455,6 @@ export default function SsiInvestigatePage() {
         throw new Error("Service unavailable. Please try again later.");
       }
       const data: InvestigateResponse = await res.json();
-      setInvestigationId(data.investigation_id);
       persistInvestigation(data.investigation_id, trimmed, scanType);
       setPhase("polling");
       startPolling(data.investigation_id);
@@ -414,12 +471,13 @@ export default function SsiInvestigatePage() {
     clearPersistedInvestigation();
     setPhase("idle");
     setUrl("");
-    setInvestigationId(null);
     setScanId(null);
+    setSsiScanId(null);
     setApiStatus("pending");
     setResult(null);
     setErrorMsg(null);
     setCaseId(null);
+    setLiveViewOpen(false);
   }
 
   const riskScore =
@@ -568,6 +626,104 @@ export default function SsiInvestigatePage() {
             </p>
           )}
 
+          {/* Live View panel (Phase 3A) — read-only monitor */}
+          {phase === "polling" && scanType !== "passive" && (
+            <div className="border-t border-slate-100 dark:border-slate-700 pt-4">
+              <button
+                onClick={() => setLiveViewOpen((v) => !v)}
+                className="flex w-full items-center justify-between text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <Monitor className="w-4 h-4 text-slate-400" />
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                    Live View
+                  </span>
+                  <Badge
+                    className={
+                      wsState === "connected"
+                        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                        : wsState === "connecting"
+                          ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                          : "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
+                    }
+                  >
+                    {wsState}
+                  </Badge>
+                </div>
+                {liveViewOpen ? (
+                  <ChevronUp className="w-4 h-4 text-slate-400" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                )}
+              </button>
+
+              {liveViewOpen && (
+                <div className="mt-4 grid gap-4 lg:grid-cols-3">
+                  {/* Screenshot panel */}
+                  <div className="lg:col-span-2 space-y-2">
+                    <div className="rounded-xl overflow-hidden bg-slate-900 border border-slate-700">
+                      {screenshot ? (
+                        /* eslint-disable-next-line @next/next/no-img-element -- base64 data URI */
+                        <img
+                          src={`data:image/png;base64,${screenshot}`}
+                          alt="Live screenshot of investigation"
+                          className="w-full h-auto"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-48 text-slate-500 text-sm">
+                          {wsState === "connected"
+                            ? "Waiting for screenshot…"
+                            : wsState === "connecting"
+                              ? "Connecting to live monitor…"
+                              : "Live view unavailable"}
+                        </div>
+                      )}
+                    </div>
+                    {monitorSnapshot?.state && (
+                      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                        <Radio className="w-3 h-3" />
+                        <span>
+                          State:{" "}
+                          <strong className="text-slate-700 dark:text-slate-300">
+                            {monitorSnapshot.state}
+                          </strong>
+                        </span>
+                        {monitorSnapshot.url && (
+                          <>
+                            <span>·</span>
+                            <span className="truncate">
+                              {monitorSnapshot.url}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Event log */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Event Log ({monitorEvents.length})
+                    </h4>
+                    <div className="max-h-56 overflow-y-auto space-y-1 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3">
+                      {monitorEvents.length === 0 && (
+                        <p className="text-xs text-slate-400 italic">
+                          No events yet
+                        </p>
+                      )}
+                      {monitorEvents
+                        .slice()
+                        .reverse()
+                        .map((evt, i) => (
+                          <LiveEventRow key={i} event={evt} />
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {phase === "failed" && errorMsg && (
             <div className="flex items-start gap-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3 text-sm text-red-700 dark:text-red-300">
               <XCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -587,7 +743,7 @@ export default function SsiInvestigatePage() {
                 <p className="text-white font-semibold text-sm">
                   Investigation complete
                 </p>
-                {result.duration_seconds !== undefined && (
+                {typeof result.duration_seconds === "number" && (
                   <p className="text-slate-400 text-xs">
                     Completed in {result.duration_seconds.toFixed(1)}s
                   </p>
