@@ -108,6 +108,15 @@ async function proxyToCore(taskId: string): Promise<NextResponse> {
 
   const status = String(data.status ?? "unknown");
 
+  // Log the raw core response for SSI scan ID tracing.
+  console.debug(
+    "[ssi proxy] task=%s status=%s investigationId=%s scanId=%s",
+    taskId,
+    status,
+    data.investigationId ?? "(absent)",
+    data.scanId ?? "(absent)",
+  );
+
   // Build a result object for completed/failed investigations
   // using the extra fields the TaskStatusReporter pushes.
   let result: Record<string, unknown> | undefined;

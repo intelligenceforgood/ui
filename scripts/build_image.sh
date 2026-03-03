@@ -13,6 +13,7 @@ Options:
   -f, --dockerfile PATH    Override Dockerfile path (default: docker/<name>.Dockerfile)
   -i, --image IMAGE        Override full image tag (default: <registry>/<name>:<tag>)
       --registry PREFIX    Registry/repo prefix (default: us-central1-docker.pkg.dev/i4g-dev/ui)
+      --no-cache           Build without Docker cache
   -a, --build-arg KEY=VAL  Additional build arguments (repeatable)
       --no-push            Build locally without pushing to the registry
   -h, --help               Show this message
@@ -29,6 +30,7 @@ REPO_ROOT=$(cd -- "$SCRIPT_DIR/.." && pwd)
 DOCKERFILE=""
 IMAGE_TAG=""
 REGISTRY_PREFIX="us-central1-docker.pkg.dev/i4g-dev/applications"
+NO_CACHE="false"
 EXTRA_BUILD_ARGS=()
 PUSH_IMAGE=true
 POSITIONAL=()
@@ -38,6 +40,10 @@ while [[ $# -gt 0 ]]; do
         -f|--dockerfile)
             DOCKERFILE="$2"
             shift 2
+            ;;
+        --no-cache)
+            NO_CACHE="true"
+            shift
             ;;
         -i|--image)
             IMAGE_TAG="$2"
@@ -90,6 +96,10 @@ if [[ ! -f "$DOCKERFILE" ]]; then
 fi
 
 BUILD_CMD=(docker buildx build --platform linux/amd64 -f "$DOCKERFILE" -t "$IMAGE_TAG")
+
+if [[ "$NO_CACHE" == "true" ]]; then
+    BUILD_CMD+=(--no-cache)
+fi
 
 if ((${#EXTRA_BUILD_ARGS[@]})); then
     for arg in "${EXTRA_BUILD_ARGS[@]}"; do

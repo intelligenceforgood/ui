@@ -26,6 +26,7 @@ import type {
   InvestigationDetailResponse,
   PIIExposure,
   SSIEvent,
+  SSIEventType,
   WalletRecord,
 } from "@/types/ssi";
 
@@ -216,10 +217,153 @@ function InfoRow({ label, value }: { label: string; value: unknown }) {
 }
 
 // ---------------------------------------------------------------------------
+// Replay Panel — shown when a scan has already completed
+// ---------------------------------------------------------------------------
+
+interface SsiEventRecord {
+  id: string;
+  scan_id: string;
+  event_type: string;
+  timestamp: string;
+  data: Record<string, unknown> | null;
+  screenshot_url: string | null;
+  created_at: string;
+}
+
+interface SsiEventsListResponse {
+  scanId: string;
+  items: SsiEventRecord[];
+  count: number;
+}
+
+function ReplayPanel({ scanId }: { scanId: string }) {
+  const [events, setEvents] = useState<SsiEventRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(`/api/events/ssi/${scanId}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = (await res.json()) as SsiEventsListResponse;
+        if (!cancelled) setEvents(json.items ?? []);
+      } catch (err) {
+        if (!cancelled)
+          setFetchError(
+            err instanceof Error ? err.message : "Failed to load replay",
+          );
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [scanId]);
+
+  // Find the last screenshot event so we can render a final frame.
+  const lastScreenshot = [...events]
+    .reverse()
+    .find(
+      (e) =>
+        e.event_type === "screenshot_update" &&
+        typeof (e.data as Record<string, unknown> | null)?.screenshot_b64 ===
+          "string",
+    );
+  const screenshotB64 = lastScreenshot
+    ? ((lastScreenshot.data as Record<string, unknown>)
+        .screenshot_b64 as string)
+    : null;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-48 text-sm text-slate-400">
+        Loading event replay…
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="flex items-center justify-center h-48 text-sm text-red-500">
+        {fetchError}
+      </div>
+    );
+  }
+
+  const ssiEvents: SSIEvent[] = events.map((e) => ({
+    event_type: e.event_type as SSIEventType,
+    timestamp: e.timestamp,
+    investigation_id: e.scan_id,
+    data: (e.data as Record<string, unknown>) ?? {},
+  }));
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-3">
+      {/* Final screenshot */}
+      <div className="lg:col-span-2 space-y-4">
+        <div className="flex items-center gap-2">
+          <Monitor className="w-4 h-4 text-slate-400" />
+          <span className="text-sm font-semibold text-slate-900 dark:text-white">
+            Final Screenshot
+          </span>
+          <Badge className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            replay
+          </Badge>
+        </div>
+        <Card className="overflow-hidden bg-slate-900">
+          {screenshotB64 ? (
+            /* eslint-disable-next-line @next/next/no-img-element -- base64 data URI from DB replay; next/image does not support data URIs */
+            <img
+              src={`data:image/jpeg;base64,${screenshotB64}`}
+              alt="Final screenshot from investigation replay"
+              className="w-full h-auto"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-64 text-slate-500 text-sm">
+              No screenshot captured
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Replayed event log */}
+      <div className="space-y-4">
+        <Card className="p-4">
+          <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
+            Event Replay ({ssiEvents.length})
+          </h4>
+          <div className="max-h-[30rem] overflow-y-auto space-y-1.5">
+            {ssiEvents.length === 0 && (
+              <p className="text-xs text-slate-400 italic">
+                No events recorded for this scan.
+              </p>
+            )}
+            {ssiEvents
+              .slice()
+              .reverse()
+              .map((evt, i) => (
+                <EventRow key={i} event={evt} />
+              ))}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Live Monitor Tab
 // ---------------------------------------------------------------------------
 
-function LiveMonitorTab({ investigationId }: { investigationId: string }) {
+/**
+ * Renders the live WS/SSE view.  Kept separate from LiveMonitorTab so that
+ * the `useInvestigationMonitor` hook (which opens a connection) is only
+ * mounted for in-progress scans.
+ */
+function LiveMonitorContent({ investigationId }: { investigationId: string }) {
   const {
     state: wsState,
     screenshot,
@@ -390,6 +534,23 @@ function LiveMonitorTab({ investigationId }: { investigationId: string }) {
       </div>
     </div>
   );
+}
+
+/**
+ * Thin router: shows event replay for completed/failed scans and the live
+ * monitor for all other statuses.
+ */
+function LiveMonitorTab({
+  investigationId,
+  scanStatus,
+}: {
+  investigationId: string;
+  scanStatus: string;
+}) {
+  if (scanStatus === "completed" || scanStatus === "failed") {
+    return <ReplayPanel scanId={investigationId} />;
+  }
+  return <LiveMonitorContent investigationId={investigationId} />;
 }
 
 function EventRow({ event }: { event: SSIEvent }) {
@@ -761,7 +922,10 @@ export default function InvestigationDetailPage() {
       {/* Tab content */}
       {activeTab === "recon" && <ReconTab data={data} />}
       {activeTab === "monitor" && (
-        <LiveMonitorTab investigationId={scan.scan_id} />
+        <LiveMonitorTab
+          investigationId={scan.scan_id}
+          scanStatus={scan.status}
+        />
       )}
       {activeTab === "results" && <ResultsTab data={data} />}
     </div>

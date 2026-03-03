@@ -1,0 +1,9 @@
+# Exclude local-only env files that contain dev-only settings (e.g. NEXT_PUBLIC_SSI_WS_URL).
+# These must never be bundled into cloud images — NEXT_PUBLIC_* vars baked in at build time
+# would point services at localhost and break SSE/WebSocket transport in GCP Cloud Run.
+**/.env.local
+**/.env.*.local
+**/node_modules
+**/.next
+**/.git
+**/dist
