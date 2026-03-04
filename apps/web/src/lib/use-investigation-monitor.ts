@@ -295,11 +295,40 @@ export function useInvestigationMonitor({
         console.warn("sendGuidance called but guidance mode is not enabled.");
         return;
       }
+
+      // WebSocket path (local dev) — send directly over the open socket.
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify(command));
+        return;
+      }
+
+      // HTTP path (cloud / SSE mode) — POST via the Next.js proxy to core.
+      if (investigationId) {
+        const guidanceUrl = `/api/events/ssi/${investigationId}/guidance`;
+        fetch(guidanceUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(command),
+        })
+          .then((res) => {
+            if (!res.ok) {
+              console.warn(
+                "[Monitor] Guidance POST returned %d for %s",
+                res.status,
+                investigationId,
+              );
+            }
+          })
+          .catch((err) => {
+            console.error(
+              "[Monitor] Guidance POST failed for %s:",
+              investigationId,
+              err,
+            );
+          });
       }
     },
-    [guidance],
+    [guidance, investigationId],
   );
 
   // Auto-connect when investigationId changes.

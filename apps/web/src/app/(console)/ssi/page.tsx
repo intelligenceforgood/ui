@@ -27,6 +27,7 @@ import { Badge, SectionLabel } from "@i4g/ui-kit";
 import { useInvestigationMonitor } from "@/lib/use-investigation-monitor";
 import { parseUTCDate } from "@/lib/format";
 import type {
+  GuidanceCommand,
   InvestigateResponse,
   InvestigationResult,
   ScanType,
@@ -246,6 +247,9 @@ export default function SsiInvestigatePage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [caseId, setCaseId] = useState<string | null>(null);
   const [liveViewOpen, setLiveViewOpen] = useState(false);
+  const [guidanceAction, setGuidanceAction] = useState<string>("click");
+  const [guidanceValue, setGuidanceValue] = useState("");
+  const [guidanceReason, setGuidanceReason] = useState("");
 
   const pollCount = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -260,9 +264,10 @@ export default function SsiInvestigatePage() {
     screenshot,
     events: monitorEvents,
     snapshot: monitorSnapshot,
+    sendGuidance,
   } = useInvestigationMonitor({
     investigationId: monitorId,
-    guidance: false,
+    guidance: true,
   });
 
   const stepQueued: StepProps["state"] =
@@ -700,8 +705,75 @@ export default function SsiInvestigatePage() {
                     )}
                   </div>
 
-                  {/* Event log */}
-                  <div className="space-y-2">
+                  {/* Event log + guidance */}
+                  <div className="space-y-4">
+                    {/* Guidance input (Phase 3C) */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Send Guidance
+                      </h4>
+                      <div className="rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 space-y-2">
+                        {wsState !== "connected" && (
+                          <p className="text-xs text-slate-400 italic">
+                            Connect to send guidance commands.
+                          </p>
+                        )}
+                        <select
+                          value={guidanceAction}
+                          onChange={(e) => setGuidanceAction(e.target.value)}
+                          disabled={wsState !== "connected"}
+                          className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        >
+                          <option value="click">Click</option>
+                          <option value="type">Type</option>
+                          <option value="goto">Go to URL</option>
+                          <option value="skip">Skip</option>
+                          <option value="continue">Continue</option>
+                        </select>
+                        {(guidanceAction === "click" ||
+                          guidanceAction === "type" ||
+                          guidanceAction === "goto") && (
+                          <input
+                            value={guidanceValue}
+                            onChange={(e) => setGuidanceValue(e.target.value)}
+                            disabled={wsState !== "connected"}
+                            placeholder={
+                              guidanceAction === "click"
+                                ? "CSS selector"
+                                : guidanceAction === "goto"
+                                  ? "https://..."
+                                  : "selector|text"
+                            }
+                            className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                          />
+                        )}
+                        <input
+                          value={guidanceReason}
+                          onChange={(e) => setGuidanceReason(e.target.value)}
+                          disabled={wsState !== "connected"}
+                          placeholder="Reason (optional)"
+                          className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        />
+                        <button
+                          onClick={() => {
+                            sendGuidance({
+                              action:
+                                guidanceAction as GuidanceCommand["action"],
+                              value: guidanceValue || undefined,
+                              reason: guidanceReason || undefined,
+                            });
+                            setGuidanceValue("");
+                            setGuidanceReason("");
+                          }}
+                          disabled={wsState !== "connected"}
+                          className="w-full rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Send
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Event log */}
                     <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Event Log ({monitorEvents.length})
                     </h4>
