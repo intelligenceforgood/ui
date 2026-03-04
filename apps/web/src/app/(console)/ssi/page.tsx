@@ -890,7 +890,7 @@ export default function SsiInvestigatePage() {
               </div>
             )}
 
-            {/* Case link (evidence is attached to the case via CoreBridge) */}
+            {/* Case link (evidence is attached to the case via direct DB writes) */}
             {resolvedCaseId && (
               <div className="flex items-start gap-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-3">
                 <Briefcase className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
