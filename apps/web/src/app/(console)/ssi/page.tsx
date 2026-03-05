@@ -23,7 +23,7 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
-import { Badge, SectionLabel } from "@i4g/ui-kit";
+import { Badge, SectionLabel, FeedbackButton } from "@i4g/ui-kit";
 import { useInvestigationMonitor } from "@/lib/use-investigation-monitor";
 import { parseUTCDate } from "@/lib/format";
 import type {
@@ -496,7 +496,7 @@ export default function SsiInvestigatePage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <header className="group flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <SectionLabel>Scam Site Investigator</SectionLabel>
           <h1 className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">
@@ -508,7 +508,8 @@ export default function SsiInvestigatePage() {
             packaging.
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <FeedbackButton feedbackId="ssi-investigate.form" />
           <Link
             href="/ssi/investigations"
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-blue-300 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
@@ -807,7 +808,11 @@ export default function SsiInvestigatePage() {
 
       {/* Result card */}
       {phase === "done" && result && (
-        <div className="max-w-2xl bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700 overflow-hidden">
+        <div className="group max-w-2xl bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700 overflow-hidden relative">
+          <FeedbackButton
+            feedbackId="ssi-investigate.results"
+            className="absolute top-2 right-2 z-10"
+          />
           <div className="bg-slate-800 dark:bg-slate-900 px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <CheckCircle2 className="w-6 h-6 text-emerald-400 flex-shrink-0" />

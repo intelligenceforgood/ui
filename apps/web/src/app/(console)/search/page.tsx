@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { Sparkles } from "lucide-react";
 import { Badge, Card } from "@i4g/ui-kit";
+import { FeedbackButton } from "@i4g/ui-kit";
 import type { SearchRequest, SearchTimeRange } from "@i4g/sdk";
 import { getI4GClient } from "@/lib/i4g-client";
 import SearchExperience from "./search-experience";
@@ -252,24 +253,42 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </Card>
       ) : null}
 
-      <SearchExperience
-        initialResults={initialResults}
-        taxonomy={taxonomy}
-        initialSelection={{
-          sources: selectionSources,
-          taxonomy: selectionTaxonomy,
-          indicatorTypes: selectionIndicatorTypes,
-          datasets: selectionDatasets,
-          timePreset: resolvedTimePreset ?? null,
-          entities: entityFilters,
-        }}
-        initialSavedSearch={savedSearchDescriptor}
-        schema={schema}
-      />
+      <div className="group relative">
+        <SearchExperience
+          initialResults={initialResults}
+          taxonomy={taxonomy}
+          initialSelection={{
+            sources: selectionSources,
+            taxonomy: selectionTaxonomy,
+            indicatorTypes: selectionIndicatorTypes,
+            datasets: selectionDatasets,
+            timePreset: resolvedTimePreset ?? null,
+            entities: entityFilters,
+          }}
+          initialSavedSearch={savedSearchDescriptor}
+          schema={schema}
+        />
+        <FeedbackButton
+          feedbackId="search.results"
+          className="absolute top-2 right-2 z-10"
+        />
+      </div>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <SearchHistoryList events={history} />
-        <SavedSearchesList items={savedSearches} />
+        <div className="group relative">
+          <SearchHistoryList events={history} />
+          <FeedbackButton
+            feedbackId="search.history"
+            className="absolute top-2 right-2 z-10"
+          />
+        </div>
+        <div className="group relative">
+          <SavedSearchesList items={savedSearches} />
+          <FeedbackButton
+            feedbackId="search.saved"
+            className="absolute top-2 right-2 z-10"
+          />
+        </div>
       </section>
     </div>
   );

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Badge, Card } from "@i4g/ui-kit";
+import { Badge, Card, FeedbackButton } from "@i4g/ui-kit";
 import {
   ArrowLeft,
   Clock,
@@ -920,14 +920,36 @@ export default function InvestigationDetailPage() {
       </div>
 
       {/* Tab content */}
-      {activeTab === "recon" && <ReconTab data={data} />}
-      {activeTab === "monitor" && (
-        <LiveMonitorTab
-          investigationId={scan.scan_id}
-          scanStatus={scan.status}
-        />
+      {activeTab === "recon" && (
+        <div className="group relative">
+          <FeedbackButton
+            feedbackId="ssi-detail.recon"
+            className="absolute top-2 right-2 z-10"
+          />
+          <ReconTab data={data} />
+        </div>
       )}
-      {activeTab === "results" && <ResultsTab data={data} />}
+      {activeTab === "monitor" && (
+        <div className="group relative">
+          <FeedbackButton
+            feedbackId="ssi-detail.monitor"
+            className="absolute top-2 right-2 z-10"
+          />
+          <LiveMonitorTab
+            investigationId={scan.scan_id}
+            scanStatus={scan.status}
+          />
+        </div>
+      )}
+      {activeTab === "results" && (
+        <div className="group relative">
+          <FeedbackButton
+            feedbackId="ssi-detail.results"
+            className="absolute top-2 right-2 z-10"
+          />
+          <ResultsTab data={data} />
+        </div>
+      )}
     </div>
   );
 }

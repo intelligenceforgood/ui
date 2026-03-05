@@ -22,6 +22,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { UserPreferences } from "@/components/user-preferences";
+import { FeedbackButton } from "@i4g/ui-kit";
 import { useAuth, type UserRole } from "@/lib/auth-context";
 
 interface NavItem {
@@ -182,6 +183,11 @@ export function Navigation() {
         <nav className="flex-1 px-4 py-8 overflow-y-auto">{navLinks}</nav>
         <div className="px-6 pb-8 space-y-4">
           <UserPreferences />
+          <FeedbackButton
+            variant="text"
+            feedbackId="navigation.global"
+            className="w-full justify-center opacity-100"
+          />
           <Link
             href="https://docs.intelligenceforgood.org/book/guides"
             className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-teal-300 hover:text-teal-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Badge, Button, Card, Input } from "@i4g/ui-kit";
+import { FeedbackButton } from "@i4g/ui-kit";
 import { ArrowUpRight, Layers3 } from "lucide-react";
 
 import { getI4GClient } from "@/lib/i4g-client";
@@ -56,7 +57,11 @@ export default async function EvidenceDossiersPage({
   } satisfies DossierListOptions);
 
   return (
-    <div className="space-y-8">
+    <div className="group relative space-y-8">
+      <FeedbackButton
+        feedbackId="dossiers.page"
+        className="absolute top-1 right-0 z-10"
+      />
       <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">

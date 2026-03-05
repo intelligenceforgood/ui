@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Badge, Card, SectionLabel } from "@i4g/ui-kit";
+import { Badge, Card, SectionLabel, FeedbackButton } from "@i4g/ui-kit";
 import { Search, Wallet } from "lucide-react";
 import type { WalletRecord, WalletsSearchResponse } from "@/types/ssi";
 
@@ -70,7 +70,11 @@ export default function WalletsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="group relative space-y-8">
+      <FeedbackButton
+        feedbackId="ssi-wallets.page"
+        className="absolute top-1 right-0 z-10"
+      />
       <header>
         <SectionLabel>Scam Site Investigator</SectionLabel>
         <h1 className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">

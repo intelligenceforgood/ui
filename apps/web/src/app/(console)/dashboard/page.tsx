@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   SignalHigh,
 } from "lucide-react";
-import { Badge, Card } from "@i4g/ui-kit";
+import { Badge, Card, FeedbackButton } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
 import type { DashboardReminder } from "@i4g/sdk";
 import { TextWithTokens } from "@/components/text-with-tokens";
@@ -78,7 +78,11 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="group relative grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <FeedbackButton
+          feedbackId="dashboard.metrics"
+          className="absolute -top-1 right-0 z-10"
+        />
         {metrics.map((metric) => (
           <Card key={metric.label}>
             <p className="text-sm text-slate-500">{metric.label}</p>
@@ -91,7 +95,7 @@ export default async function DashboardPage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-        <Card className="space-y-6">
+        <Card className="group space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">
@@ -101,9 +105,12 @@ export default async function DashboardPage() {
                 Consolidated signals from intake pipelines and live monitoring.
               </p>
             </div>
-            <Badge variant="info" className="uppercase tracking-wide">
-              {alerts.length} active
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="info" className="uppercase tracking-wide">
+                {alerts.length} active
+              </Badge>
+              <FeedbackButton feedbackId="dashboard.alerts" />
+            </div>
           </div>
           <ul className="space-y-4">
             {alerts.map((alert) => (
@@ -135,12 +142,15 @@ export default async function DashboardPage() {
         </Card>
 
         <div className="space-y-6">
-          <Card className="space-y-4">
+          <Card className="group space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900">
                 Activity feed
               </h2>
-              <Badge variant="default">Last hour</Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="default">Last hour</Badge>
+                <FeedbackButton feedbackId="dashboard.activity" />
+              </div>
             </div>
             <ul className="space-y-4">
               {activity.map((item) => (
@@ -160,12 +170,15 @@ export default async function DashboardPage() {
               ))}
             </ul>
           </Card>
-          <Card className="space-y-4">
+          <Card className="group space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900">
                 Reminders
               </h2>
-              <Badge variant="warning">Action needed</Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="warning">Action needed</Badge>
+                <FeedbackButton feedbackId="dashboard.reminders" />
+              </div>
             </div>
             <div className="space-y-3 text-sm text-slate-500">
               {reminders.map((reminder) => (
@@ -181,17 +194,20 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <section>
+      <section className="group">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900">
             Quick actions
           </h2>
-          <Link
-            href="/cases"
-            className="text-sm font-semibold text-teal-600 hover:text-teal-700"
-          >
-            View all
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/cases"
+              className="text-sm font-semibold text-teal-600 hover:text-teal-700"
+            >
+              View all
+            </Link>
+            <FeedbackButton feedbackId="dashboard.actions" />
+          </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {quickActions.map((action) => (

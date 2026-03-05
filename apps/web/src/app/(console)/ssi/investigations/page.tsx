@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Badge, Card, SectionLabel } from "@i4g/ui-kit";
+import { Badge, Card, SectionLabel, FeedbackButton } from "@i4g/ui-kit";
 import {
   ArrowUpRight,
   Clock,
@@ -138,7 +138,11 @@ export default async function InvestigationsPage(props: {
   const data = await fetchInvestigations(params);
 
   return (
-    <div className="space-y-8">
+    <div className="group relative space-y-8">
+      <FeedbackButton
+        feedbackId="ssi-investigations.list"
+        className="absolute top-1 right-0 z-10"
+      />
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <SectionLabel>Scam Site Investigator</SectionLabel>

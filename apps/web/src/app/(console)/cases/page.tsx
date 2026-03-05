@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Badge, Card, SectionLabel } from "@i4g/ui-kit";
+import { Badge, Card, SectionLabel, FeedbackButton } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
 import type { CaseSummary } from "@i4g/sdk";
 import {
@@ -145,10 +145,13 @@ export default async function CasesPage(props: {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-        <Card className="overflow-hidden">
+        <Card className="group overflow-hidden">
           <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
             <h2 className="text-lg font-semibold text-slate-900">Cases</h2>
-            <Badge variant="info">{cases.length} in view</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="info">{cases.length} in view</Badge>
+              <FeedbackButton feedbackId="cases.list" />
+            </div>
           </div>
           <div className="divide-y divide-slate-100">
             {cases.map((caseItem) => (
@@ -221,10 +224,13 @@ export default async function CasesPage(props: {
           </div>
         </Card>
 
-        <Card className="space-y-4">
+        <Card className="group space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">Queues</h2>
-            <Badge variant="default">{queues.length} total</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="default">{queues.length} total</Badge>
+              <FeedbackButton feedbackId="cases.queue" />
+            </div>
           </div>
           <div className="space-y-4">
             {queues.map((queue) => (

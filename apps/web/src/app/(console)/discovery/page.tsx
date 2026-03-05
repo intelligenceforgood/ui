@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { Sparkles } from "lucide-react";
+import { FeedbackButton } from "@i4g/ui-kit";
 import { getDiscoveryDefaults } from "@/lib/server/discovery-config";
 
 const DiscoveryPanel = dynamic(() => import("./discovery-panel"), {
@@ -18,7 +19,11 @@ export const metadata: Metadata = {
 export default function DiscoveryPage() {
   const defaults = getDiscoveryDefaults();
   return (
-    <div className="space-y-8">
+    <div className="group relative space-y-8">
+      <FeedbackButton
+        feedbackId="discovery.page"
+        className="absolute top-1 right-0 z-10"
+      />
       <header className="space-y-4">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
           Discovery

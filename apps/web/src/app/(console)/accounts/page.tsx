@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import nextDynamic from "next/dynamic";
+import { FeedbackButton } from "@i4g/ui-kit";
 import { getAccountListRuns } from "@/lib/server/account-list-service";
 
 const AccountListConsole = nextDynamic(
@@ -22,7 +23,11 @@ export default async function AccountListPage() {
   const runs = await getAccountListRuns(8);
 
   return (
-    <div className="space-y-10">
+    <div className="group relative space-y-10">
+      <FeedbackButton
+        feedbackId="accounts.page"
+        className="absolute top-1 right-0 z-10"
+      />
       <header className="space-y-3">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
           Financial indicators

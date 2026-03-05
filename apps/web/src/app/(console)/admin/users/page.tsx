@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { listAccounts } from "@/lib/server/admin-accounts-service";
 import { Card, SectionLabel } from "@i4g/ui-kit";
+import { FeedbackButton } from "@i4g/ui-kit";
 import { AccountsTable } from "./accounts-table";
 
 export const metadata: Metadata = {
@@ -37,7 +38,11 @@ export default async function AdminUsersPage() {
   const inactiveAccounts = accounts.filter((a) => !a.isActive);
 
   return (
-    <div className="space-y-8">
+    <div className="group relative space-y-8">
+      <FeedbackButton
+        feedbackId="admin-users.page"
+        className="absolute top-1 right-0 z-10"
+      />
       <header className="space-y-2">
         <SectionLabel>Administration</SectionLabel>
         <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">

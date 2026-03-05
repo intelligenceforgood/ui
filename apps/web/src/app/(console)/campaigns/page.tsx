@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { listCampaigns } from "@/lib/server/campaigns-service";
-import { Card } from "@i4g/ui-kit";
+import { Card, FeedbackButton } from "@i4g/ui-kit";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -14,7 +14,11 @@ export default async function CampaignsPage() {
   const campaigns = await listCampaigns();
 
   return (
-    <div className="space-y-6">
+    <div className="group relative space-y-6">
+      <FeedbackButton
+        feedbackId="campaigns.list"
+        className="absolute top-1 right-0 z-10"
+      />
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight dark:text-white">
           Campaigns

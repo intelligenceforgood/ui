@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { ShieldPlus } from "lucide-react";
+import { FeedbackButton } from "@i4g/ui-kit";
 
 const CaseIntakeForm = dynamic(() => import("./case-intake-form"), {
   loading: () => (
@@ -15,7 +16,11 @@ export const metadata: Metadata = {
 
 export default function CaseIntakePage() {
   return (
-    <div className="space-y-8">
+    <div className="group relative space-y-8">
+      <FeedbackButton
+        feedbackId="case-intake.form"
+        className="absolute top-1 right-0 z-10"
+      />
       <header className="space-y-3">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
           Intake

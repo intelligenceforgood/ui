@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Badge, Card } from "@i4g/ui-kit";
+import { FeedbackButton } from "@i4g/ui-kit";
 import { getTaxonomyTree } from "@/lib/server/taxonomy-service";
 import { ListTree } from "lucide-react";
 import type { TaxonomyAxis, TaxonomyResponse } from "@i4g/sdk";
@@ -87,7 +88,11 @@ export default async function TaxonomyPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="group relative space-y-8">
+      <FeedbackButton
+        feedbackId="taxonomy.page"
+        className="absolute top-1 right-0 z-10"
+      />
       <header className="flex flex-col gap-4">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">

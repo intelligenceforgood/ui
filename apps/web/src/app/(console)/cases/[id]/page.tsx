@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getI4GClient } from "@/lib/i4g-client";
-import { Badge, Card } from "@i4g/ui-kit";
+import { Badge, Card, FeedbackButton } from "@i4g/ui-kit";
 import {
   ArrowLeft,
   Clock,
@@ -33,7 +33,7 @@ async function CaseDetailView({ id }: { id: string }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="group flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Link
@@ -64,6 +64,7 @@ async function CaseDetailView({ id }: { id: string }) {
             </span>
           </div>
         </div>
+        <FeedbackButton feedbackId="case-detail.header" />
       </div>
 
       {/* Main Content Grid */}
@@ -84,11 +85,12 @@ async function CaseDetailView({ id }: { id: string }) {
             </p>
           </Card>
 
-          <Card className="p-6">
+          <Card className="group p-6">
             <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
               <Clock className="w-5 h-5 text-slate-400" />
               Timeline
               <FieldHelp helpKey="case.timeline" />
+              <FeedbackButton feedbackId="case-detail.timeline" />
             </h3>
             <div className="space-y-4">
               {caseData.timeline.length === 0 && (
@@ -120,11 +122,12 @@ async function CaseDetailView({ id }: { id: string }) {
 
         {/* Right Column: Classification, Artifacts & Metadata */}
         <div className="space-y-6">
-          <Card className="p-6">
+          <Card className="group p-6">
             <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
               <Tag className="w-5 h-5 text-slate-400" />
               Classification
               <SectionHelp helpKey="case.classification" />
+              <FeedbackButton feedbackId="case-detail.entities" />
             </h3>
             {caseData.classification ? (
               <div className="space-y-4">
@@ -164,22 +167,25 @@ async function CaseDetailView({ id }: { id: string }) {
             )}
           </Card>
 
-          <Card className="p-6">
+          <Card className="group p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium flex items-center gap-2">
                 <Paperclip className="w-5 h-5 text-slate-400" />
                 Artifacts ({caseData.artifacts.length})
                 <FieldHelp helpKey="case.artifacts" />
               </h3>
-              {caseData.artifacts.length > 0 && (
-                <a
-                  href={`/api/cases/${id}/evidence/export`}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded px-2.5 py-1 bg-blue-50 hover:bg-blue-100 transition-colors"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  Download Bundle
-                </a>
-              )}
+              <div className="flex items-center gap-2">
+                {caseData.artifacts.length > 0 && (
+                  <a
+                    href={`/api/cases/${id}/evidence/export`}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded px-2.5 py-1 bg-blue-50 hover:bg-blue-100 transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Download Bundle
+                  </a>
+                )}
+                <FeedbackButton feedbackId="case-detail.attachments" />
+              </div>
             </div>
             <ul className="space-y-3">
               {caseData.artifacts.map((art) => {

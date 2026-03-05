@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import nextDynamic from "next/dynamic";
-import { Badge, Card } from "@i4g/ui-kit";
+import { Badge, Card, FeedbackButton } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
 import type { AnalyticsMetric } from "@i4g/sdk";
 import { Activity, TrendingDown, TrendingUp } from "lucide-react";
@@ -54,7 +54,11 @@ export default async function AnalyticsPage() {
         </p>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="group relative grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <FeedbackButton
+          feedbackId="analytics.metrics"
+          className="absolute -top-1 right-0 z-10"
+        />
         {analytics.metrics.map((metric) => (
           <Card key={metric.id} className="space-y-2">
             <div className="flex items-start justify-between">
@@ -73,7 +77,13 @@ export default async function AnalyticsPage() {
         ))}
       </section>
 
-      <AnalyticsCharts data={analytics} />
+      <div className="group relative">
+        <AnalyticsCharts data={analytics} />
+        <FeedbackButton
+          feedbackId="analytics.charts"
+          className="absolute top-2 right-2 z-10"
+        />
+      </div>
     </div>
   );
 }

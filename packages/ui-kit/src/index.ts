@@ -7,3 +7,6 @@ export * from "./components/section-label";
 export * from "./components/error-fallback";
 export * from "./components/help-tooltip";
 export * from "./components/info-popover";
+export * from "./components/feedback-provider";
+export * from "./components/feedback-button";
+export * from "./components/feedback-dialog";
