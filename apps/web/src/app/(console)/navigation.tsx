@@ -21,6 +21,8 @@ import {
   History,
   Upload,
   Wallet,
+  Rss,
+  TrendingUp,
 } from "lucide-react";
 import { UserPreferences } from "@/components/user-preferences";
 import { FeedbackButton } from "@i4g/ui-kit";
@@ -77,6 +79,18 @@ const navItems: NavItem[] = [
         href: "/ssi/submissions",
         label: "Submissions",
         icon: Upload,
+        minRole: "analyst",
+      },
+      {
+        href: "/ssi/ecx-feed",
+        label: "Intelligence Feed",
+        icon: Rss,
+        minRole: "analyst",
+      },
+      {
+        href: "/ssi/ecx-dashboard",
+        label: "Trend Dashboard",
+        icon: TrendingUp,
         minRole: "analyst",
       },
     ],

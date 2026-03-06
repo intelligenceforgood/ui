@@ -12,9 +12,9 @@ const SSI_API_URL = process.env.SSI_API_URL ?? "http://localhost:8100";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
-  const { id } = params;
+  const { id } = await params;
   const upstream = `${SSI_API_URL}/ecx/investigate/${encodeURIComponent(id)}`;
   try {
     const res = await fetch(upstream, { signal: AbortSignal.timeout(10_000) });

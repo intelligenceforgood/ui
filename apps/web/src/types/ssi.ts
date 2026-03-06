@@ -349,3 +349,46 @@ export interface EcxRejectRequest {
   analyst: string;
   reason?: string;
 }
+
+// ---------------------------------------------------------------------------
+// eCX Intelligence Feed (Phase 3)
+// ---------------------------------------------------------------------------
+
+export interface EcxFeedRecord {
+  id: number;
+  url?: string;
+  domain?: string;
+  ip?: string;
+  address?: string;
+  brand?: string;
+  confidence?: number;
+  status?: string;
+  discovered_at?: number;
+  created_at?: number | string;
+  currency?: string;
+  crime_category?: string;
+  site_link?: string;
+  classification?: string;
+  tld?: string;
+  asn?: number[];
+  [key: string]: unknown;
+}
+
+export interface EcxFeedResponse {
+  module: string;
+  count: number;
+  records: EcxFeedRecord[];
+}
+
+export interface EcxPollingState {
+  module: string;
+  last_polled_id: number;
+  last_polled_at?: string;
+  records_found: number;
+  errors: number;
+  updated_at?: string;
+}
+
+export interface EcxPollingStatusResponse {
+  modules: EcxPollingState[];
+}
