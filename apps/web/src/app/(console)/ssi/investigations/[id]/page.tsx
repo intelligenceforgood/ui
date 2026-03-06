@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { Badge, Card, FeedbackButton } from "@i4g/ui-kit";
 import {
   ArrowLeft,
+  CheckCircle,
   Clock,
   Download,
   Eye,
@@ -18,10 +19,15 @@ import {
   Shield,
   ShieldAlert,
   ShieldCheck,
+  Upload,
   Wallet,
+  XCircle,
 } from "lucide-react";
 import { useInvestigationMonitor } from "@/lib/use-investigation-monitor";
 import type {
+  EcxApproveRequest,
+  EcxSubmission,
+  EcxSubmissionsResponse,
   GuidanceCommand,
   InvestigationDetailResponse,
   PIIExposure,
@@ -85,7 +91,6 @@ function ReconTab({ data }: { data: InvestigationDetailResponse }) {
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      {/* WHOIS */}
       <Card className="p-5">
         <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
           <Globe className="w-4 h-4 text-blue-500" />
@@ -198,6 +203,9 @@ function ReconTab({ data }: { data: InvestigationDetailResponse }) {
           </dl>
         )}
       </Card>
+
+      {/* eCrimeX Intelligence */}
+      <EcxEnrichmentPanel scanId={data.scan.scan_id} />
     </div>
   );
 }
@@ -590,6 +598,397 @@ function EventRow({ event }: { event: SSIEvent }) {
 // Results Tab
 // ---------------------------------------------------------------------------
 
+// eCX submission status display helpers
+const ECX_STATUS_CLASS: Record<string, string> = {
+  submitted:
+    "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+  updated:
+    "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+  queued: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+  pending: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
+  failed: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300",
+  rejected: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300",
+  retracted:
+    "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+};
+
+const ECX_MODULE_LABEL: Record<string, string> = {
+  phish: "Phish URL",
+  "malicious-domain": "Domain",
+  "malicious-ip": "IP",
+  "report-phishing": "Report",
+  "cryptocurrency-addresses": "Wallet",
+};
+
+// ---------------------------------------------------------------------------
+// eCrimeX Enrichment Panel — shows intelligence hits FROM eCrimeX
+// ---------------------------------------------------------------------------
+
+interface EcxEnrichmentRow {
+  enrichment_id: string;
+  query_module: string;
+  query_value: string;
+  ecx_record_id: number | null;
+  confidence: number | null;
+  ecx_data: Record<string, unknown>;
+}
+
+interface EcxEnrichmentResponse {
+  scan_id: string;
+  count: number;
+  enrichments: EcxEnrichmentRow[];
+}
+
+function EcxEnrichmentPanel({ scanId }: { scanId: string }) {
+  const [enrichments, setEnrichments] = useState<EcxEnrichmentRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/ssi/ecx/investigate/${encodeURIComponent(scanId)}`)
+      .then((r) => r.json())
+      .then((data: EcxEnrichmentResponse) => {
+        if (!cancelled) setEnrichments(data.enrichments ?? []);
+      })
+      .catch(() => {
+        /* silently ignore — panel stays empty */
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [scanId]);
+
+  const hits = enrichments.filter((e) => e.ecx_record_id != null);
+
+  return (
+    <Card className="p-5 md:col-span-2">
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+        <ShieldAlert className="w-4 h-4 text-red-500" />
+        eCrimeX Intelligence ({loading ? "…" : hits.length} hit
+        {hits.length !== 1 ? "s" : ""})
+      </h3>
+      {loading ? (
+        <p className="text-sm text-slate-400 italic">Loading…</p>
+      ) : hits.length === 0 ? (
+        <p className="text-sm italic text-slate-400 dark:text-slate-500">
+          No matching records found in eCrimeX for this investigation.
+        </p>
+      ) : (
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="text-left text-xs text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+              <th className="pb-2 pr-4 font-medium">Module</th>
+              <th className="pb-2 pr-4 font-medium">Value</th>
+              <th className="pb-2 pr-4 font-medium">Classification</th>
+              <th className="pb-2 font-medium">Confidence</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            {hits.map((row) => {
+              const classification =
+                (row.ecx_data.classification as string) ?? "—";
+              const confidence = row.confidence ?? 0;
+              return (
+                <tr key={row.enrichment_id}>
+                  <td className="py-2 pr-4 text-slate-600 dark:text-slate-400">
+                    {ECX_MODULE_LABEL[row.query_module] ?? row.query_module}
+                  </td>
+                  <td className="py-2 pr-4 font-mono text-slate-800 dark:text-slate-200 break-all">
+                    {row.query_value}
+                  </td>
+                  <td className="py-2 pr-4 capitalize text-slate-800 dark:text-slate-200">
+                    {classification}
+                  </td>
+                  <td className="py-2">
+                    <Badge
+                      variant={
+                        confidence >= 80
+                          ? "danger"
+                          : confidence >= 50
+                            ? "warning"
+                            : "default"
+                      }
+                    >
+                      {confidence}%
+                    </Badge>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+    </Card>
+  );
+}
+
+function EcxSubmissionsPanel({ scanId }: { scanId: string }) {
+  const [submissions, setSubmissions] = useState<EcxSubmission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actingOn, setActingOn] = useState<string | null>(null);
+  const [analystInput, setAnalystInput] = useState<Record<string, string>>({});
+  const [error, setError] = useState<string | null>(null);
+
+  const reload = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `/api/ssi/ecx/submissions?scan_id=${encodeURIComponent(scanId)}&limit=50`,
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = (await res.json()) as EcxSubmissionsResponse;
+      setSubmissions(json.submissions ?? []);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to load submissions",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [scanId]);
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
+
+  async function handleApprove(sub: EcxSubmission) {
+    const analyst = analystInput[sub.submission_id] ?? "";
+    if (!analyst.trim()) {
+      alert("Enter your analyst identifier before approving.");
+      return;
+    }
+    setActingOn(sub.submission_id);
+    try {
+      const body: EcxApproveRequest = {
+        analyst: analyst.trim(),
+        release_label: sub.release_label ?? "",
+      };
+      const res = await fetch(
+        `/api/ssi/ecx/submissions/${sub.submission_id}/approve`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
+      if (!res.ok) {
+        const msg = (await res.json()) as { detail?: string };
+        throw new Error(msg.detail ?? `HTTP ${res.status}`);
+      }
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Approve failed");
+    } finally {
+      setActingOn(null);
+    }
+  }
+
+  async function handleReject(sub: EcxSubmission) {
+    const analyst = analystInput[sub.submission_id] ?? "";
+    if (!analyst.trim()) {
+      alert("Enter your analyst identifier before rejecting.");
+      return;
+    }
+    setActingOn(sub.submission_id);
+    try {
+      const res = await fetch(
+        `/api/ssi/ecx/submissions/${sub.submission_id}/reject`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ analyst: analyst.trim() }),
+        },
+      );
+      if (!res.ok) {
+        const msg = (await res.json()) as { detail?: string };
+        throw new Error(msg.detail ?? `HTTP ${res.status}`);
+      }
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Reject failed");
+    } finally {
+      setActingOn(null);
+    }
+  }
+
+  async function handleRetract(sub: EcxSubmission) {
+    const analyst = analystInput[sub.submission_id] ?? "";
+    if (!analyst.trim()) {
+      alert("Enter your analyst identifier before retracting.");
+      return;
+    }
+    if (
+      !confirm(
+        `Retract submission for "${sub.submitted_value}" from eCrimeX? This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    setActingOn(sub.submission_id);
+    try {
+      const res = await fetch(
+        `/api/ssi/ecx/submissions/${sub.submission_id}/retract`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ analyst: analyst.trim() }),
+        },
+      );
+      if (!res.ok) {
+        const msg = (await res.json()) as { detail?: string };
+        throw new Error(msg.detail ?? `HTTP ${res.status}`);
+      }
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Retract failed");
+    } finally {
+      setActingOn(null);
+    }
+  }
+
+  return (
+    <Card className="p-5">
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+        <Upload className="w-4 h-4 text-indigo-500" />
+        eCrimeX Submissions ({submissions.length})
+      </h3>
+
+      {error && (
+        <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 dark:bg-red-950 dark:text-red-300">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="space-y-2">
+          {[...Array(2)].map((_, i) => (
+            <div
+              key={i}
+              className="h-10 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800"
+            />
+          ))}
+        </div>
+      ) : submissions.length === 0 ? (
+        <p className="text-sm text-slate-500 dark:text-slate-400 italic">
+          No eCrimeX submissions for this investigation. Submissions are created
+          automatically after investigation completes (when ECX is enabled and
+          the data-sharing agreement is signed).
+        </p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 dark:border-slate-800 text-left text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th className="pb-2 pr-3">Module</th>
+                <th className="pb-2 pr-3">Value</th>
+                <th className="pb-2 pr-3">Confidence</th>
+                <th className="pb-2 pr-3">Status</th>
+                <th className="pb-2 pr-3">eCX ID</th>
+                <th className="pb-2 pr-3">Submitted at</th>
+                <th className="pb-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {submissions.map((sub) => {
+                const isQueued = sub.status === "queued";
+                const isSubmitted = sub.status === "submitted";
+                const isBusy = actingOn === sub.submission_id;
+                return (
+                  <tr key={sub.submission_id}>
+                    <td className="py-2 pr-3 font-medium text-slate-700 dark:text-slate-300">
+                      {ECX_MODULE_LABEL[sub.ecx_module] ?? sub.ecx_module}
+                    </td>
+                    <td className="py-2 pr-3 font-mono text-xs text-slate-600 dark:text-slate-400 break-all max-w-[14rem]">
+                      {sub.submitted_value}
+                    </td>
+                    <td className="py-2 pr-3 text-slate-600 dark:text-slate-400">
+                      {sub.confidence}%
+                    </td>
+                    <td className="py-2 pr-3">
+                      <Badge
+                        className={
+                          ECX_STATUS_CLASS[sub.status] ??
+                          ECX_STATUS_CLASS.pending
+                        }
+                      >
+                        {sub.status}
+                      </Badge>
+                    </td>
+                    <td className="py-2 pr-3 text-slate-600 dark:text-slate-400">
+                      {sub.ecx_record_id ?? "—"}
+                    </td>
+                    <td className="py-2 pr-3 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                      {sub.submitted_at
+                        ? new Date(sub.submitted_at).toLocaleString()
+                        : "—"}
+                    </td>
+                    <td className="py-2">
+                      {isQueued || isSubmitted ? (
+                        <div className="flex flex-col gap-1.5">
+                          <input
+                            value={analystInput[sub.submission_id] ?? ""}
+                            onChange={(e) =>
+                              setAnalystInput((prev) => ({
+                                ...prev,
+                                [sub.submission_id]: e.target.value,
+                              }))
+                            }
+                            placeholder="Analyst ID"
+                            className="w-28 rounded border border-slate-200 bg-white px-2 py-1 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                          />
+                          <div className="flex gap-1">
+                            {isQueued && (
+                              <>
+                                <button
+                                  onClick={() => void handleApprove(sub)}
+                                  disabled={isBusy}
+                                  className="inline-flex items-center gap-1 rounded bg-emerald-600 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+                                >
+                                  <CheckCircle className="w-3 h-3" />
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => void handleReject(sub)}
+                                  disabled={isBusy}
+                                  className="inline-flex items-center gap-1 rounded bg-red-600 px-2 py-1 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+                                >
+                                  <XCircle className="w-3 h-3" />
+                                  Reject
+                                </button>
+                              </>
+                            )}
+                            {isSubmitted && (
+                              <button
+                                onClick={() => void handleRetract(sub)}
+                                disabled={isBusy}
+                                className="inline-flex items-center gap-1 rounded bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-500 disabled:opacity-50"
+                              >
+                                <XCircle className="w-3 h-3" />
+                                Retract
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400">
+                          {sub.submitted_by ? `by ${sub.submitted_by}` : "—"}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 function ResultsTab({ data }: { data: InvestigationDetailResponse }) {
   const scan = data.scan;
   const classification = scan.classification_result;
@@ -759,6 +1158,9 @@ function ResultsTab({ data }: { data: InvestigationDetailResponse }) {
           </div>
         )}
       </Card>
+
+      {/* eCrimeX Submissions */}
+      <EcxSubmissionsPanel scanId={scan.scan_id} />
     </div>
   );
 }

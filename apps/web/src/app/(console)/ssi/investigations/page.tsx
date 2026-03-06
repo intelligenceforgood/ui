@@ -8,6 +8,7 @@ import {
   Search,
   ShieldAlert,
   ShieldCheck,
+  Upload,
 } from "lucide-react";
 import { LocalTime } from "@/components/local-time";
 import { apiFetch } from "@/lib/server/api-client";
@@ -130,10 +131,15 @@ export default async function InvestigationsPage(props: {
     typeof searchParams?.status === "string" ? searchParams.status : undefined;
   const domain =
     typeof searchParams?.domain === "string" ? searchParams.domain : undefined;
+  const ecxStatus =
+    typeof searchParams?.ecx_status === "string"
+      ? searchParams.ecx_status
+      : undefined;
 
   const params: Record<string, string> = {};
   if (status) params.status = status;
   if (domain) params.domain = domain;
+  if (ecxStatus) params.ecx_submission_status = ecxStatus;
 
   const data = await fetchInvestigations(params);
 
@@ -156,6 +162,13 @@ export default async function InvestigationsPage(props: {
         </div>
         <div className="flex flex-wrap gap-3">
           <Link
+            href="/ssi/submissions"
+            className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-5 py-2.5 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 dark:hover:bg-indigo-900"
+          >
+            <Upload className="w-4 h-4" />
+            Submissions queue
+          </Link>
+          <Link
             href="/ssi"
             className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl"
           >
@@ -165,30 +178,73 @@ export default async function InvestigationsPage(props: {
         </div>
       </header>
 
-      {/* Status filter pills */}
-      <div className="flex flex-wrap gap-2">
-        {["all", "completed", "failed", "running", "pending"].map((s) => {
-          const isActive = s === "all" ? !status : status === s;
-          const href =
-            s === "all"
-              ? "/ssi/investigations"
-              : `/ssi/investigations?status=${s}`;
-          return (
-            <Link
-              key={s}
-              href={href}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                isActive
-                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
-              }`}
-            >
-              {s === "completed" && <ShieldCheck className="w-3 h-3" />}
-              {s === "failed" && <ShieldAlert className="w-3 h-3" />}
-              <span className="capitalize">{s}</span>
-            </Link>
-          );
-        })}
+      {/* Scan status filter pills */}
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          Status
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {["all", "completed", "failed", "running", "pending"].map((s) => {
+            const isActive = s === "all" ? !status : status === s;
+            const base = ecxStatus ? `?ecx_status=${ecxStatus}` : "";
+            const href =
+              s === "all"
+                ? `/ssi/investigations${base}`
+                : `/ssi/investigations?status=${s}${ecxStatus ? `&ecx_status=${ecxStatus}` : ""}`;
+            return (
+              <Link
+                key={s}
+                href={href}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                  isActive
+                    ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+                }`}
+              >
+                {s === "completed" && <ShieldCheck className="w-3 h-3" />}
+                {s === "failed" && <ShieldAlert className="w-3 h-3" />}
+                <span className="capitalize">{s}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* eCX submission status filter pills */}
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          eCX submission
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {[
+            { key: "all", label: "All" },
+            { key: "queued", label: "Queued" },
+            { key: "submitted", label: "Submitted" },
+            { key: "failed", label: "Failed" },
+            { key: "rejected", label: "Rejected" },
+          ].map(({ key, label }) => {
+            const isActive = key === "all" ? !ecxStatus : ecxStatus === key;
+            const base = status ? `?status=${status}` : "";
+            const href =
+              key === "all"
+                ? `/ssi/investigations${base}`
+                : `/ssi/investigations?${status ? `status=${status}&` : ""}ecx_status=${key}`;
+            return (
+              <Link
+                key={key}
+                href={href}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                  isActive
+                    ? "bg-indigo-700 text-white dark:bg-indigo-300 dark:text-indigo-950"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+                }`}
+              >
+                {key !== "all" && <Upload className="w-3 h-3" />}
+                {label}
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       {/* Investigation list */}

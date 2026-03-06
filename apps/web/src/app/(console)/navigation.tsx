@@ -19,6 +19,7 @@ import {
   Users,
   ShieldAlert,
   History,
+  Upload,
   Wallet,
 } from "lucide-react";
 import { UserPreferences } from "@/components/user-preferences";
@@ -72,6 +73,12 @@ const navItems: NavItem[] = [
         icon: History,
       },
       { href: "/ssi/wallets", label: "Wallets", icon: Wallet },
+      {
+        href: "/ssi/submissions",
+        label: "Submissions",
+        icon: Upload,
+        minRole: "analyst",
+      },
     ],
   },
   {

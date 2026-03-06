@@ -304,3 +304,48 @@ export interface GuidanceCommand {
   value?: string;
   reason?: string;
 }
+
+// ---------------------------------------------------------------------------
+// eCrimeX submission (Phase 2)
+// ---------------------------------------------------------------------------
+
+/** Mirrors ECXSubmissionRecord from ssi/src/ssi/models/ecx.py */
+export type EcxSubmissionStatus =
+  | "pending"
+  | "queued"
+  | "submitted"
+  | "updated"
+  | "failed"
+  | "rejected"
+  | "retracted";
+
+export interface EcxSubmission {
+  submission_id: string;
+  ecx_module: string;
+  ecx_record_id: number | null;
+  scan_id: string;
+  case_id?: string | null;
+  submitted_value: string;
+  confidence: number;
+  release_label: string;
+  status: EcxSubmissionStatus;
+  submitted_by: string;
+  submitted_at: string | null;
+  error_message?: string | null;
+  created_at: string | null;
+}
+
+export interface EcxSubmissionsResponse {
+  count: number;
+  submissions: EcxSubmission[];
+}
+
+export interface EcxApproveRequest {
+  release_label?: string;
+  analyst: string;
+}
+
+export interface EcxRejectRequest {
+  analyst: string;
+  reason?: string;
+}

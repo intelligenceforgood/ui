@@ -441,6 +441,9 @@ export default function SsiInvestigatePage() {
     const trimmed = url.trim();
     if (!trimmed) return;
 
+    // Accept bare domains (e.g. "okdcassets.cc") by assuming https://
+    const normalised = trimmed.includes("://") ? trimmed : `https://${trimmed}`;
+
     setPhase("submitting");
     setErrorMsg(null);
     setResult(null);
@@ -451,7 +454,7 @@ export default function SsiInvestigatePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          url: trimmed,
+          url: normalised,
           passive_only: scanType === "passive",
           scan_type: scanType,
         }),
@@ -460,7 +463,7 @@ export default function SsiInvestigatePage() {
         throw new Error("Service unavailable. Please try again later.");
       }
       const data: InvestigateResponse = await res.json();
-      persistInvestigation(data.investigation_id, trimmed, scanType);
+      persistInvestigation(data.investigation_id, normalised, scanType);
       setPhase("polling");
       startPolling(data.investigation_id);
     } catch (err) {
@@ -527,10 +530,10 @@ export default function SsiInvestigatePage() {
               <div className="flex-1 relative">
                 <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
                 <input
-                  type="url"
+                  type="text"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://suspicious-site.example.com"
+                  placeholder="https://suspicious-site.example.com or suspicious-site.cc"
                   required
                   className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500"
                 />
