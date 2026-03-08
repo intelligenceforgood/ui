@@ -29,11 +29,11 @@ This guide captures day-to-day workflows for building, testing, and deploying th
 
 ## Mock vs Live Backend
 
-| Scenario               | Configuration                                                                                               | Notes                                                                                                                |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Rapid prototyping/demo | `NEXT_PUBLIC_USE_MOCK_DATA=true`                                                                            | No other env needed. Mock dataset lives in `@i4g/sdk` and mirrors backend schemas.                                   |
-| Local FastAPI dev      | `NEXT_PUBLIC_USE_MOCK_DATA=false` + `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000`                        | The UI calls Next.js API routes (`/api/search`, etc.), which forward to FastAPI using `I4G_API_URL` / `I4G_API_KEY`. |
-| Production             | `NEXT_PUBLIC_USE_MOCK_DATA=false` + `I4G_API_URL=https://api.intelligenceforgood.org` + `I4G_API_KIND=core` | Set secrets in the hosting platform. Avoid exposing API keys with the `NEXT_PUBLIC_*` prefix.                        |
+| Scenario               | Configuration                                                                                                   | Notes                                                                                                                |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Rapid prototyping/demo | `NEXT_PUBLIC_USE_MOCK_DATA=true`                                                                                | No other env needed. Mock dataset lives in `@i4g/sdk` and mirrors backend schemas.                                   |
+| Local FastAPI dev      | `NEXT_PUBLIC_USE_MOCK_DATA=false` + `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000`                            | The UI calls Next.js API routes (`/api/search`, etc.), which forward to FastAPI using `I4G_API_URL` / `I4G_API_KEY`. |
+| Cloud (dev)            | `NEXT_PUBLIC_USE_MOCK_DATA=false` + `I4G_API_URL=https://api.dev.intelligenceforgood.org` + `I4G_API_KIND=core` | Set secrets in the hosting platform. Avoid exposing API keys with the `NEXT_PUBLIC_*` prefix.                        |
 
 ## Available Scripts
 
