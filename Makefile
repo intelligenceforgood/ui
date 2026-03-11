@@ -1,5 +1,5 @@
 .PHONY: install check format lint test test-smoke dev stop build clean \
-        build-dev deploy-dev rehydrate
+        build-dev deploy-dev build-prod deploy-prod rehydrate
 
 # ---------- Setup ----------
 # Prerequisites: pnpm and Node.js already installed.
@@ -44,6 +44,16 @@ deploy-dev: build-dev
 		--image us-central1-docker.pkg.dev/i4g-dev/applications/i4g-console:dev \
 		--region us-central1 \
 		--project i4g-dev
+
+build-prod:
+	scripts/build_image.sh i4g-console prod \
+		--registry us-central1-docker.pkg.dev/i4g-prod/applications
+
+deploy-prod: build-prod
+	gcloud run deploy i4g-console \
+		--image us-central1-docker.pkg.dev/i4g-prod/applications/i4g-console:prod \
+		--region us-central1 \
+		--project i4g-prod
 
 # ---------- Clean ----------
 # Kills any running dev processes and wipes Next.js and pnpm caches.
