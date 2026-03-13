@@ -31,6 +31,7 @@ const riskColor: Record<string, "success" | "warning" | "danger" | "default"> =
 export default function EntityExplorer({ initialParams }: EntityExplorerProps) {
   const [data, setData] = useState<EntityListResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<EntityStats | null>(null);
 
   // Filter state
@@ -61,6 +62,7 @@ export default function EntityExplorer({ initialParams }: EntityExplorerProps) {
 
   const fetchEntities = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const query = new URLSearchParams();
       if (entityType) query.set("entity_type", entityType);
@@ -74,11 +76,18 @@ export default function EntityExplorer({ initialParams }: EntityExplorerProps) {
 
       const qs = query.toString();
       const res = await fetch(`/api/intelligence/entities?${qs}`);
-      if (!res.ok) throw new Error(`Failed to load entities: ${res.status}`);
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        console.error(`[EntityExplorer] API error ${res.status}: ${body}`);
+        throw new Error(
+          `Failed to load entities: ${res.status} ${res.statusText}`,
+        );
+      }
       const json = await res.json();
       setData(json);
-    } catch {
+    } catch (err) {
       setData(null);
+      setError(err instanceof Error ? err.message : "Failed to load entities");
     } finally {
       setLoading(false);
     }
@@ -195,9 +204,18 @@ export default function EntityExplorer({ initialParams }: EntityExplorerProps) {
           <span>
             {loading
               ? "Loading…"
-              : `${total} entities found — showing ${offset + 1}–${Math.min(offset + PAGE_SIZE, total)}`}
+              : error
+                ? ""
+                : `${total} entities found — showing ${offset + 1}–${Math.min(offset + PAGE_SIZE, total)}`}
           </span>
         </div>
+
+        {/* Error banner */}
+        {error && !loading && (
+          <Card className="border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950">
+            <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+          </Card>
+        )}
 
         {/* Table */}
         <Card className="overflow-x-auto">
