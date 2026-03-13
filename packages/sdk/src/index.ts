@@ -575,6 +575,35 @@ export interface I4GClient {
     category?: string;
     unmask?: boolean;
   }): Promise<Blob>;
+  // Impact Dashboard (S3-19)
+  getImpactDashboard(
+    options?: ImpactDashboardOptions,
+  ): Promise<ImpactDashboard>;
+  getImpactLoss(): Promise<TaxonomyLossItem[]>;
+  getDetectionVelocity(): Promise<DetectionVelocityPoint[]>;
+  getPipelineFunnel(): Promise<PipelineFunnelStage[]>;
+  getCumulativeIndicators(): Promise<CumulativeIndicatorPoint[]>;
+  // Campaign Intelligence (S3-20)
+  listThreatCampaigns(
+    options?: CampaignListOptions,
+  ): Promise<ThreatCampaignList>;
+  getThreatCampaign(campaignId: string): Promise<ThreatCampaignDetail>;
+  getCampaignTimeline(campaignId: string): Promise<CampaignTimelinePoint[]>;
+  getCampaignGraph(campaignId: string): Promise<GraphPayload>;
+  manageCampaign(
+    campaignId: string,
+    action: string,
+    payload?: Record<string, unknown>,
+  ): Promise<{ status: string }>;
+  // Reports (S3-20)
+  generateReport(
+    template: string,
+    scope: string,
+    tlp?: string,
+  ): Promise<{ reportId: string; status: string }>;
+  listReports(options?: ReportLibraryOptions): Promise<ReportLibraryResponse>;
+  // LEA Referrals (S3-20)
+  getLeaSuggestions(limit?: number): Promise<LeaSuggestionResponse>;
 }
 
 const detokenizeResponseSchema = z.object({
@@ -689,16 +718,16 @@ const graphNodeSchema = z.object({
   id: z.string(),
   label: z.string(),
   entityType: z.string(),
-  caseCount: z.number().default(0),
-  riskScore: z.number().default(0),
+  caseCount: z.number(),
+  riskScore: z.number(),
   data: z.record(z.unknown()).optional(),
 });
 
 const graphEdgeSchema = z.object({
   source: z.string(),
   target: z.string(),
-  weight: z.number().default(1),
-  edgeType: z.string().default("co-occurrence"),
+  weight: z.number(),
+  edgeType: z.string(),
 });
 
 const graphPayloadSchema = z.object({
@@ -735,20 +764,185 @@ const neighborGraphSchema = z.object({
       id: z.string(),
       label: z.string(),
       entityType: z.string(),
-      caseCount: z.number().default(0),
+      caseCount: z.number(),
     }),
   ),
   edges: z.array(
     z.object({
       source: z.string(),
       target: z.string(),
-      weight: z.number().default(1),
-      edgeType: z.string().default("co-occurrence"),
+      weight: z.number(),
+      edgeType: z.string(),
     }),
   ),
 });
 
 export type NeighborGraph = z.infer<typeof neighborGraphSchema>;
+
+// ---------------------------------------------------------------------------
+// Impact Dashboard types (S3-19)
+// ---------------------------------------------------------------------------
+
+const kpiCardItemSchema = z.object({
+  label: z.string(),
+  value: z.union([z.number(), z.string()]),
+  change: z.string().nullable().optional(),
+  unit: z.string().nullable().optional(),
+});
+
+export type KpiCardItem = z.infer<typeof kpiCardItemSchema>;
+
+const impactDashboardSchema = z.object({
+  period: z.string(),
+  kpis: z.array(kpiCardItemSchema),
+});
+
+export type ImpactDashboard = z.infer<typeof impactDashboardSchema>;
+
+const taxonomyLossItemSchema = z.object({
+  label: z.string(),
+  lossSum: z.number(),
+  caseCount: z.number(),
+});
+
+export type TaxonomyLossItem = z.infer<typeof taxonomyLossItemSchema>;
+
+const detectionVelocityPointSchema = z.object({
+  period: z.string(),
+  proactive: z.number(),
+  reactive: z.number(),
+  total: z.number(),
+});
+
+export type DetectionVelocityPoint = z.infer<
+  typeof detectionVelocityPointSchema
+>;
+
+const pipelineFunnelStageSchema = z.object({
+  stage: z.string(),
+  count: z.number(),
+});
+
+export type PipelineFunnelStage = z.infer<typeof pipelineFunnelStageSchema>;
+
+const cumulativeIndicatorPointSchema = z.object({
+  period: z.string(),
+  bank: z.number(),
+  crypto: z.number(),
+  email: z.number(),
+  phone: z.number(),
+  other: z.number(),
+});
+
+export type CumulativeIndicatorPoint = z.infer<
+  typeof cumulativeIndicatorPointSchema
+>;
+
+// ---------------------------------------------------------------------------
+// Campaign Intelligence types (S3-20)
+// ---------------------------------------------------------------------------
+
+const threatCampaignSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  status: z.string(),
+  caseCount: z.number(),
+  indicatorCount: z.number(),
+  lossSum: z.number(),
+  victimCount: z.number(),
+  riskScore: z.number(),
+  firstCaseAt: z.string().nullable().optional(),
+  lastCaseAt: z.string().nullable().optional(),
+  createdAt: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional(),
+});
+
+export type ThreatCampaign = z.infer<typeof threatCampaignSchema>;
+
+const threatCampaignListSchema = z.object({
+  items: z.array(threatCampaignSchema),
+  count: z.number(),
+});
+
+export type ThreatCampaignList = z.infer<typeof threatCampaignListSchema>;
+
+const threatCampaignDetailSchema = threatCampaignSchema.extend({
+  cases: z.array(z.record(z.unknown())).optional(),
+  entityTypes: z.array(z.string()).optional(),
+  ssiLinks: z.array(z.record(z.unknown())).optional(),
+});
+
+export type ThreatCampaignDetail = z.infer<typeof threatCampaignDetailSchema>;
+
+const campaignTimelinePointSchema = z.object({
+  date: z.string(),
+  count: z.number(),
+});
+
+export type CampaignTimelinePoint = z.infer<typeof campaignTimelinePointSchema>;
+
+// Report types (S3-20)
+
+const reportLibraryItemSchema = z.object({
+  reportId: z.string(),
+  template: z.string(),
+  scope: z.string(),
+  tlp: z.string(),
+  status: z.string(),
+  createdAt: z.string(),
+  createdBy: z.string(),
+});
+
+export type ReportLibraryItem = z.infer<typeof reportLibraryItemSchema>;
+
+const reportLibraryResponseSchema = z.object({
+  items: z.array(reportLibraryItemSchema),
+  count: z.number(),
+});
+
+export type ReportLibraryResponse = z.infer<typeof reportLibraryResponseSchema>;
+
+// LEA Referral types (S3-20)
+
+const leaSuggestionSchema = z.object({
+  suggestionId: z.string(),
+  targetType: z.string(),
+  targetId: z.string(),
+  targetLabel: z.string(),
+  reasons: z.array(z.string()),
+  lossSum: z.number(),
+  caseCount: z.number(),
+  riskScore: z.number(),
+  ecxCorroborated: z.boolean(),
+});
+
+export type LeaSuggestion = z.infer<typeof leaSuggestionSchema>;
+
+const leaSuggestionResponseSchema = z.object({
+  suggestions: z.array(leaSuggestionSchema),
+  count: z.number(),
+});
+
+export type LeaSuggestionResponse = z.infer<typeof leaSuggestionResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Impact / Campaign / Report list options
+// ---------------------------------------------------------------------------
+
+export interface ImpactDashboardOptions {
+  days?: number;
+}
+
+export interface CampaignListOptions {
+  status?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface ReportLibraryOptions {
+  limit?: number;
+  template?: string;
+}
 
 // ---------------------------------------------------------------------------
 // Entity/Indicator list options
@@ -1027,6 +1221,104 @@ export function createClient(config: ClientConfig): I4GClient {
       }
       return response.blob();
     },
+    // Impact Dashboard (S3-19)
+    getImpactDashboard(options) {
+      const query = new URLSearchParams();
+      if (options?.days) query.set("days", String(options.days));
+      const qs = query.toString();
+      const path = qs ? `/impact/dashboard?${qs}` : "/impact/dashboard";
+      return request(path, impactDashboardSchema);
+    },
+    getImpactLoss() {
+      return request(
+        "/impact/loss-by-taxonomy",
+        z.array(taxonomyLossItemSchema),
+      );
+    },
+    getDetectionVelocity() {
+      return request(
+        "/impact/detection-velocity",
+        z.array(detectionVelocityPointSchema),
+      );
+    },
+    getPipelineFunnel() {
+      return request(
+        "/impact/pipeline-funnel",
+        z.array(pipelineFunnelStageSchema),
+      );
+    },
+    getCumulativeIndicators() {
+      return request(
+        "/impact/cumulative-indicators",
+        z.array(cumulativeIndicatorPointSchema),
+      );
+    },
+    // Campaign Intelligence (S3-20)
+    listThreatCampaigns(options) {
+      const query = new URLSearchParams();
+      if (options?.status) query.set("status", options.status);
+      if (options?.limit) query.set("limit", String(options.limit));
+      if (options?.offset) query.set("offset", String(options.offset));
+      const qs = query.toString();
+      const path = qs
+        ? `/intelligence/campaigns?${qs}`
+        : "/intelligence/campaigns";
+      return request(path, threatCampaignListSchema);
+    },
+    getThreatCampaign(campaignId) {
+      return request(
+        `/intelligence/campaigns/${encodeURIComponent(campaignId)}`,
+        threatCampaignDetailSchema,
+      );
+    },
+    getCampaignTimeline(campaignId) {
+      return request(
+        `/intelligence/campaigns/${encodeURIComponent(campaignId)}/timeline`,
+        z.array(campaignTimelinePointSchema),
+      );
+    },
+    getCampaignGraph(campaignId) {
+      return request(
+        `/intelligence/campaigns/${encodeURIComponent(campaignId)}/graph`,
+        graphPayloadSchema,
+      );
+    },
+    async manageCampaign(campaignId, action, payload) {
+      const body = { action, ...payload };
+      return request(
+        `/intelligence/campaigns/${encodeURIComponent(campaignId)}/manage`,
+        z.object({ status: z.string() }),
+        { method: "POST", body: JSON.stringify(body) },
+      );
+    },
+    // Reports (S3-20)
+    async generateReport(template, scope, tlp) {
+      const body: Record<string, string> = { template, scope };
+      if (tlp) body.tlp = tlp;
+      return request(
+        "/reports/generate",
+        z.object({ reportId: z.string(), status: z.string() }),
+        { method: "POST", body: JSON.stringify(body) },
+      );
+    },
+    listReports(options) {
+      const query = new URLSearchParams();
+      if (options?.limit) query.set("limit", String(options.limit));
+      if (options?.template) query.set("template", options.template);
+      const qs = query.toString();
+      const path = qs ? `/reports/library?${qs}` : "/reports/library";
+      return request(path, reportLibraryResponseSchema);
+    },
+    // LEA Referrals (S3-20)
+    getLeaSuggestions(limit) {
+      const query = new URLSearchParams();
+      if (limit) query.set("limit", String(limit));
+      const qs = query.toString();
+      const path = qs
+        ? `/intelligence/lea-suggestions?${qs}`
+        : "/intelligence/lea-suggestions";
+      return request(path, leaSuggestionResponseSchema);
+    },
   };
 }
 
@@ -1038,10 +1330,20 @@ export { createMockClient } from "./__fixtures__/index";
 
 export {
   analyticsOverviewSchema,
+  campaignTimelinePointSchema,
   casesResponseSchema,
+  cumulativeIndicatorPointSchema,
   dashboardOverviewSchema,
+  detectionVelocityPointSchema,
   dossierListRequestSchema,
+  impactDashboardSchema,
+  leaSuggestionResponseSchema,
+  pipelineFunnelStageSchema,
+  reportLibraryResponseSchema,
   searchRequestSchema,
   searchResponseSchema,
+  taxonomyLossItemSchema,
   taxonomyResponseSchema,
+  threatCampaignDetailSchema,
+  threatCampaignListSchema,
 };

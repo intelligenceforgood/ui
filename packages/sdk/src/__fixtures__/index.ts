@@ -8,18 +8,29 @@
 import { z } from "zod";
 import type {
   AnalyticsOverview,
+  CampaignTimelinePoint,
   CasesResponse,
   DashboardOverview,
+  DetectionVelocityPoint,
   DossierListResponse,
   DossierListOptions,
   DossierRecord,
   DossierVerificationReport,
+  GraphPayload,
   I4GClient,
+  ImpactDashboard,
+  LeaSuggestionResponse,
+  PipelineFunnelStage,
+  ReportLibraryResponse,
   SearchResponse,
   SearchRequestInput,
   SearchResult,
   SearchFacet,
+  TaxonomyLossItem,
   TaxonomyResponse,
+  ThreatCampaignDetail,
+  ThreatCampaignList,
+  CumulativeIndicatorPoint,
   DetokenizeResponse,
 } from "../index";
 import { searchRequestSchema, dossierListRequestSchema } from "../index";
@@ -786,6 +797,63 @@ export function createMockClient(): I4GClient {
     },
     async exportIndicators() {
       return new Blob([""], { type: "text/csv" });
+    },
+    // Impact Dashboard (Sprint 3)
+    async getImpactDashboard() {
+      return {
+        kpis: [],
+        period: "30d",
+      } as ImpactDashboard;
+    },
+    async getImpactLoss() {
+      return [] as TaxonomyLossItem[];
+    },
+    async getDetectionVelocity() {
+      return [] as DetectionVelocityPoint[];
+    },
+    async getPipelineFunnel() {
+      return [] as PipelineFunnelStage[];
+    },
+    async getCumulativeIndicators() {
+      return [] as CumulativeIndicatorPoint[];
+    },
+    // Campaign Intelligence (Sprint 3)
+    async listThreatCampaigns() {
+      return { items: [], count: 0 } as ThreatCampaignList;
+    },
+    async getThreatCampaign(campaignId: string) {
+      return {
+        id: campaignId,
+        name: `Campaign ${campaignId}`,
+        status: "active",
+        caseCount: 0,
+        indicatorCount: 0,
+        lossSum: 0,
+        riskScore: 0,
+        victimCount: 0,
+        firstCaseAt: null,
+        entityTypes: [],
+      } as ThreatCampaignDetail;
+    },
+    async getCampaignTimeline() {
+      return [] as CampaignTimelinePoint[];
+    },
+    async getCampaignGraph() {
+      return { nodes: [], edges: [] } as GraphPayload;
+    },
+    async manageCampaign() {
+      return { status: "ok" };
+    },
+    // Reports (Sprint 3)
+    async generateReport() {
+      return { reportId: "mock-report-1", status: "completed" };
+    },
+    async listReports() {
+      return { items: [], count: 0 } as ReportLibraryResponse;
+    },
+    // LEA Referrals (Sprint 3)
+    async getLeaSuggestions() {
+      return { suggestions: [], count: 0 } as LeaSuggestionResponse;
     },
   };
 }

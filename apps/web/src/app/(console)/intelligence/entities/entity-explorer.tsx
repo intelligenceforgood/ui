@@ -50,6 +50,14 @@ export default function EntityExplorer({ initialParams }: EntityExplorerProps) {
   const [descending, setDescending] = useState(true);
   const [offset, setOffset] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [entityTypes, setEntityTypes] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/intelligence/entities/types")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((types: string[]) => setEntityTypes(types))
+      .catch(() => {});
+  }, []);
 
   const fetchEntities = useCallback(async () => {
     setLoading(true);
@@ -130,6 +138,7 @@ export default function EntityExplorer({ initialParams }: EntityExplorerProps) {
   return (
     <div className="flex gap-6">
       <EntityFilterSidebar
+        entityTypes={entityTypes}
         entityType={entityType}
         onEntityTypeChange={(v) => {
           setEntityType(v);

@@ -16,6 +16,8 @@ import {
   Globe,
   ListChecks,
   FileCheck2,
+  FileText,
+  BookOpen,
   Users,
   ShieldAlert,
   History,
@@ -49,9 +51,26 @@ const navItems: NavItem[] = [
   { href: "/cases", label: "Cases & Tasks", icon: CaseSensitive },
   {
     href: "/reports/dossiers",
-    label: "Evidence dossiers",
+    label: "Reports",
     icon: FileCheck2,
     minRole: "analyst",
+    children: [
+      {
+        href: "/reports/dossiers",
+        label: "Evidence Dossiers",
+        icon: FileCheck2,
+      },
+      {
+        href: "/reports/library",
+        label: "Report Library",
+        icon: BookOpen,
+      },
+      {
+        href: "/reports/builder",
+        label: "Report Builder",
+        icon: FileText,
+      },
+    ],
   },
   {
     href: "/intelligence",

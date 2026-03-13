@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { Card, Badge } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
+import type { LeaSuggestion } from "@i4g/sdk";
 import {
   ShieldAlert,
   ListChecks,
   Layers,
   TrendingUp,
   PieChart,
+  Scale,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +21,10 @@ export const metadata: Metadata = {
 
 export default async function IntelligenceDashboardPage() {
   const client = getI4GClient();
-  const widgets = await client.getDashboardWidgets();
+  const [widgets, leaResponse] = await Promise.all([
+    client.getDashboardWidgets(),
+    client.getLeaSuggestions(5),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -102,6 +107,42 @@ export default async function IntelligenceDashboardPage() {
                 </Card>
               ),
             )}
+          </div>
+        </section>
+      )}
+
+      {leaResponse.suggestions.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Scale className="h-4 w-4 text-red-500" />
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+              LEA Referral Suggestions
+            </h2>
+            <Badge variant="danger">{leaResponse.count}</Badge>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {leaResponse.suggestions.map((suggestion: LeaSuggestion) => (
+              <Card
+                key={suggestion.suggestionId}
+                className="space-y-2 border-red-100"
+              >
+                <div className="flex items-start justify-between">
+                  <span className="text-sm font-semibold text-slate-900">
+                    {suggestion.targetLabel}
+                  </span>
+                  <Badge variant="danger">
+                    Score: {suggestion.riskScore.toFixed(1)}
+                  </Badge>
+                </div>
+                <p className="text-xs text-slate-500">
+                  {suggestion.reasons.join("; ")}
+                </p>
+                <div className="flex gap-4 text-xs text-slate-400">
+                  <span>Loss: ${suggestion.lossSum.toLocaleString()}</span>
+                  <span>Cases: {suggestion.caseCount}</span>
+                </div>
+              </Card>
+            ))}
           </div>
         </section>
       )}

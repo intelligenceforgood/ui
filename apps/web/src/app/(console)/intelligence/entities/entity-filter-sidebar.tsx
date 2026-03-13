@@ -3,20 +3,10 @@
 import { Button, Input } from "@i4g/ui-kit";
 import { SlidersHorizontal, X } from "lucide-react";
 
-const ENTITY_TYPES = [
-  "person",
-  "phone",
-  "email",
-  "crypto_wallet",
-  "bank_account",
-  "ip_address",
-  "domain",
-  "organization",
-];
-
 const STATUSES = ["active", "inactive", "flagged"];
 
 interface EntityFilterSidebarProps {
+  entityTypes: string[];
   entityType: string;
   onEntityTypeChange: (v: string) => void;
   status: string;
@@ -29,6 +19,7 @@ interface EntityFilterSidebarProps {
 }
 
 export function EntityFilterSidebar({
+  entityTypes,
   entityType,
   onEntityTypeChange,
   status,
@@ -65,7 +56,7 @@ export function EntityFilterSidebar({
           Entity Type
         </label>
         <div className="space-y-1">
-          {ENTITY_TYPES.map((t) => (
+          {entityTypes.map((t) => (
             <label key={t} className="flex items-center gap-2 text-sm">
               <input
                 type="radio"

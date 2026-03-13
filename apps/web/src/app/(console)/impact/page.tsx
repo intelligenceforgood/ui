@@ -3,17 +3,14 @@ import type { ReactNode } from "react";
 import nextDynamic from "next/dynamic";
 import { Badge, Card, FeedbackButton } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
-import type { AnalyticsMetric } from "@i4g/sdk";
+import type { KpiCardItem } from "@i4g/sdk";
 import { Activity, TrendingDown, TrendingUp } from "lucide-react";
 
-const AnalyticsCharts = nextDynamic(
-  () => import("../analytics/analytics-charts"),
-  {
-    loading: () => (
-      <div className="h-96 animate-pulse rounded-2xl bg-slate-100" />
-    ),
-  },
-);
+const ImpactCharts = nextDynamic(() => import("./impact-charts"), {
+  loading: () => (
+    <div className="h-96 animate-pulse rounded-2xl bg-slate-100" />
+  ),
+});
 
 export const dynamic = "force-dynamic";
 
@@ -23,24 +20,32 @@ export const metadata: Metadata = {
     "Monitor program impact, detection health, and pipeline throughput.",
 };
 
-const trendIconMap: Record<AnalyticsMetric["trend"], ReactNode> = {
-  up: <TrendingUp className="h-3 w-3" />,
-  down: <TrendingDown className="h-3 w-3" />,
-  flat: <Activity className="h-3 w-3" />,
-};
+function trendIcon(change: string | null | undefined): ReactNode {
+  if (!change) return <Activity className="h-3 w-3" />;
+  if (change.startsWith("+")) return <TrendingUp className="h-3 w-3" />;
+  if (change.startsWith("-")) return <TrendingDown className="h-3 w-3" />;
+  return <Activity className="h-3 w-3" />;
+}
 
-const trendColorMap: Record<
-  AnalyticsMetric["trend"],
-  "success" | "danger" | "default"
-> = {
-  up: "success",
-  down: "danger",
-  flat: "default",
-};
+function trendColor(
+  change: string | null | undefined,
+): "success" | "danger" | "default" {
+  if (!change) return "default";
+  if (change.startsWith("+")) return "success";
+  if (change.startsWith("-")) return "danger";
+  return "default";
+}
 
 export default async function ImpactPage() {
   const client = getI4GClient();
-  const analytics = await client.getAnalyticsOverview();
+  const [dashboard, lossByTaxonomy, velocity, funnel, cumulative] =
+    await Promise.all([
+      client.getImpactDashboard(),
+      client.getImpactLoss(),
+      client.getDetectionVelocity(),
+      client.getPipelineFunnel(),
+      client.getCumulativeIndicators(),
+    ]);
 
   return (
     <div className="space-y-8">
@@ -62,26 +67,36 @@ export default async function ImpactPage() {
           feedbackId="impact.metrics"
           className="absolute -top-1 right-0 z-10"
         />
-        {analytics.metrics.map((metric) => (
-          <Card key={metric.id} className="space-y-2">
+        {dashboard.kpis.map((kpi: KpiCardItem) => (
+          <Card key={kpi.label} className="space-y-2">
             <div className="flex items-start justify-between">
               <span className="text-sm font-medium text-slate-500">
-                {metric.label}
+                {kpi.label}
               </span>
-              <Badge variant={trendColorMap[metric.trend]} className="gap-1">
-                {trendIconMap[metric.trend]}
-                {metric.change}
+              <Badge variant={trendColor(kpi.change)} className="gap-1">
+                {trendIcon(kpi.change)}
+                {kpi.change ?? "—"}
               </Badge>
             </div>
             <p className="text-3xl font-semibold text-slate-900">
-              {metric.value}
+              {kpi.value}
+              {kpi.unit ? (
+                <span className="ml-1 text-base text-slate-400">
+                  {kpi.unit}
+                </span>
+              ) : null}
             </p>
           </Card>
         ))}
       </section>
 
       <div className="group relative">
-        <AnalyticsCharts data={analytics} />
+        <ImpactCharts
+          lossByTaxonomy={lossByTaxonomy}
+          velocity={velocity}
+          funnel={funnel}
+          cumulative={cumulative}
+        />
         <FeedbackButton
           feedbackId="impact.charts"
           className="absolute top-2 right-2 z-10"

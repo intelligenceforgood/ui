@@ -15,7 +15,7 @@ export async function GET(
     process.env.I4G_API_URL ||
     process.env.NEXT_PUBLIC_API_BASE_URL ||
     "http://127.0.0.1:8000";
-  const targetUrl = `${apiUrl}/${path}`;
+  const targetUrl = `${apiUrl}/${path}${request.nextUrl.search}`;
 
   // Get Auth Headers (IAP support)
   const headers = await getIapHeaders();
@@ -57,10 +57,7 @@ export async function GET(
   }
 }
 
-// We can add POST/PUT/DELETE handlers if we want a full proxy,
-// but for artifacts GET is sufficient.
-// If valid API usage relies on this proxy for other methods, we should add them.
-// Given strict instructions, let's add POST/PUT/DELETE to be safe and robust.
+// Full proxy: POST/PUT/DELETE/PATCH forward all mutating requests to the API.
 
 export async function POST(
   req: NextRequest,
