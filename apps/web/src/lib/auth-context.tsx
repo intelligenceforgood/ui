@@ -3,7 +3,7 @@
 import { createContext, useContext, type ReactNode } from "react";
 
 /** Role constants matching the backend Role enum. */
-export type UserRole = "user" | "analyst" | "admin" | "leo";
+export type UserRole = "researcher" | "user" | "analyst" | "admin" | "leo";
 
 export interface AuthUser {
   email: string;
@@ -28,10 +28,11 @@ const AuthContext = createContext<AuthContextValue>({
 
 /** Role hierarchy — admin always has all permissions. */
 const ROLE_HIERARCHY: Record<UserRole, Set<UserRole>> = {
-  user: new Set(),
-  analyst: new Set(["user"]),
-  leo: new Set(["user", "analyst"]),
-  admin: new Set(["user", "analyst", "leo"]),
+  researcher: new Set(),
+  user: new Set(["researcher"]),
+  analyst: new Set(["researcher", "user"]),
+  leo: new Set(["researcher", "user", "analyst"]),
+  admin: new Set(["researcher", "user", "analyst", "leo"]),
 };
 
 function checkRole(userRole: UserRole, requiredRole: UserRole): boolean {

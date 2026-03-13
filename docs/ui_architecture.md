@@ -50,13 +50,21 @@ ui/
 
 ## Navigation & Layout
 
-Top-level navigation uses a responsive side rail (collapsible on mobile) with tabs for:
+Top-level navigation uses a responsive side rail (collapsible on mobile) with two groups:
 
-1. **Dashboard** – Alerts, intake volume, case backlog, quick actions.
-2. **Search** – Structured filters, saved searches, paginated results with summary cards and inline actions.
-3. **Cases & Tasks** – Kanban/table views, assignment workflows.
-4. **Taxonomy** – Manage fraud types, variant metadata.
-5. **Analytics** – Trend charts, segmentation by taxonomy, competition leaderboards (future).
+**Intelligence** (Sprint 2):
+
+1. **Entity Explorer** – Browse, search, and filter threat entities (wallets, emails, phone numbers). Drill into entity detail with co-occurrence graph and activity sparkline.
+2. **Indicator Registry** – Segmented indicator list with category tabs, bulk actions, confidence filters, and STIX export.
+3. **Intelligence Dashboard** – Widget-based overview with entity, indicator, campaign, and platform KPI cards plus trend sparklines.
+
+**Impact** (original pages, reorganized):
+
+4. **Dashboard** – Alerts, intake volume, case backlog, quick actions.
+5. **Search** – Structured filters, saved searches, paginated results with summary cards and inline actions.
+6. **Cases & Tasks** – Kanban/table views, assignment workflows.
+7. **Taxonomy** – Manage fraud types, variant metadata.
+8. **Analytics** – Trend charts, segmentation by taxonomy, competition leaderboards (future).
 
 Each page integrates contextual help (linking analysts to doc placeholders under `docs/user-guide.md`). Icons can be swapped for branded assets later.
 

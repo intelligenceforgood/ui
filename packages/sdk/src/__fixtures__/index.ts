@@ -722,5 +722,70 @@ export function createMockClient(): I4GClient {
         createdAt: new Date().toISOString(),
       };
     },
+    async getEntities() {
+      return { items: [], count: 0, limit: 50, offset: 0 };
+    },
+    async getEntity(entityType: string, canonicalValue: string) {
+      return {
+        entityType,
+        canonicalValue,
+        caseCount: 3,
+        victimCount: 2,
+        lossSum: 15000,
+        lossCurrency: "USD",
+        maxRiskScore: 72,
+        avgRiskScore: 55,
+        firstSeenAt: "2025-01-01T00:00:00Z",
+        lastSeenAt: "2025-06-01T00:00:00Z",
+        status: "active",
+        campaigns: [],
+      };
+    },
+    async getIndicators() {
+      return { items: [], count: 0, limit: 50, offset: 0 };
+    },
+    async getIndicator(indicatorId: string) {
+      return {
+        indicatorId,
+        category: "bank_account",
+        item: null,
+        type: "bank_account",
+        indicatorValue: "****1234",
+        caseCount: 1,
+        lossSum: 5000,
+        maxRiskScore: 40,
+      };
+    },
+    async getDashboardWidgets() {
+      return {
+        activeThreats: 12,
+        newIndicators: 45,
+        emergingCampaigns: 3,
+        lossTrend: [{ period: "2025-W01", loss: 50000 }],
+        sourceBreakdown: [
+          { source: "proactive", count: 20 },
+          { source: "reactive", count: 15 },
+        ],
+      };
+    },
+    async getEntityActivity() {
+      return [
+        { week: "2025-W01", caseCount: 2 },
+        { week: "2025-W02", caseCount: 5 },
+      ];
+    },
+    async getEntityNeighbors(entityType: string, canonicalValue: string) {
+      return {
+        seed: `${entityType}:${canonicalValue}`,
+        nodes: [],
+        edges: [],
+      };
+    },
+    async exportEntities() {
+      return new Blob([""], { type: "text/csv" });
+    },
+    async exportIndicators() {
+      return new Blob([""], { type: "text/csv" });
+    },
   };
 }

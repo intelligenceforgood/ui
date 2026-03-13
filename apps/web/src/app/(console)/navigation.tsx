@@ -23,6 +23,10 @@ import {
   Wallet,
   Rss,
   TrendingUp,
+  Radar,
+  Network,
+  BarChart3,
+  Gauge,
 } from "lucide-react";
 import { UserPreferences } from "@/components/user-preferences";
 import { FeedbackButton } from "@i4g/ui-kit";
@@ -41,7 +45,6 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/search", label: "Search", icon: Search },
-  { href: "/accounts", label: "Account list", icon: ListChecks },
   { href: "/discovery", label: "Discovery", icon: Globe },
   { href: "/cases", label: "Cases & Tasks", icon: CaseSensitive },
   {
@@ -51,17 +54,43 @@ const navItems: NavItem[] = [
     minRole: "analyst",
   },
   {
-    href: "/campaigns",
-    label: "Campaigns",
-    icon: Layers,
-    minRole: "admin",
-  },
-  { href: "/taxonomy", label: "Taxonomy", icon: Layers },
-  {
-    href: "/analytics",
-    label: "Analytics",
-    icon: LineChart,
+    href: "/intelligence",
+    label: "Intelligence",
+    icon: Radar,
     minRole: "analyst",
+    children: [
+      {
+        href: "/intelligence",
+        label: "Dashboard",
+        icon: Gauge,
+      },
+      {
+        href: "/intelligence/entities",
+        label: "Entity Explorer",
+        icon: Network,
+      },
+      {
+        href: "/intelligence/indicators",
+        label: "Indicator Registry",
+        icon: ListChecks,
+      },
+      {
+        href: "/intelligence/campaigns",
+        label: "Campaigns",
+        icon: Layers,
+        minRole: "admin",
+      },
+    ],
+  },
+  {
+    href: "/impact",
+    label: "Impact",
+    icon: BarChart3,
+    minRole: "analyst",
+    children: [
+      { href: "/impact", label: "Analytics", icon: LineChart },
+      { href: "/impact/taxonomy", label: "Taxonomy", icon: Layers },
+    ],
   },
   {
     href: "/ssi",

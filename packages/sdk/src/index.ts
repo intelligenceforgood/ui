@@ -547,6 +547,34 @@ export interface I4GClient {
   listDossiers(options?: DossierListOptions): Promise<DossierListResponse>;
   verifyDossier(planId: string): Promise<DossierVerificationReport>;
   detokenize(token: string, caseId?: string): Promise<DetokenizeResponse>;
+  // Intelligence (S2-15)
+  getEntities(options?: EntityListOptions): Promise<EntityListResponse>;
+  getEntity(
+    entityType: string,
+    canonicalValue: string,
+  ): Promise<EntityStats & { campaigns: { id: string; name: string }[] }>;
+  getIndicators(options?: IndicatorListOptions): Promise<IndicatorListResponse>;
+  getIndicator(indicatorId: string): Promise<IndicatorStats>;
+  getDashboardWidgets(): Promise<DashboardWidgets>;
+  getEntityActivity(
+    entityType: string,
+    canonicalValue: string,
+  ): Promise<{ week: string; caseCount: number }[]>;
+  getEntityNeighbors(
+    entityType: string,
+    canonicalValue: string,
+  ): Promise<NeighborGraph>;
+  // Exports (S2-16)
+  exportEntities(options?: {
+    fmt?: string;
+    entityType?: string;
+    status?: string;
+  }): Promise<Blob>;
+  exportIndicators(options?: {
+    fmt?: string;
+    category?: string;
+    unmask?: boolean;
+  }): Promise<Blob>;
 }
 
 const detokenizeResponseSchema = z.object({
@@ -560,6 +588,191 @@ const detokenizeResponseSchema = z.object({
 });
 
 export type DetokenizeResponse = z.infer<typeof detokenizeResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Intelligence types (S2-14)
+// ---------------------------------------------------------------------------
+
+const entityStatSchema = z.object({
+  entityType: z.string(),
+  canonicalValue: z.string(),
+  caseCount: z.number(),
+  victimCount: z.number(),
+  lossSum: z.number(),
+  lossCurrency: z.string().default("USD"),
+  maxRiskScore: z.number(),
+  avgRiskScore: z.number(),
+  firstSeenAt: z.string().nullable().optional(),
+  lastSeenAt: z.string().nullable().optional(),
+  status: z.string(),
+  campaignIds: z.array(z.string()).nullable().optional(),
+  topClassifications: z.unknown().nullable().optional(),
+  ecxSubmitted: z.boolean().optional(),
+  ecxHit: z.boolean().optional(),
+  purgeStatus: z.string().nullable().optional(),
+  updatedAt: z.string().optional(),
+});
+
+export type EntityStats = z.infer<typeof entityStatSchema>;
+
+const entityListResponseSchema = z.object({
+  items: z.array(entityStatSchema.passthrough()),
+  count: z.number(),
+  limit: z.number(),
+  offset: z.number(),
+});
+
+export type EntityListResponse = z.infer<typeof entityListResponseSchema>;
+
+const indicatorStatSchema = z.object({
+  indicatorId: z.string(),
+  category: z.string(),
+  item: z.string().nullable().optional(),
+  type: z.string(),
+  indicatorValue: z.string(),
+  caseCount: z.number(),
+  lossSum: z.number(),
+  firstSeenAt: z.string().nullable().optional(),
+  lastSeenAt: z.string().nullable().optional(),
+  maxRiskScore: z.number(),
+  ecxStatus: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+
+export type IndicatorStats = z.infer<typeof indicatorStatSchema>;
+
+const indicatorListResponseSchema = z.object({
+  items: z.array(indicatorStatSchema.passthrough()),
+  count: z.number(),
+  limit: z.number(),
+  offset: z.number(),
+});
+
+export type IndicatorListResponse = z.infer<typeof indicatorListResponseSchema>;
+
+const campaignStatSchema = z.object({
+  campaignId: z.string(),
+  caseCount: z.number(),
+  indicatorCount: z.number(),
+  entityTypes: z.unknown().nullable().optional(),
+  lossSum: z.number(),
+  victimCount: z.number(),
+  riskScore: z.number(),
+  taxonomyRollup: z.unknown().nullable().optional(),
+  firstCaseAt: z.string().nullable().optional(),
+  lastCaseAt: z.string().nullable().optional(),
+  status: z.string(),
+  updatedAt: z.string().optional(),
+});
+
+export type CampaignStats = z.infer<typeof campaignStatSchema>;
+
+const platformKpiSchema = z.object({
+  periodType: z.string(),
+  periodStart: z.string(),
+  totalCases: z.number(),
+  proactiveCases: z.number(),
+  reactiveCases: z.number(),
+  totalLoss: z.number(),
+  newIndicators: z.number(),
+  newEntities: z.number(),
+  siteScans: z.number(),
+  ecxSubmissions: z.number(),
+  casesActioned: z.number(),
+  medianActionHours: z.number().nullable().optional(),
+  updatedAt: z.string().optional(),
+});
+
+export type PlatformKpis = z.infer<typeof platformKpiSchema>;
+
+const graphNodeSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  entityType: z.string(),
+  caseCount: z.number().default(0),
+  riskScore: z.number().default(0),
+  data: z.record(z.unknown()).optional(),
+});
+
+const graphEdgeSchema = z.object({
+  source: z.string(),
+  target: z.string(),
+  weight: z.number().default(1),
+  edgeType: z.string().default("co-occurrence"),
+});
+
+const graphPayloadSchema = z.object({
+  nodes: z.array(graphNodeSchema),
+  edges: z.array(graphEdgeSchema),
+  nodeCount: z.number().optional(),
+  edgeCount: z.number().optional(),
+  layout: z.record(z.object({ x: z.number(), y: z.number() })).optional(),
+});
+
+export type GraphNode = z.infer<typeof graphNodeSchema>;
+export type GraphEdge = z.infer<typeof graphEdgeSchema>;
+export type GraphPayload = z.infer<typeof graphPayloadSchema>;
+
+const dashboardWidgetsSchema = z.object({
+  activeThreats: z.number(),
+  newIndicators: z.number(),
+  emergingCampaigns: z.number(),
+  lossTrend: z.array(z.object({ period: z.string(), loss: z.number() })),
+  sourceBreakdown: z.array(z.object({ source: z.string(), count: z.number() })),
+});
+
+export type DashboardWidgets = z.infer<typeof dashboardWidgetsSchema>;
+
+const activityPointSchema = z.object({
+  week: z.string(),
+  caseCount: z.number(),
+});
+
+const neighborGraphSchema = z.object({
+  seed: z.string(),
+  nodes: z.array(
+    z.object({
+      id: z.string(),
+      label: z.string(),
+      entityType: z.string(),
+      caseCount: z.number().default(0),
+    }),
+  ),
+  edges: z.array(
+    z.object({
+      source: z.string(),
+      target: z.string(),
+      weight: z.number().default(1),
+      edgeType: z.string().default("co-occurrence"),
+    }),
+  ),
+});
+
+export type NeighborGraph = z.infer<typeof neighborGraphSchema>;
+
+// ---------------------------------------------------------------------------
+// Entity/Indicator list options
+// ---------------------------------------------------------------------------
+
+export interface EntityListOptions {
+  entityType?: string;
+  status?: string;
+  minCaseCount?: number;
+  minLoss?: number;
+  orderBy?: string;
+  descending?: boolean;
+  limit?: number;
+  offset?: number;
+}
+
+export interface IndicatorListOptions {
+  category?: string;
+  minCaseCount?: number;
+  orderBy?: string;
+  descending?: boolean;
+  limit?: number;
+  offset?: number;
+}
 
 function buildUrl(baseUrl: string, path: string) {
   if (path.startsWith("http")) {
@@ -693,6 +906,126 @@ export function createClient(config: ClientConfig): I4GClient {
         method: "POST",
         body: JSON.stringify(payload),
       });
+    },
+    // Intelligence methods (S2-15)
+    getEntities(options) {
+      const query = new URLSearchParams();
+      if (options?.entityType) query.set("entity_type", options.entityType);
+      if (options?.status) query.set("status", options.status);
+      if (options?.minCaseCount != null)
+        query.set("min_case_count", String(options.minCaseCount));
+      if (options?.minLoss != null)
+        query.set("min_loss", String(options.minLoss));
+      if (options?.orderBy) query.set("order_by", options.orderBy);
+      if (options?.descending != null)
+        query.set("descending", String(options.descending));
+      if (options?.limit) query.set("limit", String(options.limit));
+      if (options?.offset) query.set("offset", String(options.offset));
+      const qs = query.toString();
+      const path = qs
+        ? `/intelligence/entities?${qs}`
+        : "/intelligence/entities";
+      return request(
+        path,
+        entityListResponseSchema as z.ZodSchema<EntityListResponse>,
+      );
+    },
+    getEntity(entityType, canonicalValue) {
+      const et = encodeURIComponent(entityType);
+      const cv = encodeURIComponent(canonicalValue);
+      return request(
+        `/intelligence/entities/${et}/${cv}`,
+        entityStatSchema.passthrough() as z.ZodSchema,
+      );
+    },
+    getIndicators(options) {
+      const query = new URLSearchParams();
+      if (options?.category) query.set("category", options.category);
+      if (options?.minCaseCount != null)
+        query.set("min_case_count", String(options.minCaseCount));
+      if (options?.orderBy) query.set("order_by", options.orderBy);
+      if (options?.descending != null)
+        query.set("descending", String(options.descending));
+      if (options?.limit) query.set("limit", String(options.limit));
+      if (options?.offset) query.set("offset", String(options.offset));
+      const qs = query.toString();
+      const path = qs
+        ? `/intelligence/indicators?${qs}`
+        : "/intelligence/indicators";
+      return request(
+        path,
+        indicatorListResponseSchema as z.ZodSchema<IndicatorListResponse>,
+      );
+    },
+    getIndicator(indicatorId) {
+      return request(
+        `/intelligence/indicators/${encodeURIComponent(indicatorId)}`,
+        indicatorStatSchema.passthrough() as z.ZodSchema,
+      );
+    },
+    getDashboardWidgets() {
+      return request("/intelligence/dashboard", dashboardWidgetsSchema);
+    },
+    getEntityActivity(entityType, canonicalValue) {
+      const et = encodeURIComponent(entityType);
+      const cv = encodeURIComponent(canonicalValue);
+      return request(
+        `/intelligence/entities/${et}/${cv}/activity`,
+        z.array(activityPointSchema),
+      );
+    },
+    getEntityNeighbors(entityType, canonicalValue) {
+      const et = encodeURIComponent(entityType);
+      const cv = encodeURIComponent(canonicalValue);
+      return request(
+        `/intelligence/entities/${et}/${cv}/neighbors`,
+        neighborGraphSchema as z.ZodSchema<NeighborGraph>,
+      );
+    },
+    // Export methods (S2-16)
+    async exportEntities(options) {
+      const query = new URLSearchParams();
+      if (options?.fmt) query.set("fmt", options.fmt);
+      if (options?.entityType) query.set("entity_type", options.entityType);
+      if (options?.status) query.set("status", options.status);
+      const qs = query.toString();
+      const path = qs ? `/exports/entities?${qs}` : "/exports/entities";
+
+      const headers: Record<string, string> = {
+        ...additionalHeaders,
+      };
+      if (apiKey) headers["X-API-KEY"] = apiKey;
+
+      const response = await fetcher(buildUrl(baseUrl, path), { headers });
+      if (!response.ok) {
+        throw new I4GClientError(
+          `Export failed: ${response.status}`,
+          response.status,
+        );
+      }
+      return response.blob();
+    },
+    async exportIndicators(options) {
+      const query = new URLSearchParams();
+      if (options?.fmt) query.set("fmt", options.fmt);
+      if (options?.category) query.set("category", options.category);
+      if (options?.unmask) query.set("unmask", "true");
+      const qs = query.toString();
+      const path = qs ? `/exports/indicators?${qs}` : "/exports/indicators";
+
+      const headers: Record<string, string> = {
+        ...additionalHeaders,
+      };
+      if (apiKey) headers["X-API-KEY"] = apiKey;
+
+      const response = await fetcher(buildUrl(baseUrl, path), { headers });
+      if (!response.ok) {
+        throw new I4GClientError(
+          `Export failed: ${response.status}`,
+          response.status,
+        );
+      }
+      return response.blob();
     },
   };
 }
