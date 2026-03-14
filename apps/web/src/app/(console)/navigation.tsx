@@ -32,6 +32,7 @@ import {
   Clock,
   Map,
   GitBranch,
+  Eye,
 } from "lucide-react";
 import { UserPreferences } from "@/components/user-preferences";
 import { FeedbackButton } from "@i4g/ui-kit";
@@ -111,6 +112,11 @@ const navItems: NavItem[] = [
         href: "/intelligence/timeline",
         label: "Timeline",
         icon: Clock,
+      },
+      {
+        href: "/intelligence/watchlist",
+        label: "Watchlist",
+        icon: Eye,
       },
     ],
   },

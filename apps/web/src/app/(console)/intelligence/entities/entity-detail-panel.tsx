@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Badge, Button, Card } from "@i4g/ui-kit";
 import type { EntityStats } from "@i4g/sdk";
-import { X, Activity, Network, Download, Flag } from "lucide-react";
+import { X, Activity, Network, Download, Flag, Eye } from "lucide-react";
 import { AnnotationPanel } from "../components/annotation-panel";
 import { EntityStatusBadge } from "../components/entity-status-badge";
 
@@ -210,6 +210,25 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
             <Button variant="secondary" size="sm">
               <Download className="mr-1 h-3.5 w-3.5" />
               Export Summary
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={async () => {
+                await fetch("/api/intelligence/watchlist", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    entityType: entity.entityType,
+                    canonicalValue: entity.canonicalValue,
+                    alertOnNewCase: true,
+                    alertOnLossIncrease: false,
+                  }),
+                });
+              }}
+            >
+              <Eye className="mr-1 h-3.5 w-3.5" />
+              Pin to Watchlist
             </Button>
             <Button
               variant="secondary"

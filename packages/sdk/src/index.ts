@@ -656,6 +656,32 @@ export interface I4GClient {
     action: string,
     options?: { tag?: string; status?: string },
   ): Promise<BulkActionResult>;
+  // Sprint 5: Watchlist
+  addToWatchlist(item: WatchlistItemInput): Promise<WatchlistItem>;
+  listWatchlistItems(options?: {
+    entityType?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<WatchlistListResponse>;
+  updateWatchlistItem(
+    watchlistId: string,
+    update: WatchlistUpdateInput,
+  ): Promise<WatchlistItem>;
+  removeFromWatchlist(watchlistId: string): Promise<{ deleted: boolean }>;
+  getWatchlistAlerts(options?: {
+    unreadOnly?: boolean;
+    limit?: number;
+  }): Promise<WatchlistAlert[]>;
+  markAlertRead(alertId: string): Promise<{ markedRead: boolean }>;
+  markAllAlertsRead(): Promise<{ markedRead: number }>;
+  // Sprint 5: Scheduled Reports
+  createReportSchedule(schedule: ReportScheduleInput): Promise<ReportSchedule>;
+  listReportSchedules(): Promise<ReportSchedule[]>;
+  updateReportSchedule(
+    scheduleId: string,
+    update: Partial<ReportScheduleInput>,
+  ): Promise<ReportSchedule>;
+  deleteReportSchedule(scheduleId: string): Promise<{ deleted: boolean }>;
 }
 
 const detokenizeResponseSchema = z.object({
@@ -772,6 +798,7 @@ const graphNodeSchema = z.object({
   entityType: z.string(),
   caseCount: z.number(),
   riskScore: z.number(),
+  clusterId: z.number().optional(),
   data: z.record(z.unknown()).optional(),
 });
 
@@ -782,17 +809,113 @@ const graphEdgeSchema = z.object({
   edgeType: z.string(),
 });
 
+const clusterSummarySchema = z.object({
+  clusterId: z.number(),
+  nodeCount: z.number(),
+  primaryEntityType: z.string(),
+  totalCases: z.number(),
+  avgRiskScore: z.number(),
+});
+
+export type ClusterSummary = z.infer<typeof clusterSummarySchema>;
+
 const graphPayloadSchema = z.object({
   nodes: z.array(graphNodeSchema),
   edges: z.array(graphEdgeSchema),
   nodeCount: z.number().optional(),
   edgeCount: z.number().optional(),
   layout: z.record(z.object({ x: z.number(), y: z.number() })).optional(),
+  clusters: z.array(clusterSummarySchema).optional(),
 });
 
 export type GraphNode = z.infer<typeof graphNodeSchema>;
 export type GraphEdge = z.infer<typeof graphEdgeSchema>;
 export type GraphPayload = z.infer<typeof graphPayloadSchema>;
+
+// ---------------------------------------------------------------------------
+// Watchlist types (S5-07)
+// ---------------------------------------------------------------------------
+
+const watchlistItemSchema = z.object({
+  watchlistId: z.string(),
+  entityType: z.string(),
+  canonicalValue: z.string(),
+  alertOnNewCase: z.boolean(),
+  alertOnLossIncrease: z.boolean(),
+  lossThreshold: z.number().nullable().optional(),
+  note: z.string().nullable().optional(),
+  createdBy: z.string(),
+  createdAt: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional(),
+});
+
+export type WatchlistItem = z.infer<typeof watchlistItemSchema>;
+
+export interface WatchlistItemInput {
+  entityType: string;
+  canonicalValue: string;
+  alertOnNewCase?: boolean;
+  alertOnLossIncrease?: boolean;
+  lossThreshold?: number | null;
+  note?: string | null;
+}
+
+export interface WatchlistUpdateInput {
+  alertOnNewCase?: boolean;
+  alertOnLossIncrease?: boolean;
+  lossThreshold?: number | null;
+  note?: string | null;
+}
+
+const watchlistListResponseSchema = z.object({
+  items: z.array(watchlistItemSchema),
+  count: z.number(),
+  limit: z.number(),
+  offset: z.number(),
+});
+
+export type WatchlistListResponse = z.infer<typeof watchlistListResponseSchema>;
+
+const watchlistAlertSchema = z.object({
+  alertId: z.string(),
+  watchlistId: z.string(),
+  alertType: z.string(),
+  message: z.string(),
+  isRead: z.boolean(),
+  data: z.record(z.unknown()).nullable().optional(),
+  createdAt: z.string().nullable().optional(),
+});
+
+export type WatchlistAlert = z.infer<typeof watchlistAlertSchema>;
+
+// ---------------------------------------------------------------------------
+// Scheduled Report types (S5-15)
+// ---------------------------------------------------------------------------
+
+const reportScheduleSchema = z.object({
+  scheduleId: z.string(),
+  template: z.string(),
+  cadence: z.string(),
+  scope: z.record(z.unknown()).nullable().optional(),
+  options: z.record(z.unknown()).nullable().optional(),
+  recipients: z.array(z.string()).nullable().optional(),
+  isActive: z.boolean(),
+  createdBy: z.string(),
+  lastRunAt: z.string().nullable().optional(),
+  nextRunAt: z.string().nullable().optional(),
+  createdAt: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional(),
+});
+
+export type ReportSchedule = z.infer<typeof reportScheduleSchema>;
+
+export interface ReportScheduleInput {
+  template: string;
+  cadence: string;
+  scope?: Record<string, unknown>;
+  options?: Record<string, unknown>;
+  recipients?: string[];
+}
 
 const dashboardWidgetsSchema = z.object({
   activeThreats: z.number(),
@@ -1647,6 +1770,87 @@ export function createClient(config: ClientConfig): I4GClient {
         }),
       });
     },
+    // Sprint 5: Watchlist
+    addToWatchlist(item) {
+      return request("/intelligence/watchlist", watchlistItemSchema, {
+        method: "POST",
+        body: JSON.stringify(item),
+      });
+    },
+    listWatchlistItems(options) {
+      const query = new URLSearchParams();
+      if (options?.entityType) query.set("entity_type", options.entityType);
+      if (options?.limit) query.set("limit", String(options.limit));
+      if (options?.offset) query.set("offset", String(options.offset));
+      const qs = query.toString();
+      return request(
+        qs ? `/intelligence/watchlist?${qs}` : "/intelligence/watchlist",
+        watchlistListResponseSchema,
+      );
+    },
+    updateWatchlistItem(watchlistId, update) {
+      return request(
+        `/intelligence/watchlist/${watchlistId}`,
+        watchlistItemSchema,
+        { method: "PUT", body: JSON.stringify(update) },
+      );
+    },
+    removeFromWatchlist(watchlistId) {
+      return request(
+        `/intelligence/watchlist/${watchlistId}`,
+        z.object({ deleted: z.boolean() }),
+        { method: "DELETE" },
+      );
+    },
+    getWatchlistAlerts(options) {
+      const query = new URLSearchParams();
+      if (options?.unreadOnly) query.set("unread_only", "true");
+      if (options?.limit) query.set("limit", String(options.limit));
+      const qs = query.toString();
+      return request(
+        qs
+          ? `/intelligence/watchlist/alerts?${qs}`
+          : "/intelligence/watchlist/alerts",
+        z.array(watchlistAlertSchema),
+      );
+    },
+    markAlertRead(alertId) {
+      return request(
+        `/intelligence/watchlist/alerts/${alertId}/read`,
+        z.object({ markedRead: z.boolean() }),
+        { method: "POST" },
+      );
+    },
+    markAllAlertsRead() {
+      return request(
+        "/intelligence/watchlist/alerts/read-all",
+        z.object({ markedRead: z.number() }),
+        { method: "POST" },
+      );
+    },
+    // Sprint 5: Scheduled Reports
+    createReportSchedule(schedule) {
+      return request("/reports/schedules", reportScheduleSchema, {
+        method: "POST",
+        body: JSON.stringify(schedule),
+      });
+    },
+    listReportSchedules() {
+      return request("/reports/schedules", z.array(reportScheduleSchema));
+    },
+    updateReportSchedule(scheduleId, update) {
+      return request(`/reports/schedules/${scheduleId}`, reportScheduleSchema, {
+        method: "PUT",
+        body: JSON.stringify(update),
+      });
+    },
+    deleteReportSchedule(scheduleId) {
+      return request(
+        `/reports/schedules/${scheduleId}`,
+        z.object({ deleted: z.boolean() }),
+        { method: "DELETE" },
+      );
+    },
   };
 }
 
@@ -1662,6 +1866,7 @@ export {
   bulkActionResultSchema,
   campaignTimelinePointSchema,
   casesResponseSchema,
+  clusterSummarySchema,
   countryDetailResponseSchema,
   cumulativeIndicatorPointSchema,
   dashboardOverviewSchema,
@@ -1674,6 +1879,7 @@ export {
   leaSuggestionResponseSchema,
   pipelineFunnelStageSchema,
   reportLibraryResponseSchema,
+  reportScheduleSchema,
   sankeyResponseSchema,
   searchRequestSchema,
   searchResponseSchema,
@@ -1683,4 +1889,7 @@ export {
   threatCampaignDetailSchema,
   threatCampaignListSchema,
   timelineResponseSchema,
+  watchlistAlertSchema,
+  watchlistItemSchema,
+  watchlistListResponseSchema,
 };

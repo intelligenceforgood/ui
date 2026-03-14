@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Card, FeedbackButton } from "@i4g/ui-kit";
-import { FileText, Loader2 } from "lucide-react";
+import { CalendarClock, FileText, Loader2 } from "lucide-react";
 
 const TEMPLATES = [
   {
@@ -21,6 +21,14 @@ const TEMPLATES = [
 ];
 
 const TLP_OPTIONS = ["TLP:WHITE", "TLP:GREEN", "TLP:AMBER", "TLP:RED"];
+const CADENCE_OPTIONS = [
+  { value: "once", label: "One-time" },
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
+];
+
+type Mode = "generate" | "schedule";
 
 export default function ReportBuilderPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
@@ -28,10 +36,16 @@ export default function ReportBuilderPage() {
   const [tlp, setTlp] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{
-    reportId: string;
+    reportId?: string;
+    scheduleId?: string;
     status: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Schedule-specific state
+  const [mode, setMode] = useState<Mode>("generate");
+  const [cadence, setCadence] = useState<string>("weekly");
+  const [recipients, setRecipients] = useState<string>("");
 
   const template = TEMPLATES.find((t) => t.id === selectedTemplate);
 
@@ -44,23 +58,50 @@ export default function ReportBuilderPage() {
     setResult(null);
 
     try {
-      const res = await fetch("/api/reports/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          template: selectedTemplate,
-          scope,
-          tlp: tlp || undefined,
-        }),
-      });
+      if (mode === "generate") {
+        const res = await fetch("/api/reports/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            template: selectedTemplate,
+            scope,
+            tlp: tlp || undefined,
+          }),
+        });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.detail ?? `Request failed: ${res.status}`);
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.detail ?? `Request failed: ${res.status}`);
+        }
+
+        const data = await res.json();
+        setResult(data);
+      } else {
+        const recipientList = recipients
+          .split(",")
+          .map((r) => r.trim())
+          .filter(Boolean);
+
+        const res = await fetch("/api/reports/schedules", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            template: selectedTemplate,
+            cadence,
+            scope: { date_range: scope },
+            options: tlp ? { tlp } : undefined,
+            recipients: recipientList.length > 0 ? recipientList : undefined,
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.detail ?? `Request failed: ${res.status}`);
+        }
+
+        const data = await res.json();
+        setResult({ scheduleId: data.scheduleId, status: "scheduled" });
       }
-
-      const data = await res.json();
-      setResult(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -84,6 +125,34 @@ export default function ReportBuilderPage() {
         <p className="mt-1 text-sm text-slate-500">
           Generate an executive summary or LEA evidence dossier.
         </p>
+      </div>
+
+      {/* Mode toggle */}
+      <div className="flex gap-2 rounded-lg border border-slate-200 p-1">
+        <button
+          type="button"
+          onClick={() => setMode("generate")}
+          className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+            mode === "generate"
+              ? "bg-blue-600 text-white"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          <FileText className="h-4 w-4" />
+          Generate Now
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("schedule")}
+          className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+            mode === "schedule"
+              ? "bg-blue-600 text-white"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          <CalendarClock className="h-4 w-4" />
+          Schedule
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -169,6 +238,53 @@ export default function ReportBuilderPage() {
           </select>
         </div>
 
+        {/* Schedule-specific fields */}
+        {mode === "schedule" && (
+          <div className="space-y-4 rounded-lg border border-blue-200 bg-blue-50/50 p-4">
+            <h3 className="text-sm font-semibold text-slate-700">
+              Schedule Configuration
+            </h3>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="cadence"
+                className="block text-sm font-medium text-slate-700"
+              >
+                Cadence
+              </label>
+              <select
+                id="cadence"
+                value={cadence}
+                onChange={(e) => setCadence(e.target.value)}
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                {CADENCE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="recipients"
+                className="block text-sm font-medium text-slate-700"
+              >
+                Recipients (comma-separated emails)
+              </label>
+              <input
+                id="recipients"
+                type="text"
+                value={recipients}
+                onChange={(e) => setRecipients(e.target.value)}
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="analyst@example.com, lead@example.com"
+              />
+            </div>
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={!selectedTemplate || submitting}
@@ -177,12 +293,17 @@ export default function ReportBuilderPage() {
           {submitting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Generating…
+              {mode === "generate" ? "Generating…" : "Scheduling…"}
             </>
-          ) : (
+          ) : mode === "generate" ? (
             <>
               <FileText className="h-4 w-4" />
               Generate Report
+            </>
+          ) : (
+            <>
+              <CalendarClock className="h-4 w-4" />
+              Create Schedule
             </>
           )}
         </button>
@@ -191,10 +312,14 @@ export default function ReportBuilderPage() {
       {result && (
         <Card className="border-green-200 bg-green-50 p-4">
           <p className="text-sm font-medium text-green-800">
-            Report queued successfully.
+            {result.scheduleId
+              ? "Report schedule created."
+              : "Report queued successfully."}
           </p>
           <p className="mt-1 text-xs text-green-600">
-            Report ID: {result.reportId} — Status: {result.status}
+            {result.scheduleId
+              ? `Schedule ID: ${result.scheduleId}`
+              : `Report ID: ${result.reportId} — Status: ${result.status}`}
           </p>
         </Card>
       )}
@@ -202,7 +327,9 @@ export default function ReportBuilderPage() {
       {error && (
         <Card className="border-red-200 bg-red-50 p-4">
           <p className="text-sm font-medium text-red-800">
-            Report generation failed.
+            {mode === "generate"
+              ? "Report generation failed."
+              : "Schedule creation failed."}
           </p>
           <p className="mt-1 text-xs text-red-600">{error}</p>
         </Card>

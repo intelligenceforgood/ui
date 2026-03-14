@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Card, Button, Input, Badge } from "@i4g/ui-kit";
-import type { GraphPayload, GraphNode } from "@i4g/sdk";
+import type { GraphPayload, GraphNode, ClusterSummary } from "@i4g/sdk";
 import { Download, Maximize2, Search, ZoomIn, ZoomOut } from "lucide-react";
 
 const ENTITY_COLORS: Record<string, string> = {
@@ -19,8 +19,24 @@ const EDGE_COLORS: Record<string, string> = {
   "co-occurrence": "#94a3b8",
   "shared-ip": "#f97316",
   "same-campaign": "#3b82f6",
+  infrastructure: "#a855f7",
+  "shared-registrar": "#a855f7",
+  "shared-hosting": "#a855f7",
   default: "#cbd5e1",
 };
+
+const CLUSTER_COLORS = [
+  "#6366f1",
+  "#f43f5e",
+  "#0ea5e9",
+  "#84cc16",
+  "#f59e0b",
+  "#ec4899",
+  "#14b8a6",
+  "#a855f7",
+  "#f97316",
+  "#06b6d4",
+];
 
 interface NodePosition {
   x: number;
@@ -43,6 +59,11 @@ export default function NetworkGraph() {
     new Map(),
   );
   const [scale, setScale] = useState(1);
+  const [showClusters, setShowClusters] = useState(false);
+  const [hoveredCluster, setHoveredCluster] = useState<ClusterSummary | null>(
+    null,
+  );
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const animRef = useRef<number | null>(null);
 
   const fetchGraph = useCallback(async () => {
@@ -182,7 +203,24 @@ export default function NetworkGraph() {
       for (const p of posArr) {
         const n = p.node;
         const radius = Math.max(6, Math.min(20, 4 + n.caseCount * 2));
-        const color = ENTITY_COLORS[n.entityType] ?? ENTITY_COLORS["default"]!;
+        const baseColor =
+          ENTITY_COLORS[n.entityType] ?? ENTITY_COLORS["default"]!;
+        const color =
+          showClusters && n.clusterId != null
+            ? CLUSTER_COLORS[n.clusterId % CLUSTER_COLORS.length] ?? baseColor
+            : baseColor;
+
+        // Cluster ring
+        if (showClusters && n.clusterId != null) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, radius + 4, 0, 2 * Math.PI);
+          ctx.strokeStyle =
+            CLUSTER_COLORS[n.clusterId % CLUSTER_COLORS.length] ?? "#6b7280";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([3, 3]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
 
         // Risk border
         if (n.riskScore > 70) {
@@ -215,7 +253,41 @@ export default function NetworkGraph() {
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };
-  }, [graphData, positions, scale]);
+  }, [graphData, positions, scale, showClusters]);
+
+  const handleCanvasMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      if (!showClusters || !graphData?.clusters) {
+        setHoveredCluster(null);
+        return;
+      }
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) / scale;
+      const my = (e.clientY - rect.top) / scale;
+
+      for (const p of positions.values()) {
+        const dx = p.x - mx;
+        const dy = p.y - my;
+        if (Math.sqrt(dx * dx + dy * dy) < 20 && p.node.clusterId != null) {
+          const cluster = graphData.clusters.find(
+            (c) => c.clusterId === p.node.clusterId,
+          );
+          if (cluster) {
+            setHoveredCluster(cluster);
+            setTooltipPos({
+              x: e.clientX - rect.left,
+              y: e.clientY - rect.top,
+            });
+            return;
+          }
+        }
+      }
+      setHoveredCluster(null);
+    },
+    [showClusters, graphData, positions, scale],
+  );
 
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -306,6 +378,19 @@ export default function NetworkGraph() {
               <Download className="h-4 w-4" />
             </Button>
           </div>
+          {graphData?.clusters && graphData.clusters.length > 0 && (
+            <div>
+              <label className="flex items-center gap-2 text-xs text-slate-500">
+                <input
+                  type="checkbox"
+                  checked={showClusters}
+                  onChange={(e) => setShowClusters(e.target.checked)}
+                  className="rounded border-slate-300"
+                />
+                Show Communities
+              </label>
+            </div>
+          )}
         </div>
         {/* Legend */}
         <div className="mt-4 space-y-1">
@@ -316,6 +401,20 @@ export default function NetworkGraph() {
               <div key={type} className="flex items-center gap-2 text-xs">
                 <span
                   className="inline-block h-3 w-3 rounded-full"
+                  style={{ backgroundColor: color }}
+                />
+                {type}
+              </div>
+            ))}
+          <p className="mt-2 text-xs font-semibold text-slate-500">
+            Edge Types
+          </p>
+          {Object.entries(EDGE_COLORS)
+            .filter(([k]) => k !== "default")
+            .map(([type, color]) => (
+              <div key={type} className="flex items-center gap-2 text-xs">
+                <span
+                  className="inline-block h-[2px] w-3"
                   style={{ backgroundColor: color }}
                 />
                 {type}
@@ -346,8 +445,25 @@ export default function NetworkGraph() {
           width={800}
           height={600}
           onClick={handleCanvasClick}
+          onMouseMove={handleCanvasMouseMove}
           className="w-full cursor-crosshair"
         />
+        {hoveredCluster && (
+          <div
+            className="pointer-events-none absolute z-20 rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-800"
+            style={{ left: tooltipPos.x + 12, top: tooltipPos.y - 10 }}
+          >
+            <p className="text-xs font-semibold text-slate-900 dark:text-white">
+              Community {hoveredCluster.clusterId}
+            </p>
+            <div className="mt-1 space-y-0.5 text-xs text-slate-500">
+              <p>{hoveredCluster.nodeCount} nodes</p>
+              <p>Primary: {hoveredCluster.primaryEntityType}</p>
+              <p>{hoveredCluster.totalCases} total cases</p>
+              <p>Avg risk: {hoveredCluster.avgRiskScore.toFixed(1)}</p>
+            </div>
+          </div>
+        )}
         {graphData && (
           <div className="absolute bottom-2 left-2 text-xs text-slate-400">
             {graphData.nodeCount} nodes · {graphData.edgeCount} edges
