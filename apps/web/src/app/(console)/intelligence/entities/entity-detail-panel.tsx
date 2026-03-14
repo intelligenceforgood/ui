@@ -3,14 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Badge, Button, Card } from "@i4g/ui-kit";
 import type { EntityStats } from "@i4g/sdk";
-import {
-  X,
-  Activity,
-  Network,
-  Download,
-  Flag,
-  MessageSquarePlus,
-} from "lucide-react";
+import { X, Activity, Network, Download, Flag } from "lucide-react";
+import { AnnotationPanel } from "../components/annotation-panel";
+import { EntityStatusBadge } from "../components/entity-status-badge";
 
 interface EntityDetailPanelProps {
   entity: EntityStats;
@@ -23,8 +18,9 @@ interface ActivityPoint {
 }
 
 interface NeighborNode {
+  id: string;
+  label: string;
   entityType: string;
-  canonicalValue: string;
   caseCount: number;
 }
 
@@ -82,7 +78,10 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
     <div className="fixed inset-y-0 right-0 z-40 w-[420px] overflow-y-auto border-l border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white/90 px-6 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
         <div>
-          <Badge variant="default">{entity.entityType}</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="default">{entity.entityType}</Badge>
+            <EntityStatusBadge status={entity.status} />
+          </div>
           <h2 className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">
             {entity.canonicalValue}
           </h2>
@@ -133,7 +132,7 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
 
         {/* Activity sparkline */}
         <section className="space-y-2">
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
             <Activity className="h-4 w-4" />
             Activity Over Time
           </div>
@@ -160,7 +159,7 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
 
         {/* Mini network graph (neighbor list) */}
         <section className="space-y-2">
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
             <Network className="h-4 w-4" />
             Related Entities
           </div>
@@ -174,7 +173,7 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
             <div className="space-y-1.5">
               {neighbors.slice(0, 10).map((n) => (
                 <div
-                  key={`${n.entityType}-${n.canonicalValue}`}
+                  key={n.id}
                   className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 text-sm dark:border-slate-800"
                 >
                   <div className="flex items-center gap-2">
@@ -182,7 +181,7 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
                       {n.entityType}
                     </Badge>
                     <span className="font-mono text-xs text-slate-700 dark:text-slate-300">
-                      {n.canonicalValue}
+                      {n.label}
                     </span>
                   </div>
                   <span className="text-xs text-slate-400">
@@ -192,6 +191,14 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
               ))}
             </div>
           )}
+        </section>
+
+        {/* Annotations */}
+        <section>
+          <AnnotationPanel
+            targetType="entity"
+            targetId={`${entity.entityType}:${entity.canonicalValue}`}
+          />
         </section>
 
         {/* Actions toolbar */}
@@ -204,13 +211,23 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
               <Download className="mr-1 h-3.5 w-3.5" />
               Export Summary
             </Button>
-            <Button variant="secondary" size="sm">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={async () => {
+                await fetch("/api/intelligence/entities/status", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    entityType: entity.entityType,
+                    canonicalValue: entity.canonicalValue,
+                    status: "flagged",
+                  }),
+                });
+              }}
+            >
               <Flag className="mr-1 h-3.5 w-3.5" />
               Flag for Review
-            </Button>
-            <Button variant="secondary" size="sm">
-              <MessageSquarePlus className="mr-1 h-3.5 w-3.5" />
-              Add Annotation
             </Button>
           </div>
         </section>

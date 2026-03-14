@@ -35,7 +35,7 @@ export function EntityFilterSidebar({
   return (
     <aside className="hidden w-56 shrink-0 space-y-6 lg:block">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+        <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
           <SlidersHorizontal className="h-4 w-4" />
           Filters
         </div>

@@ -604,6 +604,58 @@ export interface I4GClient {
   listReports(options?: ReportLibraryOptions): Promise<ReportLibraryResponse>;
   // LEA Referrals (S3-20)
   getLeaSuggestions(limit?: number): Promise<LeaSuggestionResponse>;
+  // Sprint 4: Network Graph
+  getIntelligenceGraph(options: {
+    seed: string;
+    seedType?: string;
+    hops?: number;
+    entityTypes?: string;
+    limit?: number;
+  }): Promise<GraphPayload>;
+  exportGraph(seed: string, fmt?: string): Promise<Blob>;
+  // Sprint 4: Timeline
+  getTimeline(options?: {
+    period?: string;
+    granularity?: string;
+  }): Promise<TimelineResponse>;
+  // Sprint 4: Taxonomy & Geography
+  getTaxonomySankey(period?: string): Promise<SankeyResponse>;
+  getTaxonomyHeatmap(
+    period?: string,
+    granularity?: string,
+  ): Promise<HeatmapCell[]>;
+  getTaxonomyTrend(
+    period?: string,
+    categories?: string,
+  ): Promise<TaxonomyTrendPoint[]>;
+  getGeographySummary(period?: string): Promise<GeographySummary[]>;
+  getGeographyDetail(
+    country: string,
+    period?: string,
+  ): Promise<CountryDetailResponse>;
+  // Sprint 4: Annotations
+  createAnnotation(
+    targetType: string,
+    targetId: string,
+    content: string,
+  ): Promise<Annotation>;
+  listAnnotations(
+    targetType?: string,
+    targetId?: string,
+  ): Promise<Annotation[]>;
+  updateAnnotation(annotationId: string, content: string): Promise<Annotation>;
+  deleteAnnotation(annotationId: string): Promise<{ deleted: boolean }>;
+  // Sprint 4: Entity status & bulk actions
+  updateEntityStatus(
+    entityType: string,
+    canonicalValue: string,
+    status: string,
+  ): Promise<{ entityType: string; canonicalValue: string; status: string }>;
+  bulkEntityAction(
+    entityIds: string[],
+    action: string,
+    options?: { tag?: string; status?: string },
+  ): Promise<BulkActionResult>;
 }
 
 const detokenizeResponseSchema = z.object({
@@ -793,17 +845,20 @@ const kpiCardItemSchema = z.object({
 export type KpiCardItem = z.infer<typeof kpiCardItemSchema>;
 
 const impactDashboardSchema = z.object({
-  period: z.string(),
+  periodLabel: z.string().optional(),
   kpis: z.array(kpiCardItemSchema),
 });
 
 export type ImpactDashboard = z.infer<typeof impactDashboardSchema>;
 
-const taxonomyLossItemSchema = z.object({
-  label: z.string(),
-  lossSum: z.number(),
-  caseCount: z.number(),
-});
+const taxonomyLossItemSchema = z
+  .object({
+    label: z.string(),
+    code: z.string().optional(),
+    lossSum: z.number(),
+    caseCount: z.number(),
+  })
+  .transform((d) => ({ ...d, code: d.code ?? "" }));
 
 export type TaxonomyLossItem = z.infer<typeof taxonomyLossItemSchema>;
 
@@ -829,9 +884,10 @@ const cumulativeIndicatorPointSchema = z.object({
   period: z.string(),
   bank: z.number(),
   crypto: z.number(),
-  email: z.number(),
-  phone: z.number(),
+  domain: z.number(),
+  ip: z.number(),
   other: z.number(),
+  total: z.number(),
 });
 
 export type CumulativeIndicatorPoint = z.infer<
@@ -926,6 +982,132 @@ const leaSuggestionResponseSchema = z.object({
 export type LeaSuggestionResponse = z.infer<typeof leaSuggestionResponseSchema>;
 
 // ---------------------------------------------------------------------------
+// Sprint 4: Timeline types
+// ---------------------------------------------------------------------------
+
+const timelineTrackSchema = z.object({
+  track: z.string(),
+  data: z.array(z.record(z.unknown())),
+});
+
+const timelineResponseSchema = z.object({
+  tracks: z.array(timelineTrackSchema),
+  granularity: z.string(),
+});
+
+export type TimelineTrack = z.infer<typeof timelineTrackSchema>;
+export type TimelineResponse = z.infer<typeof timelineResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Sprint 4: Taxonomy types
+// ---------------------------------------------------------------------------
+
+const sankeyNodeSchema = z
+  .object({
+    id: z.string(),
+    label: z.string(),
+    code: z.string().optional(),
+    value: z.number(),
+  })
+  .transform((d) => ({ ...d, code: d.code ?? "" }));
+
+const sankeyLinkSchema = z.object({
+  source: z.string(),
+  target: z.string(),
+  value: z.number(),
+});
+
+const sankeyResponseSchema = z.object({
+  nodes: z.array(sankeyNodeSchema),
+  links: z.array(sankeyLinkSchema),
+});
+
+export type SankeyNode = z.infer<typeof sankeyNodeSchema>;
+export type SankeyLink = z.infer<typeof sankeyLinkSchema>;
+export type SankeyResponse = z.infer<typeof sankeyResponseSchema>;
+
+const heatmapCellSchema = z
+  .object({
+    category: z.string(),
+    categoryCode: z.string().optional(),
+    period: z.string(),
+    count: z.number(),
+  })
+  .transform((d) => ({ ...d, categoryCode: d.categoryCode ?? "" }));
+
+export type HeatmapCell = z.infer<typeof heatmapCellSchema>;
+
+const taxonomyTrendPointSchema = z
+  .object({
+    period: z.string(),
+    category: z.string(),
+    categoryCode: z.string().optional(),
+    count: z.number(),
+  })
+  .transform((d) => ({ ...d, categoryCode: d.categoryCode ?? "" }));
+
+export type TaxonomyTrendPoint = z.infer<typeof taxonomyTrendPointSchema>;
+
+// ---------------------------------------------------------------------------
+// Sprint 4: Geography types
+// ---------------------------------------------------------------------------
+
+const geographySummarySchema = z.object({
+  country: z.string(),
+  caseCount: z.number(),
+  totalLoss: z.number(),
+  victimCount: z.number(),
+});
+
+export type GeographySummary = z.infer<typeof geographySummarySchema>;
+
+const countryDetailRecordSchema = z.object({
+  caseId: z.string(),
+  category: z.string().nullable().optional(),
+  categoryCode: z.string().nullable().optional(),
+  lossAmount: z.number(),
+  createdAt: z.string().nullable().optional(),
+});
+
+const countryDetailResponseSchema = z.object({
+  country: z.string(),
+  totalCases: z.number(),
+  totalLoss: z.number(),
+  records: z.array(countryDetailRecordSchema),
+});
+
+export type CountryDetailRecord = z.infer<typeof countryDetailRecordSchema>;
+export type CountryDetailResponse = z.infer<typeof countryDetailResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Sprint 4: Annotation types
+// ---------------------------------------------------------------------------
+
+const annotationSchema = z.object({
+  annotationId: z.string(),
+  targetType: z.string(),
+  targetId: z.string(),
+  content: z.string(),
+  author: z.string(),
+  createdAt: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional(),
+});
+
+export type Annotation = z.infer<typeof annotationSchema>;
+
+// ---------------------------------------------------------------------------
+// Sprint 4: Bulk action types
+// ---------------------------------------------------------------------------
+
+const bulkActionResultSchema = z.object({
+  processed: z.number(),
+  failed: z.number(),
+  errors: z.array(z.string()),
+});
+
+export type BulkActionResult = z.infer<typeof bulkActionResultSchema>;
+
+// ---------------------------------------------------------------------------
 // Impact / Campaign / Report list options
 // ---------------------------------------------------------------------------
 
@@ -1002,11 +1184,11 @@ export function createClient(config: ClientConfig): I4GClient {
 
   const fetcher: FetchLike = runtimeFetch;
 
-  async function request<T>(
+  async function request<S extends z.ZodTypeAny>(
     path: string,
-    schema: z.ZodSchema<T>,
+    schema: S,
     init?: RequestInit,
-  ) {
+  ): Promise<z.infer<S>> {
     const headers: Record<string, string> = {
       Accept: "application/json",
       ...(init?.body ? { "Content-Type": "application/json" } : {}),
@@ -1319,6 +1501,152 @@ export function createClient(config: ClientConfig): I4GClient {
         : "/intelligence/lea-suggestions";
       return request(path, leaSuggestionResponseSchema);
     },
+    // Sprint 4: Network Graph
+    getIntelligenceGraph(options) {
+      const query = new URLSearchParams();
+      query.set("seed", options.seed);
+      if (options.seedType) query.set("seed_type", options.seedType);
+      if (options.hops) query.set("hops", String(options.hops));
+      if (options.entityTypes) query.set("entity_types", options.entityTypes);
+      if (options.limit) query.set("limit", String(options.limit));
+      return request(
+        `/intelligence/graph?${query}`,
+        graphPayloadSchema as z.ZodSchema<GraphPayload>,
+      );
+    },
+    async exportGraph(seed, fmt = "png") {
+      const path = `/intelligence/graph/export?seed=${encodeURIComponent(seed)}&fmt=${fmt}`;
+      const headers: Record<string, string> = {
+        ...additionalHeaders,
+      };
+      if (apiKey) headers["X-API-KEY"] = apiKey;
+      const res = await fetcher(buildUrl(baseUrl, path), {
+        headers,
+      });
+      if (!res.ok) throw new I4GClientError("Graph export failed", res.status);
+      return res.blob();
+    },
+    // Sprint 4: Timeline
+    getTimeline(options) {
+      const query = new URLSearchParams();
+      if (options?.period) query.set("period", options.period);
+      if (options?.granularity) query.set("granularity", options.granularity);
+      const qs = query.toString();
+      return request(
+        qs ? `/intelligence/timeline?${qs}` : "/intelligence/timeline",
+        timelineResponseSchema,
+      );
+    },
+    // Sprint 4: Taxonomy & Geography
+    getTaxonomySankey(period) {
+      const query = new URLSearchParams();
+      if (period) query.set("period", period);
+      const qs = query.toString();
+      return request(
+        qs ? `/impact/taxonomy/sankey?${qs}` : "/impact/taxonomy/sankey",
+        sankeyResponseSchema,
+      );
+    },
+    getTaxonomyHeatmap(period, granularity) {
+      const query = new URLSearchParams();
+      if (period) query.set("period", period);
+      if (granularity) query.set("granularity", granularity);
+      const qs = query.toString();
+      return request(
+        qs ? `/impact/taxonomy/heatmap?${qs}` : "/impact/taxonomy/heatmap",
+        z.array(heatmapCellSchema),
+      );
+    },
+    getTaxonomyTrend(period, categories) {
+      const query = new URLSearchParams();
+      if (period) query.set("period", period);
+      if (categories) query.set("categories", categories);
+      const qs = query.toString();
+      return request(
+        qs ? `/impact/taxonomy/trend?${qs}` : "/impact/taxonomy/trend",
+        z.array(taxonomyTrendPointSchema),
+      );
+    },
+    getGeographySummary(period) {
+      const query = new URLSearchParams();
+      if (period) query.set("period", period);
+      const qs = query.toString();
+      return request(
+        qs ? `/impact/geography?${qs}` : "/impact/geography",
+        z.array(geographySummarySchema),
+      );
+    },
+    getGeographyDetail(country, period) {
+      const query = new URLSearchParams();
+      if (period) query.set("period", period);
+      const qs = query.toString();
+      return request(
+        qs
+          ? `/impact/geography/${encodeURIComponent(country)}?${qs}`
+          : `/impact/geography/${encodeURIComponent(country)}`,
+        countryDetailResponseSchema,
+      );
+    },
+    // Sprint 4: Annotations
+    createAnnotation(targetType, targetId, content) {
+      return request("/intelligence/annotations", annotationSchema, {
+        method: "POST",
+        body: JSON.stringify({ targetType, targetId, content }),
+      });
+    },
+    listAnnotations(targetType, targetId) {
+      const query = new URLSearchParams();
+      if (targetType) query.set("target_type", targetType);
+      if (targetId) query.set("target_id", targetId);
+      const qs = query.toString();
+      return request(
+        qs ? `/intelligence/annotations?${qs}` : "/intelligence/annotations",
+        z.array(annotationSchema),
+      );
+    },
+    updateAnnotation(annotationId, content) {
+      return request(
+        `/intelligence/annotations/${annotationId}`,
+        annotationSchema,
+        {
+          method: "PUT",
+          body: JSON.stringify({ content }),
+        },
+      );
+    },
+    deleteAnnotation(annotationId) {
+      return request(
+        `/intelligence/annotations/${annotationId}`,
+        z.object({ deleted: z.boolean() }),
+        { method: "DELETE" },
+      );
+    },
+    // Sprint 4: Entity status & bulk actions
+    updateEntityStatus(entityType, canonicalValue, status) {
+      return request(
+        "/intelligence/entities/status",
+        z.object({
+          entityType: z.string(),
+          canonicalValue: z.string(),
+          status: z.string(),
+        }),
+        {
+          method: "POST",
+          body: JSON.stringify({ entityType, canonicalValue, status }),
+        },
+      );
+    },
+    bulkEntityAction(entityIds, action, options) {
+      return request("/intelligence/entities/bulk", bulkActionResultSchema, {
+        method: "POST",
+        body: JSON.stringify({
+          entityIds,
+          action,
+          ...(options?.tag ? { tag: options.tag } : {}),
+          ...(options?.status ? { status: options.status } : {}),
+        }),
+      });
+    },
   };
 }
 
@@ -1330,20 +1658,29 @@ export { createMockClient } from "./__fixtures__/index";
 
 export {
   analyticsOverviewSchema,
+  annotationSchema,
+  bulkActionResultSchema,
   campaignTimelinePointSchema,
   casesResponseSchema,
+  countryDetailResponseSchema,
   cumulativeIndicatorPointSchema,
   dashboardOverviewSchema,
   detectionVelocityPointSchema,
   dossierListRequestSchema,
+  geographySummarySchema,
+  graphPayloadSchema,
+  heatmapCellSchema,
   impactDashboardSchema,
   leaSuggestionResponseSchema,
   pipelineFunnelStageSchema,
   reportLibraryResponseSchema,
+  sankeyResponseSchema,
   searchRequestSchema,
   searchResponseSchema,
   taxonomyLossItemSchema,
   taxonomyResponseSchema,
+  taxonomyTrendPointSchema,
   threatCampaignDetailSchema,
   threatCampaignListSchema,
+  timelineResponseSchema,
 };

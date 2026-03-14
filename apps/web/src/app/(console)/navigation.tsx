@@ -29,6 +29,9 @@ import {
   Network,
   BarChart3,
   Gauge,
+  Clock,
+  Map,
+  GitBranch,
 } from "lucide-react";
 import { UserPreferences } from "@/components/user-preferences";
 import { FeedbackButton } from "@i4g/ui-kit";
@@ -99,6 +102,16 @@ const navItems: NavItem[] = [
         icon: Layers,
         minRole: "admin",
       },
+      {
+        href: "/intelligence/graph",
+        label: "Network Graph",
+        icon: GitBranch,
+      },
+      {
+        href: "/intelligence/timeline",
+        label: "Timeline",
+        icon: Clock,
+      },
     ],
   },
   {
@@ -109,6 +122,12 @@ const navItems: NavItem[] = [
     children: [
       { href: "/impact", label: "Analytics", icon: LineChart },
       { href: "/impact/taxonomy", label: "Taxonomy", icon: Layers },
+      {
+        href: "/impact/taxonomy-explorer",
+        label: "Taxonomy Explorer",
+        icon: BarChart3,
+      },
+      { href: "/impact/geography", label: "Geography", icon: Map },
     ],
   },
   {

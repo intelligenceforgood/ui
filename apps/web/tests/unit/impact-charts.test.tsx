@@ -48,8 +48,18 @@ vi.mock("@i4g/ui-kit", () => ({
 import ImpactCharts from "@/app/(console)/impact/impact-charts";
 
 const sampleLoss = [
-  { label: "Investment Scam", lossSum: 250000, caseCount: 12 },
-  { label: "Romance Scam", lossSum: 180000, caseCount: 8 },
+  {
+    label: "Investment Scam",
+    code: "INTENT.INVESTMENT",
+    lossSum: 250000,
+    caseCount: 12,
+  },
+  {
+    label: "Romance Scam",
+    code: "INTENT.ROMANCE",
+    lossSum: 180000,
+    caseCount: 8,
+  },
 ];
 
 const sampleVelocity = [

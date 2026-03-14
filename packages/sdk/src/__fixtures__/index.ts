@@ -8,30 +8,38 @@
 import { z } from "zod";
 import type {
   AnalyticsOverview,
+  Annotation,
+  BulkActionResult,
   CampaignTimelinePoint,
   CasesResponse,
+  CountryDetailResponse,
+  CumulativeIndicatorPoint,
   DashboardOverview,
   DetectionVelocityPoint,
-  DossierListResponse,
+  DetokenizeResponse,
   DossierListOptions,
+  DossierListResponse,
   DossierRecord,
   DossierVerificationReport,
+  GeographySummary,
   GraphPayload,
+  HeatmapCell,
   I4GClient,
   ImpactDashboard,
   LeaSuggestionResponse,
   PipelineFunnelStage,
   ReportLibraryResponse,
-  SearchResponse,
-  SearchRequestInput,
-  SearchResult,
+  SankeyResponse,
   SearchFacet,
+  SearchRequestInput,
+  SearchResponse,
+  SearchResult,
   TaxonomyLossItem,
   TaxonomyResponse,
+  TaxonomyTrendPoint,
   ThreatCampaignDetail,
   ThreatCampaignList,
-  CumulativeIndicatorPoint,
-  DetokenizeResponse,
+  TimelineResponse,
 } from "../index";
 import { searchRequestSchema, dossierListRequestSchema } from "../index";
 
@@ -802,7 +810,7 @@ export function createMockClient(): I4GClient {
     async getImpactDashboard() {
       return {
         kpis: [],
-        period: "30d",
+        periodLabel: "30d",
       } as ImpactDashboard;
     },
     async getImpactLoss() {
@@ -854,6 +862,80 @@ export function createMockClient(): I4GClient {
     // LEA Referrals (Sprint 3)
     async getLeaSuggestions() {
       return { suggestions: [], count: 0 } as LeaSuggestionResponse;
+    },
+    // Sprint 4: Network Graph
+    async getIntelligenceGraph() {
+      return { nodes: [], edges: [] } as GraphPayload;
+    },
+    async exportGraph() {
+      return new Blob(["mock-graph-export"], { type: "text/csv" });
+    },
+    // Sprint 4: Timeline
+    async getTimeline() {
+      return {
+        tracks: [],
+        period: "30d",
+        granularity: "week",
+      } as TimelineResponse;
+    },
+    // Sprint 4: Taxonomy & Geography
+    async getTaxonomySankey() {
+      return { nodes: [], links: [] } as SankeyResponse;
+    },
+    async getTaxonomyHeatmap() {
+      return [] as HeatmapCell[];
+    },
+    async getTaxonomyTrend() {
+      return [] as TaxonomyTrendPoint[];
+    },
+    async getGeographySummary() {
+      return [] as GeographySummary[];
+    },
+    async getGeographyDetail() {
+      return {
+        country: "US",
+        totalCases: 0,
+        totalLoss: 0,
+        records: [],
+      } as CountryDetailResponse;
+    },
+    // Sprint 4: Annotations
+    async createAnnotation() {
+      return {
+        annotationId: "mock-ann-1",
+        targetType: "entity",
+        targetId: "e1",
+        content: "note",
+        author: "mock",
+        createdAt: new Date().toISOString(),
+      } as Annotation;
+    },
+    async listAnnotations() {
+      return [] as Annotation[];
+    },
+    async updateAnnotation() {
+      return {
+        annotationId: "mock-ann-1",
+        targetType: "entity",
+        targetId: "e1",
+        content: "updated",
+        author: "mock",
+        createdAt: new Date().toISOString(),
+      } as Annotation;
+    },
+    async deleteAnnotation() {
+      return { deleted: true };
+    },
+    // Sprint 4: Entity status & bulk actions
+    async updateEntityStatus() {
+      return {
+        entityType: "wallet",
+        canonicalValue: "mock",
+        status: "flagged",
+      };
+    },
+    async bulkEntityAction() {
+      return { processed: 0, failed: 0, errors: [] } as BulkActionResult;
     },
   };
 }
