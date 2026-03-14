@@ -116,3 +116,35 @@ pnpm --filter web test:watch
 - Keep secrets out of the client bundle; store keys in the hosting platform and pass them only as server-side env vars.
 
 Refer to `docs/ui_architecture.md` for roadmap-level decisions.
+
+## TIFAP Frontend Development (Sprint 6)
+
+### Page structure
+
+TIFAP pages live under three navigation groups:
+
+| Group            | Route prefix              | Pages                                                                                           |
+| ---------------- | ------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Intelligence** | `(console)/intelligence/` | Entity Explorer, Indicator Registry, Intelligence Dashboard, Network Graph, Campaigns, Timeline |
+| **Impact**       | `(console)/impact/`       | Impact Dashboard, Geography, Taxonomy Analytics                                                 |
+| **Reports**      | `(console)/reports/`      | Report Builder, Report Library                                                                  |
+
+### Charting library
+
+All charts use **Recharts** (not D3.js directly). Refer to existing chart patterns in [impact-charts.tsx](<../apps/web/src/app/(console)/impact/impact-charts.tsx>) for responsive container setup and Tailwind theme integration:
+
+- Use `ResponsiveContainer` with responsive height classes (`h-60 sm:h-80`).
+- Apply chart colors via Tailwind CSS variables for theme consistency.
+- Mobile charts use simplified layouts (2-column KPI grid, reduced chart heights).
+
+### Graph rendering
+
+Network graph visualization uses the `ForceGraphComponent` at `(console)/intelligence/graph/`. Graph data flows from `GraphService` → `/intelligence/graph` API → SDK client → React component.
+
+### KPI cards with sparklines
+
+Use the `KpiSparklineCard` component ([kpi-sparkline-card.tsx](../apps/web/src/components/kpi-sparkline-card.tsx)) for mobile-friendly KPI displays with inline trend sparklines.
+
+### Data contracts
+
+Chart components expect data shaped by the `@i4g/sdk` types (`ThreatCampaign`, `ThreatCampaignDetail`, etc.). Update SDK Zod schemas when FastAPI response shapes change.

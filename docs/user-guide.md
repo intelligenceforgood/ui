@@ -92,4 +92,55 @@ This guide walks through the current analyst console experience. Screenshots are
 - Each page links to relevant documentation via the help button in the navigation footer.
 - For issues or feature requests, create an issue in the `ui` repository and cc the design or backend leads as needed.
 
+## Intelligence Hub (Sprints 2–6)
+
+The Intelligence section provides advanced threat analysis tools:
+
+### Entity Explorer
+
+Browse, search, and filter threat entities (wallets, emails, phone numbers, domains). Each entity detail page shows:
+
+- Co-occurrence graph with related entities
+- Activity sparkline showing detection trend
+- Blockchain enrichment data for wallet entities (risk label, transaction volume, exchange attribution)
+- Wallet cluster edges from on-chain analysis
+
+### Indicator Registry
+
+Segmented indicator list with category tabs (URL, email, phone, wallet, domain). Supports bulk actions, confidence filters, and STIX 2.1 or CSV export.
+
+### Network Graph
+
+Interactive force-directed graph visualization:
+
+- **Temporal animation** — Date-slider to see how the network evolved over time
+- **Louvain clustering** — Color-coded community detection with cluster density metrics
+- **Infrastructure edges** — Shared hosting, IP, registrar relationships (blue dashed)
+- **Wallet cluster edges** — Blockchain-derived wallet groupings (gold thick)
+
+### Campaigns
+
+Campaign management with taxonomy rollup, risk scoring, and member case aggregation. Each campaign shows referral status across member cases and links to the governance taxonomy.
+
+### Timeline
+
+Chronological event view with entity highlighting, date-range filtering, and drill-down to case detail.
+
+## Impact Dashboard (Sprint 6 enhancements)
+
+- **Mobile-responsive layout** — KPI grid displays 2 columns on mobile, 4 columns on desktop.
+- **KPI sparkline cards** — Inline trend sparklines on each KPI tile for at-a-glance trend visibility.
+- **Campaign alerts** — Mobile-friendly campaign alert list sorted by most recently updated.
+- **Responsive charts** — Chart heights adjust for small screens (`h-60` mobile, `h-80` desktop).
+
+## Reports
+
+### Report Builder
+
+Select a template (Standard Dossier or LEA Evidence Dossier), define the scope, and generate a report. LEA dossiers include blockchain enrichment data and chain-of-custody verification.
+
+### Report Library
+
+Browse generated reports, download artifacts, and verify SHA-256 signatures.
+
 Once screenshot assets are ready, replace the placeholder SVGs under `apps/web/public/placeholders/` and update this guide with real imagery.

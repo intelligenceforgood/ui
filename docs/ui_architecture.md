@@ -57,14 +57,22 @@ Top-level navigation uses a responsive side rail (collapsible on mobile) with tw
 1. **Entity Explorer** – Browse, search, and filter threat entities (wallets, emails, phone numbers). Drill into entity detail with co-occurrence graph and activity sparkline.
 2. **Indicator Registry** – Segmented indicator list with category tabs, bulk actions, confidence filters, and STIX export.
 3. **Intelligence Dashboard** – Widget-based overview with entity, indicator, campaign, and platform KPI cards plus trend sparklines.
+4. **Network Graph** – Interactive force-directed graph with temporal animation, Louvain clustering, infrastructure edges, and wallet cluster edges (blockchain enrichment).
+5. **Campaigns** – Campaign CRUD, taxonomy rollup, referral status, member case aggregation with risk scores.
+6. **Timeline** – Chronological event view with entity highlighting and date-range filtering.
 
 **Impact** (original pages, reorganized):
 
-4. **Dashboard** – Alerts, intake volume, case backlog, quick actions.
+4. **Dashboard** – Alerts, intake volume, case backlog, quick actions. Mobile-responsive with KPI sparkline cards and 2-column grid on small screens.
 5. **Search** – Structured filters, saved searches, paginated results with summary cards and inline actions.
-6. **Cases & Tasks** – Kanban/table views, assignment workflows.
-7. **Taxonomy** – Manage fraud types, variant metadata.
+6. **Cases & Tasks** – Kanban/table views, assignment workflows. LEA referral tracking on case detail.
+7. **Taxonomy** – Manage fraud types, variant metadata. Analytics-driven heatmap and Sankey views.
 8. **Analytics** – Trend charts, segmentation by taxonomy, competition leaderboards (future).
+
+**Reports**:
+
+9. **Report Builder** – Template-driven dossier generation with LEA evidence dossier support.
+10. **Report Library** – Browse, download, and verify generated reports.
 
 Each page integrates contextual help (linking analysts to doc placeholders under `docs/user-guide.md`). Icons can be swapped for branded assets later.
 
@@ -99,6 +107,8 @@ Each page integrates contextual help (linking analysts to doc placeholders under
 - [x] Build initial Dashboard/Search/Cases/Taxonomy/Analytics pages with mock-backed data.
 - [x] Provide mock/live SDK client switching via environment variables.
 - [x] Add Vitest + Testing Library coverage for key interactions.
+- [x] Build Intelligence Hub pages (Entity Explorer, Indicator Registry, Intelligence Dashboard, Network Graph, Campaigns, Timeline).
+- [x] Implement mobile-responsive Impact Dashboard with KPI sparkline cards and campaign alerts.
 - [ ] Implement authentication handshake with FastAPI (`/api/auth/session`).
 - [ ] Add Storybook for `@i4g/ui-kit` components.
 - [ ] Wire TanStack Query (or equivalent) for shared caching once API endpoints stabilise.

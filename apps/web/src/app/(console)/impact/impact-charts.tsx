@@ -66,9 +66,9 @@ export default function ImpactCharts({
   cumulative,
 }: ImpactChartsProps) {
   return (
-    <section className="grid gap-4 xl:grid-cols-2">
+    <section className="grid gap-4 sm:grid-cols-1 xl:grid-cols-2">
       {/* Loss by Taxonomy (Treemap-style bar) */}
-      <Card className="flex h-80 flex-col">
+      <Card className="flex h-60 flex-col sm:h-80">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900">
             Loss by fraud type
@@ -109,7 +109,7 @@ export default function ImpactCharts({
       </Card>
 
       {/* Detection Velocity */}
-      <Card className="flex h-80 flex-col">
+      <Card className="flex h-60 flex-col sm:h-80">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900">
             Detection velocity
@@ -154,7 +154,7 @@ export default function ImpactCharts({
       </Card>
 
       {/* Pipeline Funnel */}
-      <Card className="flex h-80 flex-col">
+      <Card className="flex h-60 flex-col sm:h-80">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900">
             Pipeline funnel
@@ -184,7 +184,7 @@ export default function ImpactCharts({
       </Card>
 
       {/* Cumulative Indicators (stacked area) */}
-      <Card className="flex h-80 flex-col">
+      <Card className="flex h-60 flex-col sm:h-80">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900">
             Cumulative indicators

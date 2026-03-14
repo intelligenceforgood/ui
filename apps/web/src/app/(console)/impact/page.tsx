@@ -48,21 +48,21 @@ export default async function ImpactPage() {
     ]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <header>
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 sm:text-sm">
           Impact
         </p>
-        <h1 className="mt-2 text-3xl font-semibold text-slate-900">
+        <h1 className="mt-1 text-2xl font-semibold text-slate-900 sm:mt-2 sm:text-3xl">
           Analytics & impact reporting
         </h1>
-        <p className="mt-2 max-w-3xl text-sm text-slate-500">
+        <p className="mt-1 max-w-3xl text-xs text-slate-500 sm:mt-2 sm:text-sm">
           Track detection performance, pipeline health, and operational coverage
           to inform partner updates and resourcing decisions.
         </p>
       </header>
 
-      <section className="group relative grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="group relative grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <FeedbackButton
           feedbackId="impact.metrics"
           className="absolute -top-1 right-0 z-10"
