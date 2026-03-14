@@ -12,6 +12,7 @@ import {
   casesResponseSchema,
   dashboardOverviewSchema,
   analyticsOverviewSchema,
+  reportLibraryResponseSchema,
   createMockClient,
 } from "../src/index";
 
@@ -248,5 +249,49 @@ describe("createMockClient", () => {
   it("detokenizes a token", async () => {
     const result = await client.detokenize("TOK-abc-123");
     expect(result.token).toBe("TOK-abc-123");
+  });
+});
+
+// ── Report Library schema validation (S6-H12) ─────────────────────
+
+describe("reportLibraryResponseSchema", () => {
+  it("parses a valid report library API response", () => {
+    const apiResponse = {
+      items: [
+        {
+          reportId: "rpt-001",
+          template: "executive_summary",
+          scope: "Campaign: abc12345",
+          tlp: "TLP:AMBER",
+          status: "completed",
+          createdAt: "2026-03-14T12:00:00Z",
+          createdBy: "analyst@example.com",
+        },
+        {
+          reportId: "rpt-002",
+          template: "entity_dossier",
+          scope: "Platform-wide",
+          tlp: "TLP:GREEN",
+          status: "queued",
+          createdAt: "2026-03-13T08:30:00Z",
+          createdBy: "system",
+        },
+      ],
+      count: 2,
+    };
+    const parsed = reportLibraryResponseSchema.parse(apiResponse);
+    expect(parsed.count).toBe(2);
+    expect(parsed.items).toHaveLength(2);
+    expect(parsed.items[0].reportId).toBe("rpt-001");
+    expect(parsed.items[0].template).toBe("executive_summary");
+    expect(parsed.items[1].createdBy).toBe("system");
+  });
+
+  it("rejects a response missing required fields", () => {
+    const badResponse = {
+      items: [{ reportId: "rpt-001" }],
+      count: 1,
+    };
+    expect(() => reportLibraryResponseSchema.parse(badResponse)).toThrow();
   });
 });

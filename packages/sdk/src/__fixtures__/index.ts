@@ -937,5 +937,88 @@ export function createMockClient(): I4GClient {
     async bulkEntityAction() {
       return { processed: 0, failed: 0, errors: [] } as BulkActionResult;
     },
+    // Sprint 5: Watchlist
+    async addToWatchlist() {
+      return {
+        watchlistId: "mock-wl-001",
+        entityType: "crypto_wallet",
+        canonicalValue: "0xMOCK",
+        alertOnNewCase: true,
+        alertOnLossIncrease: false,
+        lossThreshold: null,
+        note: null,
+        createdBy: "mock@example.com",
+        createdAt: "2026-01-01T00:00:00Z",
+        updatedAt: "2026-01-01T00:00:00Z",
+      };
+    },
+    async listWatchlistItems() {
+      return { items: [], count: 0, limit: 50, offset: 0 };
+    },
+    async updateWatchlistItem() {
+      return {
+        watchlistId: "mock-wl-001",
+        entityType: "crypto_wallet",
+        canonicalValue: "0xMOCK",
+        alertOnNewCase: true,
+        alertOnLossIncrease: false,
+        lossThreshold: null,
+        note: null,
+        createdBy: "mock@example.com",
+        createdAt: "2026-01-01T00:00:00Z",
+        updatedAt: "2026-01-01T00:00:00Z",
+      };
+    },
+    async removeFromWatchlist() {
+      return { deleted: true };
+    },
+    async getWatchlistAlerts() {
+      return [];
+    },
+    async markAlertRead() {
+      return { markedRead: true };
+    },
+    async markAllAlertsRead() {
+      return { markedRead: 0 };
+    },
+    // Sprint 5: Scheduled Reports
+    async createReportSchedule() {
+      return {
+        scheduleId: "mock-sched-001",
+        template: "executive_summary",
+        cadence: "weekly",
+        scope: null,
+        options: null,
+        recipients: null,
+        isActive: true,
+        createdBy: "mock@example.com",
+        lastRunAt: null,
+        nextRunAt: "2026-01-08T00:00:00Z",
+        createdAt: "2026-01-01T00:00:00Z",
+        updatedAt: "2026-01-01T00:00:00Z",
+      };
+    },
+    async listReportSchedules() {
+      return [];
+    },
+    async updateReportSchedule() {
+      return {
+        scheduleId: "mock-sched-001",
+        template: "executive_summary",
+        cadence: "weekly",
+        scope: null,
+        options: null,
+        recipients: null,
+        isActive: true,
+        createdBy: "mock@example.com",
+        lastRunAt: null,
+        nextRunAt: "2026-01-08T00:00:00Z",
+        createdAt: "2026-01-01T00:00:00Z",
+        updatedAt: "2026-01-01T00:00:00Z",
+      };
+    },
+    async deleteReportSchedule() {
+      return { deleted: true };
+    },
   };
 }

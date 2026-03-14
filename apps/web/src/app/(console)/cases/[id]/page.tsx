@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getI4GClient } from "@/lib/i4g-client";
+import { I4GClientError } from "@i4g/sdk";
 import { Badge, Card, FeedbackButton } from "@i4g/ui-kit";
 import {
   ArrowLeft,
@@ -14,6 +15,7 @@ import {
 import Link from "next/link";
 import { ClassificationBadges } from "@/components/classification-badges";
 import { FieldHelp, SectionHelp } from "@/components/help";
+import { RestrictedAccess } from "@/components/restricted-access";
 import { TextWithTokens } from "@/components/text-with-tokens";
 
 // Force dynamic since we are fetching a specific ID
@@ -21,10 +23,20 @@ export const dynamic = "force-dynamic";
 
 async function CaseDetailView({ id }: { id: string }) {
   const client = getI4GClient();
-  const [caseData, taxonomy] = await Promise.all([
-    client.getCase(id),
-    client.getTaxonomy(),
-  ]);
+  let caseData;
+  let taxonomy;
+
+  try {
+    [caseData, taxonomy] = await Promise.all([
+      client.getCase(id),
+      client.getTaxonomy(),
+    ]);
+  } catch (error) {
+    if (error instanceof I4GClientError && error.status === 403) {
+      return <RestrictedAccess backHref="/cases" backLabel="Return to cases" />;
+    }
+    throw error;
+  }
 
   if (!caseData) {
     notFound();
