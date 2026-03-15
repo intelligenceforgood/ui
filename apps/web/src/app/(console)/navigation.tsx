@@ -54,7 +54,7 @@ const navItems: NavItem[] = [
   { href: "/discovery", label: "Discovery", icon: Globe },
   { href: "/cases", label: "Cases & Tasks", icon: CaseSensitive },
   {
-    href: "/reports/dossiers",
+    href: "/reports",
     label: "Reports",
     icon: FileCheck2,
     minRole: "analyst",

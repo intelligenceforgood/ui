@@ -4,10 +4,9 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
+import { resolveSsiUrl, ssiHeaders } from "@/lib/server/ssi-proxy";
 
 export const runtime = "nodejs";
-
-const SSI_API_URL = process.env.SSI_API_URL ?? "http://localhost:8100";
 
 export async function POST(
   request: NextRequest,
@@ -15,10 +14,12 @@ export async function POST(
 ): Promise<NextResponse> {
   const { id } = await params;
   const body: unknown = await request.json();
+  const ssiUrl = resolveSsiUrl();
   try {
-    const res = await fetch(`${SSI_API_URL}/ecx/submissions/${id}/reject`, {
+    const authHeaders = await ssiHeaders();
+    const res = await fetch(`${ssiUrl}/ecx/submissions/${id}/reject`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(15_000),
     });

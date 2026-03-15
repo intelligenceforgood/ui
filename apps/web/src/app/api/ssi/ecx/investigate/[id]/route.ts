@@ -5,19 +5,23 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
+import { resolveSsiUrl, ssiHeaders } from "@/lib/server/ssi-proxy";
 
 export const runtime = "nodejs";
-
-const SSI_API_URL = process.env.SSI_API_URL ?? "http://localhost:8100";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   const { id } = await params;
-  const upstream = `${SSI_API_URL}/ecx/investigate/${encodeURIComponent(id)}`;
+  const ssiUrl = resolveSsiUrl();
+  const upstream = `${ssiUrl}/ecx/investigate/${encodeURIComponent(id)}`;
   try {
-    const res = await fetch(upstream, { signal: AbortSignal.timeout(10_000) });
+    const headers = await ssiHeaders();
+    const res = await fetch(upstream, {
+      headers,
+      signal: AbortSignal.timeout(10_000),
+    });
     const data: unknown = await res.json();
     return NextResponse.json(data, { status: res.status });
   } catch (err) {

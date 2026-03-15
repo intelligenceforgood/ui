@@ -25,7 +25,7 @@ const SSI_API_URL = process.env.SSI_API_URL;
 async function proxyToSsi(
   body: Record<string, unknown>,
 ): Promise<NextResponse> {
-  const baseUrl = SSI_API_URL ?? "http://localhost:8100";
+  const baseUrl = SSI_API_URL || "http://localhost:8100";
   const upstream = await fetch(`${baseUrl}/trigger/investigate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

@@ -30,7 +30,7 @@ const SSI_API_URL = process.env.SSI_API_URL;
  *   `{ investigation_id, status, ssi_investigation_id, result? }`
  */
 async function proxyToSsi(id: string): Promise<NextResponse> {
-  const baseUrl = SSI_API_URL ?? "http://localhost:8100";
+  const baseUrl = SSI_API_URL || "http://localhost:8100";
 
   let upstream: Response;
   try {
