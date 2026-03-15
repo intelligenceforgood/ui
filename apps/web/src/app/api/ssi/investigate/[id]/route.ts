@@ -16,11 +16,9 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { apiFetch } from "@/lib/server/api-client";
+import { resolveSsiUrl, ssiHeaders } from "@/lib/server/ssi-proxy";
 
 export const runtime = "nodejs";
-
-/** SSI service URL — set only in local dev. */
-const SSI_API_URL = process.env.SSI_API_URL;
 
 /** Direct proxy to standalone SSI service (local dev).
  *
@@ -30,11 +28,13 @@ const SSI_API_URL = process.env.SSI_API_URL;
  *   `{ investigation_id, status, ssi_investigation_id, result? }`
  */
 async function proxyToSsi(id: string): Promise<NextResponse> {
-  const baseUrl = SSI_API_URL || "http://localhost:8100";
+  const baseUrl = resolveSsiUrl();
 
   let upstream: Response;
   try {
+    const headers = await ssiHeaders();
     upstream = await fetch(`${baseUrl}/investigations/${id}`, {
+      headers,
       signal: AbortSignal.timeout(10_000),
     });
   } catch {
@@ -160,7 +160,7 @@ export async function GET(
 ): Promise<NextResponse> {
   const { id } = await params;
   try {
-    if (SSI_API_URL) {
+    if (process.env.SSI_API_URL) {
       return await proxyToSsi(id);
     }
     return await proxyToCore(id);

@@ -15,20 +15,19 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { apiFetch } from "@/lib/server/api-client";
+import { resolveSsiUrl, ssiHeaders } from "@/lib/server/ssi-proxy";
 
 export const runtime = "nodejs";
 
-/** SSI service URL — set only in local dev. */
-const SSI_API_URL = process.env.SSI_API_URL;
-
-/** Direct proxy to standalone SSI service (local dev). */
+/** Direct proxy to SSI service (local dev or cloud). */
 async function proxyToSsi(
   body: Record<string, unknown>,
 ): Promise<NextResponse> {
-  const baseUrl = SSI_API_URL || "http://localhost:8100";
+  const baseUrl = resolveSsiUrl();
+  const headers = await ssiHeaders();
   const upstream = await fetch(`${baseUrl}/trigger/investigate`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(15_000),
   });
@@ -87,7 +86,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = (await request.json()) as Record<string, unknown>;
 
-    if (SSI_API_URL) {
+    if (process.env.SSI_API_URL) {
       return await proxyToSsi(body);
     }
     return await proxyToCore(body);
