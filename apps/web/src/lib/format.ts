@@ -2,8 +2,7 @@
  * Shared formatting utilities.
  *
  * Consolidates the `formatDate` function that was previously duplicated across
- * cases/page, search-history-list, saved-searches-list, account-list-console,
- * and dossier-utils.
+ * cases/page, search-history-list, saved-searches-list, and dossier-utils.
  */
 
 const dateFormatter = new Intl.DateTimeFormat("en", {
