@@ -37,18 +37,31 @@ async function proxyToSsi(id: string): Promise<NextResponse> {
       headers,
       signal: AbortSignal.timeout(10_000),
     });
-  } catch {
-    // SSI service unreachable — return running status so client keeps polling
+  } catch (err) {
+    // SSI service unreachable — signal the error so the client can track
+    // consecutive failures and stop polling rather than spinning forever.
+    console.error("[ssi proxy] SSI unreachable for %s: %s", id, err);
     return NextResponse.json(
-      { investigation_id: id, status: "running", ssi_investigation_id: id },
+      {
+        investigation_id: id,
+        status: "running",
+        ssi_investigation_id: id,
+        _proxy_error: "ssi_unreachable",
+      },
       { status: 200 },
     );
   }
 
   if (upstream.status === 404) {
-    // Scan not yet written to DB — investigation is still starting
+    // Scan not yet written to DB — signal this distinctly so the client
+    // can differentiate "not started yet" from "running".
     return NextResponse.json(
-      { investigation_id: id, status: "running", ssi_investigation_id: id },
+      {
+        investigation_id: id,
+        status: "running",
+        ssi_investigation_id: id,
+        _proxy_error: "scan_not_found",
+      },
       { status: 200 },
     );
   }

@@ -41,6 +41,7 @@ import type {
 
 const POLL_INTERVAL_MS = 3_000;
 const MAX_POLLS = 200;
+const MAX_CONSECUTIVE_ERRORS = 10; // stop after 10 consecutive errors (~30s)
 const SESSION_KEY = "ssi-active-investigation";
 const MAX_STALE_MS = 15 * 60 * 1000; // 15 min — discard stale sessions
 
@@ -252,6 +253,7 @@ export default function SsiInvestigatePage() {
   const [guidanceReason, setGuidanceReason] = useState("");
 
   const pollCount = useRef(0);
+  const consecutiveErrors = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const restoredRef = useRef(false);
 
@@ -357,13 +359,41 @@ export default function SsiInvestigatePage() {
       try {
         const res = await fetch(`/api/ssi/investigate/${id}`);
         if (!res.ok) {
-          stopPolling();
-          clearPersistedInvestigation();
-          setPhase("failed");
-          setErrorMsg("Failed to fetch investigation status.");
+          consecutiveErrors.current += 1;
+          if (consecutiveErrors.current >= MAX_CONSECUTIVE_ERRORS) {
+            stopPolling();
+            clearPersistedInvestigation();
+            setPhase("failed");
+            setErrorMsg(
+              `Investigation service returned ${res.status} errors. Please try again.`,
+            );
+          }
           return;
         }
         const data: StatusResponse = await res.json();
+
+        // Detect proxy-level errors (SSI unreachable or scan not found).
+        const proxyError = (data as unknown as Record<string, unknown>)
+          ._proxy_error as string | undefined;
+        if (proxyError) {
+          consecutiveErrors.current += 1;
+          if (consecutiveErrors.current >= MAX_CONSECUTIVE_ERRORS) {
+            stopPolling();
+            clearPersistedInvestigation();
+            setPhase("failed");
+            setErrorMsg(
+              proxyError === "ssi_unreachable"
+                ? "Investigation service is unreachable. Please try again later."
+                : "Investigation failed to start. The scan was not created. Please try again.",
+            );
+            return;
+          }
+          // Still within tolerance — keep polling (may be starting up)
+          return;
+        }
+
+        // Successful response — reset error counter
+        consecutiveErrors.current = 0;
         setApiStatus(data.status);
 
         // Track the SSI scan ID as soon as it appears (even during running).
@@ -391,7 +421,15 @@ export default function SsiInvestigatePage() {
           );
         }
       } catch {
-        // transient — keep polling
+        consecutiveErrors.current += 1;
+        if (consecutiveErrors.current >= MAX_CONSECUTIVE_ERRORS) {
+          stopPolling();
+          clearPersistedInvestigation();
+          setPhase("failed");
+          setErrorMsg(
+            "Lost connection to the investigation service. Please try again.",
+          );
+        }
       }
     },
     [stopPolling, clearPersistedInvestigation],
@@ -629,10 +667,18 @@ export default function SsiInvestigatePage() {
           </div>
 
           {phase === "polling" && (
-            <p className="text-xs text-slate-500 text-center">
-              Checking status every 3 seconds… this typically takes 30–90
-              seconds.
-            </p>
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-xs text-slate-500">
+                Checking status every 3 seconds… this typically takes 30–90
+                seconds.
+              </p>
+              <button
+                onClick={handleReset}
+                className="text-xs text-slate-400 hover:text-red-600 dark:hover:text-red-400 underline underline-offset-4 transition-colors"
+              >
+                Cancel investigation
+              </button>
+            </div>
           )}
 
           {/* Live View panel (Phase 3A) — read-only monitor */}
