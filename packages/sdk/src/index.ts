@@ -258,14 +258,67 @@ const caseGraphLinkSchema = z.object({
 });
 export type CaseGraphLink = z.infer<typeof caseGraphLinkSchema>;
 
+export const caseInvestigationSummarySchema = z.object({
+  scanId: z.string(),
+  url: z.string(),
+  normalizedUrl: z.string().nullable().optional(),
+  status: z.string(),
+  riskScore: z.number().nullable().optional(),
+  completedAt: z.string().nullable().optional(),
+  triggerType: z.string(),
+  linkedAt: z.string(),
+});
+export type CaseInvestigationSummary = z.infer<
+  typeof caseInvestigationSummarySchema
+>;
+
 export const caseDetailSchema = caseSummarySchema.extend({
   description: z.string().optional(),
   artifacts: z.array(caseArtifactSchema),
   timeline: z.array(caseTimelineEventSchema),
   graphNodes: z.array(caseGraphNodeSchema),
   graphLinks: z.array(caseGraphLinkSchema),
+  investigations: z.array(caseInvestigationSummarySchema).optional(),
 });
 export type CaseDetail = z.infer<typeof caseDetailSchema>;
+
+export const linkedCaseSummarySchema = z.object({
+  caseId: z.string(),
+  dataset: z.string(),
+  classification: z.string().nullable().optional(),
+  status: z.string(),
+  triggerType: z.string(),
+  linkedAt: z.string(),
+});
+export type LinkedCaseSummary = z.infer<typeof linkedCaseSummarySchema>;
+
+export const caseActivitySchema = z.object({
+  type: z.string(),
+  status: z.string(),
+  startedAt: z.string().nullable().optional(),
+  completedAt: z.string().nullable().optional(),
+  progress: z.number().nullable().optional(),
+  total: z.number().nullable().optional(),
+  scanId: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
+  riskScore: z.number().nullable().optional(),
+});
+export type CaseActivity = z.infer<typeof caseActivitySchema>;
+
+export const caseActivityResponseSchema = z.object({
+  caseId: z.string(),
+  activities: z.array(caseActivitySchema),
+  hasRunning: z.boolean(),
+});
+export type CaseActivityResponse = z.infer<typeof caseActivityResponseSchema>;
+
+export const caseInvestigateRequestSchema = z.object({
+  url: z.string(),
+  force: z.boolean().optional(),
+});
+export type CaseInvestigateRequest = z.infer<
+  typeof caseInvestigateRequestSchema
+>;
 
 export const taxonomyItemSchema = z.object({
   code: z.string(),
@@ -682,6 +735,12 @@ export interface I4GClient {
     update: Partial<ReportScheduleInput>,
   ): Promise<ReportSchedule>;
   deleteReportSchedule(scheduleId: string): Promise<{ deleted: boolean }>;
+  // SSI Case Integration (Phase 3)
+  getCaseActivity(caseId: string): Promise<CaseActivityResponse>;
+  investigateCaseUrl(
+    caseId: string,
+    body: CaseInvestigateRequest,
+  ): Promise<Record<string, unknown>>;
 }
 
 const detokenizeResponseSchema = z.object({
@@ -1850,6 +1909,16 @@ export function createClient(config: ClientConfig): I4GClient {
         z.object({ deleted: z.boolean() }),
         { method: "DELETE" },
       );
+    },
+    // SSI Case Integration (Phase 3)
+    getCaseActivity(caseId) {
+      return request(`/cases/${caseId}/activity`, caseActivityResponseSchema);
+    },
+    investigateCaseUrl(caseId, body) {
+      return request(`/cases/${caseId}/investigate`, z.record(z.unknown()), {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
     },
   };
 }

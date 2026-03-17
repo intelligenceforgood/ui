@@ -1020,5 +1020,11 @@ export function createMockClient(): I4GClient {
     async deleteReportSchedule() {
       return { deleted: true };
     },
+    async getCaseActivity() {
+      return { caseId: "mock-case", activities: [], hasRunning: false };
+    },
+    async investigateCaseUrl() {
+      return { triggered: true, scanId: "mock-scan" };
+    },
   };
 }
