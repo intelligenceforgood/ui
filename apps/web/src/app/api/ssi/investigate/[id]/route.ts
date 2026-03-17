@@ -2,7 +2,7 @@
  * Server-side proxy for SSI investigation status polling.
  *
  * **Routing logic (local dev only):**
- * - When `SSI_API_URL` is set, polls the standalone SSI service at
+ * - When `SSI_API_URL` is set, polls the SSI service (local or cloud) at
  *   `GET /investigate/{id}`. Needed because core's in-memory task
  *   status can't be updated by the SSI subprocess in local dev.
  * - Otherwise (cloud / production), polls core's task-status API at
@@ -20,7 +20,7 @@ import { resolveSsiUrl, ssiHeaders } from "@/lib/server/ssi-proxy";
 
 export const runtime = "nodejs";
 
-/** Direct proxy to standalone SSI service (local dev).
+/** Direct proxy to the SSI service (local dev).
  *
  * Queries `/investigations/{id}` on the SSI service (the scan detail
  * endpoint backed by the SQLite scan store) and normalises the response

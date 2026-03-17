@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
   Briefcase,
@@ -24,6 +25,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Badge, SectionLabel, FeedbackButton } from "@i4g/ui-kit";
+import { SsiDedupWarningModal } from "@/components/ssi/dedup-warning-modal";
 import { useInvestigationMonitor } from "@/lib/use-investigation-monitor";
 import { parseUTCDate } from "@/lib/format";
 import type {
@@ -251,6 +253,16 @@ export default function SsiInvestigatePage() {
   const [guidanceAction, setGuidanceAction] = useState<string>("click");
   const [guidanceValue, setGuidanceValue] = useState("");
   const [guidanceReason, setGuidanceReason] = useState("");
+
+  // Dedup state
+  const [dedupOpen, setDedupOpen] = useState(false);
+  const [dedupScanId, setDedupScanId] = useState<string | null>(null);
+  const [dedupRiskScore, setDedupRiskScore] = useState<number | null>(null);
+  const [dedupDays, setDedupDays] = useState(0);
+  const [dedupUrl, setDedupUrl] = useState("");
+  const [dedupScanType, setDedupScanType] = useState<ScanType>("passive");
+
+  const router = useRouter();
 
   const pollCount = useRef(0);
   const consecutiveErrors = useRef(0);
@@ -501,6 +513,19 @@ export default function SsiInvestigatePage() {
         throw new Error("Service unavailable. Please try again later.");
       }
       const data: InvestigateResponse = await res.json();
+
+      // Handle dedup response from core
+      if (data.alreadyInvestigated && data.triggered === false) {
+        setDedupScanId(data.existingScanId ?? null);
+        setDedupRiskScore(data.existingRiskScore ?? null);
+        setDedupDays(data.daysSinceScan ?? 0);
+        setDedupUrl(normalised);
+        setDedupScanType(scanType);
+        setPhase("idle");
+        setDedupOpen(true);
+        return;
+      }
+
       persistInvestigation(data.investigation_id, normalised, scanType);
       setPhase("polling");
       startPolling(data.investigation_id);
@@ -510,6 +535,31 @@ export default function SsiInvestigatePage() {
         err instanceof Error ? err.message : "An unexpected error occurred.",
       );
     }
+  }
+
+  async function handleForceReinvestigate() {
+    setPhase("submitting");
+    setErrorMsg(null);
+    setResult(null);
+    setApiStatus("pending");
+
+    const res = await fetch("/api/ssi/investigate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url: dedupUrl,
+        passive_only: dedupScanType === "passive",
+        scan_type: dedupScanType,
+        force: true,
+      }),
+    });
+    if (!res.ok) {
+      throw new Error("Service unavailable. Please try again later.");
+    }
+    const data: InvestigateResponse = await res.json();
+    persistInvestigation(data.investigation_id, dedupUrl, dedupScanType);
+    setPhase("polling");
+    startPolling(data.investigation_id);
   }
 
   function handleReset() {
@@ -1000,6 +1050,22 @@ export default function SsiInvestigatePage() {
             Investigate another URL
           </button>
         </div>
+      )}
+
+      {/* Dedup warning modal */}
+      {dedupScanId && (
+        <SsiDedupWarningModal
+          isOpen={dedupOpen}
+          onClose={() => setDedupOpen(false)}
+          url={dedupUrl}
+          existingScanId={dedupScanId}
+          existingRiskScore={dedupRiskScore}
+          daysSinceScan={dedupDays}
+          onViewExisting={(scanId) =>
+            router.push(`/ssi/investigations/${scanId}`)
+          }
+          onReinvestigate={handleForceReinvestigate}
+        />
       )}
     </div>
   );

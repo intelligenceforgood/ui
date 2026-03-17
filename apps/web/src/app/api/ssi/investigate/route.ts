@@ -1,13 +1,12 @@
 /**
  * Server-side proxy for SSI investigation submission.
  *
- * **Routing logic (local dev only):**
- * - When `SSI_API_URL` is set, proxies directly to the standalone SSI
- *   service at `POST /investigate`. This is needed in local dev because
- *   core's subprocess trigger can't update the in-memory task status.
+ * **Routing logic:**
+ * - When `SSI_API_URL` is set (local dev or direct), proxies to the SSI
+ *   service at `POST /trigger/investigate`.
  * - Otherwise (cloud / production), proxies to the core API at
  *   `POST /investigations/ssi` via `apiFetch` which injects IAP auth.
- *   Core triggers an SSI Cloud Run Job; SSI-API is not deployed in cloud.
+ *   Core forwards the request to the SSI Cloud Run Service (`ssi-svc`).
  *
  * The response is normalised so the client always receives
  * `{ investigation_id, status, message }` regardless of backend.
@@ -32,12 +31,20 @@ async function proxyToSsi(
     signal: AbortSignal.timeout(15_000),
   });
   const data = (await upstream.json()) as Record<string, unknown>;
-  // SSI returns { scan_id, status }. Normalise to { investigation_id, status }
-  // so the client page can use the same field regardless of backend path.
+  // SSI returns { scan_id, status, already_investigated, ... }.
+  // Normalise to { investigation_id, status } plus dedup fields (camelCase).
   return NextResponse.json(
     {
       investigation_id: data.scan_id,
       status: data.status ?? "accepted",
+      ...(data.already_investigated != null && {
+        triggered: !data.already_investigated,
+        alreadyInvestigated: data.already_investigated,
+        existingScanId: data.existing_scan_id,
+        existingRiskScore: data.existing_risk_score,
+        daysSinceScan: data.days_since_scan,
+        reason: data.reason,
+      }),
     },
     { status: upstream.status },
   );
@@ -59,6 +66,7 @@ async function proxyToCore(
     pushToCore: body.push_to_core ?? body.pushToCore ?? true,
     triggerDossier: body.trigger_dossier ?? body.triggerDossier ?? false,
     dataset: body.dataset ?? "ssi",
+    ...(body.force != null && { force: body.force }),
   };
 
   const data = await apiFetch<{
@@ -66,6 +74,12 @@ async function proxyToCore(
     status: string;
     message: string;
     jobName?: string;
+    triggered?: boolean;
+    alreadyInvestigated?: boolean;
+    existingScanId?: string;
+    existingRiskScore?: number | null;
+    daysSinceScan?: number | null;
+    reason?: string;
   }>("/investigations/ssi", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -77,6 +91,14 @@ async function proxyToCore(
       investigation_id: data.taskId,
       status: data.status,
       message: data.message,
+      ...(data.alreadyInvestigated != null && {
+        triggered: data.triggered,
+        alreadyInvestigated: data.alreadyInvestigated,
+        existingScanId: data.existingScanId,
+        existingRiskScore: data.existingRiskScore,
+        daysSinceScan: data.daysSinceScan,
+        reason: data.reason,
+      }),
     },
     { status: 202 },
   );

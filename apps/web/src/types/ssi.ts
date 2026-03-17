@@ -28,6 +28,13 @@ export interface InvestigateResponse {
   investigation_id: string;
   status: string;
   message: string;
+  /** Dedup fields — present when the URL was recently investigated. */
+  triggered?: boolean;
+  alreadyInvestigated?: boolean;
+  existingScanId?: string;
+  existingRiskScore?: number | null;
+  daysSinceScan?: number | null;
+  reason?: string;
 }
 
 export interface StatusResponse {

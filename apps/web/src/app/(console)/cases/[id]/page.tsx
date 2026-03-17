@@ -17,6 +17,10 @@ import { ClassificationBadges } from "@/components/classification-badges";
 import { FieldHelp, SectionHelp } from "@/components/help";
 import { RestrictedAccess } from "@/components/restricted-access";
 import { TextWithTokens } from "@/components/text-with-tokens";
+import {
+  ActivityBarClient,
+  InvestigationPanelClient,
+} from "./case-detail-client";
 
 // Force dynamic since we are fetching a specific ID
 export const dynamic = "force-dynamic";
@@ -41,6 +45,12 @@ async function CaseDetailView({ id }: { id: string }) {
   if (!caseData) {
     notFound();
   }
+
+  // Extract URL indicators from case data for the investigation panel.
+  // URLs come from artifacts of type "url" or from the investigations array.
+  const caseUrls: string[] = caseData.artifacts
+    .filter((a) => a.type === "url" && a.url)
+    .map((a) => a.url!);
 
   return (
     <div className="space-y-6">
@@ -78,6 +88,9 @@ async function CaseDetailView({ id }: { id: string }) {
         </div>
         <FeedbackButton feedbackId="case-detail.header" />
       </div>
+
+      {/* Activity Bar — client component with polling */}
+      <ActivityBarClient caseId={id} />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-3 gap-6">
@@ -242,6 +255,13 @@ async function CaseDetailView({ id }: { id: string }) {
               )}
             </ul>
           </Card>
+
+          {/* URL Investigations — client component with trigger actions */}
+          <InvestigationPanelClient
+            caseId={id}
+            investigations={caseData.investigations ?? []}
+            caseUrls={caseUrls}
+          />
         </div>
       </div>
     </div>
