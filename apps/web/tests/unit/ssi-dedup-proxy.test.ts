@@ -1,5 +1,10 @@
 /**
  * Tests for the SSI investigate API proxy dedup field passthrough.
+ *
+ * All investigation requests are routed through Core API
+ * (`POST /investigations/ssi`). There is no direct-to-SSI path for
+ * investigation lifecycle routes.
+ *
  * @see src/app/api/ssi/investigate/route.ts
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,11 +16,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mockApiFetch = vi.fn();
 vi.mock("@/lib/server/api-client", () => ({
   apiFetch: (...args: unknown[]) => mockApiFetch(...args),
-}));
-
-vi.mock("@/lib/server/ssi-proxy", () => ({
-  resolveSsiUrl: () => "http://ssi:8100",
-  ssiHeaders: async () => ({}),
 }));
 
 beforeEach(() => {
@@ -110,38 +110,14 @@ describe("SSI investigate proxy – dedup passthrough", () => {
       }),
     );
   });
-});
 
-// ---------------------------------------------------------------------------
-// proxyToSsi path (SSI_API_URL set — local dev / direct SSI)
-// ---------------------------------------------------------------------------
-
-describe("SSI investigate proxy – SSI direct path dedup", () => {
-  const mockFetch = vi.fn();
-
-  beforeEach(() => {
+  it("routes through core even when SSI_API_URL is set", async () => {
     vi.stubEnv("SSI_API_URL", "http://ssi:8100");
-    vi.stubGlobal("fetch", mockFetch);
-    mockFetch.mockReset();
-  });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it("passes dedup fields through when SSI returns already_investigated", async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 202,
-      json: async () => ({
-        scan_id: null,
-        status: "skipped",
-        already_investigated: true,
-        existing_scan_id: "scan-ssi-dedup",
-        existing_risk_score: 72.0,
-        days_since_scan: 1,
-        reason: "fresh_scan_exists",
-      }),
+    mockApiFetch.mockResolvedValueOnce({
+      taskId: "task-via-core",
+      status: "accepted",
+      message: "Investigation started",
     });
 
     const { POST } = await import("@/app/api/ssi/investigate/route");
@@ -154,59 +130,11 @@ describe("SSI investigate proxy – SSI direct path dedup", () => {
     const res = await POST(request as never);
     const body = await res.json();
 
-    expect(body.alreadyInvestigated).toBe(true);
-    expect(body.triggered).toBe(false);
-    expect(body.existingScanId).toBe("scan-ssi-dedup");
-    expect(body.existingRiskScore).toBe(72.0);
-    expect(body.daysSinceScan).toBe(1);
-    expect(body.reason).toBe("fresh_scan_exists");
-  });
-
-  it("omits dedup fields for a normal SSI response", async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 202,
-      json: async () => ({
-        scan_id: "scan-new-ssi",
-        status: "accepted",
-      }),
-    });
-
-    const { POST } = await import("@/app/api/ssi/investigate/route");
-    const request = new Request("http://localhost/api/ssi/investigate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: "https://new.example.com" }),
-    });
-
-    const res = await POST(request as never);
-    const body = await res.json();
-
-    expect(body.investigation_id).toBe("scan-new-ssi");
-    expect(body.status).toBe("accepted");
-    expect(body.alreadyInvestigated).toBeUndefined();
-  });
-
-  it("forwards force flag to SSI service", async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 202,
-      json: async () => ({
-        scan_id: "scan-forced-ssi",
-        status: "accepted",
-      }),
-    });
-
-    const { POST } = await import("@/app/api/ssi/investigate/route");
-    const request = new Request("http://localhost/api/ssi/investigate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: "https://scam.example.com", force: true }),
-    });
-
-    await POST(request as never);
-
-    const sentBody = JSON.parse(mockFetch.mock.calls[0][1].body);
-    expect(sentBody.force).toBe(true);
+    // Should always go through apiFetch (core), not direct SSI fetch
+    expect(mockApiFetch).toHaveBeenCalledWith(
+      "/investigations/ssi",
+      expect.anything(),
+    );
+    expect(body.investigation_id).toBe("task-via-core");
   });
 });

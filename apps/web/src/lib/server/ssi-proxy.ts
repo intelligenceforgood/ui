@@ -1,5 +1,8 @@
 /**
- * SSI service proxy helper.
+ * SSI service proxy helper — used by **eCX routes only**.
+ *
+ * Investigation lifecycle routes (trigger + poll) go through Core API,
+ * NOT through this helper. See `api/ssi/investigate/route.ts`.
  *
  * Resolves the upstream SSI API URL from `SSI_API_URL` env var and
  * injects a Cloud Run identity token when running on GCP so the
