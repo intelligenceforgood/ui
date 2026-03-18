@@ -11,11 +11,21 @@
 
 import { getIapToken } from "@/lib/iap-token";
 
-const DEFAULT_SSI_URL = "http://localhost:8100";
-
-/** Resolve SSI base URL, treating empty string as unset. */
+/**
+ * Resolve SSI base URL from `SSI_API_URL` env var.
+ *
+ * Throws if the variable is unset or empty — eCX routes cannot
+ * function without a reachable SSI service.
+ */
 export function resolveSsiUrl(): string {
-  return process.env.SSI_API_URL || DEFAULT_SSI_URL;
+  const url = process.env.SSI_API_URL;
+  if (!url) {
+    throw new Error(
+      "SSI_API_URL is not set. eCX proxy routes require " +
+        "a reachable SSI service URL (e.g. http://localhost:8100).",
+    );
+  }
+  return url;
 }
 
 /** True when SSI is a remote (non-localhost) target requiring auth. */
