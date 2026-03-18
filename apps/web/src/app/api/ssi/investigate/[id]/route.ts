@@ -123,11 +123,10 @@ async function proxyToCore(taskId: string): Promise<NextResponse> {
 
   // Log the raw core response for SSI scan ID tracing.
   console.debug(
-    "[ssi proxy] task=%s status=%s investigationId=%s scanId=%s",
+    "[ssi proxy] task=%s status=%s investigationId=%s",
     taskId,
     status,
     data.investigationId ?? "(absent)",
-    data.scanId ?? "(absent)",
   );
 
   // Build a result object for completed/failed investigations
@@ -142,10 +141,10 @@ async function proxyToCore(taskId: string): Promise<NextResponse> {
       case_id: data.caseId ?? data.case_id,
       // investigation_id is the SSI scan ID (distinct from task_id)
       ssi_investigation_id: data.investigationId ?? data.investigation_id,
-      // Always indicate a PDF exists for completed investigations so the
-      // page can render report download links (the report is served by
-      // core's /investigations/ssi/{scan_id}/report.pdf endpoint).
-      pdf_report_path: status === "completed" ? "generated" : undefined,
+      // Indicate a PDF *may* exist for completed investigations. The client
+      // should handle 404 gracefully when fetching the report PDF endpoint
+      // since PDF generation can fail silently in the orchestrator.
+      pdf_report_path: status === "completed" ? "pending" : undefined,
       error: status === "failed" ? data.message : undefined,
     };
   }

@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CaseActivity, CaseActivityResponse } from "@i4g/sdk";
 
+/** Max polls before auto-stopping (prevents runaway polling if an
+ * investigation is stuck in "running" forever).  600 × 10s = ~100 min. */
+const MAX_POLLS = 600;
+
 interface UseCaseActivityOptions {
   /** Polling interval in milliseconds. Default: 10000 (10s). */
   pollInterval?: number;
@@ -39,6 +43,7 @@ export function useCaseActivity(
   const shouldPollRef = useRef(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mountedRef = useRef(true);
+  const pollCountRef = useRef(0);
 
   const fetchActivity = useCallback(async () => {
     try {
@@ -68,6 +73,7 @@ export function useCaseActivity(
   // Manually trigger a refetch and resume polling
   const refetch = useCallback(() => {
     shouldPollRef.current = true;
+    pollCountRef.current = 0;
     setIsLoading(true);
     fetchActivity();
   }, [fetchActivity]);
@@ -86,6 +92,11 @@ export function useCaseActivity(
     // Set up polling interval
     intervalRef.current = setInterval(() => {
       if (shouldPollRef.current) {
+        pollCountRef.current += 1;
+        if (pollCountRef.current >= MAX_POLLS) {
+          shouldPollRef.current = false;
+          return;
+        }
         fetchActivity();
       }
     }, pollInterval);
