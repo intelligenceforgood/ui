@@ -191,6 +191,7 @@ const caseSummarySchema = z.object({
     "closed",
     "accepted",
     "rejected",
+    "escalated",
   ]),
   updatedAt: z.string(),
   assignee: z.string().nullable().optional(),

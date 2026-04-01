@@ -28,6 +28,7 @@ const statusStyles: Record<CaseSummary["status"], string> = {
   closed: "bg-slate-200 text-slate-600",
   accepted: "bg-emerald-50 text-emerald-600",
   rejected: "bg-red-50 text-red-600",
+  escalated: "bg-orange-50 text-orange-600",
 };
 
 const priorityStyles: Record<CaseSummary["priority"], string> = {
