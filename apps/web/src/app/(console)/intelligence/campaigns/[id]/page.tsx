@@ -97,7 +97,7 @@ export default async function CampaignDetailPage({
       <CampaignTimeline
         timeline={timeline}
         graph={graph}
-        entityTypes={campaign.entityTypes ?? []}
+        entityTypes={Object.keys(campaign.entityTypes ?? {})}
       />
     </div>
   );

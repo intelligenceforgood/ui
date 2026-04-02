@@ -35,7 +35,7 @@ export default function CampaignTimeline({
               <XAxis dataKey="date" />
               <YAxis allowDecimals={false} />
               <Tooltip />
-              <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="caseCount" fill="#3b82f6" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

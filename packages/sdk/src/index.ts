@@ -1107,7 +1107,7 @@ export type ThreatCampaignList = z.infer<typeof threatCampaignListSchema>;
 
 const threatCampaignDetailSchema = threatCampaignSchema.extend({
   cases: z.array(z.record(z.unknown())).optional(),
-  entityTypes: z.array(z.string()).optional(),
+  entityTypes: z.record(z.string(), z.number()).optional(),
   ssiLinks: z.array(z.record(z.unknown())).optional(),
 });
 
@@ -1115,7 +1115,7 @@ export type ThreatCampaignDetail = z.infer<typeof threatCampaignDetailSchema>;
 
 const campaignTimelinePointSchema = z.object({
   date: z.string(),
-  count: z.number(),
+  caseCount: z.number(),
 });
 
 export type CampaignTimelinePoint = z.infer<typeof campaignTimelinePointSchema>;

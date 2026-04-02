@@ -840,7 +840,7 @@ export function createMockClient(): I4GClient {
         riskScore: 0,
         victimCount: 0,
         firstCaseAt: null,
-        entityTypes: [],
+        entityTypes: {},
       } as ThreatCampaignDetail;
     },
     async getCampaignTimeline() {
