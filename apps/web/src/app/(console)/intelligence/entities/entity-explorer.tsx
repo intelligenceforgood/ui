@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { EntityFilterSidebar } from "./entity-filter-sidebar";
 import { EntityDetailPanel } from "./entity-detail-panel";
+import { entityTypeLabel } from "@/lib/entity-types";
 
 interface EntityExplorerProps {
   initialParams: Record<string, string | string[] | undefined>;
@@ -270,7 +271,9 @@ export default function EntityExplorer({ initialParams }: EntityExplorerProps) {
                     onClick={() => setSelected(entity)}
                   >
                     <td className="px-4 py-3">
-                      <Badge variant="default">{entity.entityType}</Badge>
+                      <Badge variant="default" title={entity.entityType}>
+                        {entityTypeLabel(entity.entityType)}
+                      </Badge>
                     </td>
                     <td className="px-4 py-3 font-mono text-sm text-slate-900 dark:text-white">
                       {entity.canonicalValue}

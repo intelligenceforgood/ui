@@ -2,6 +2,7 @@
 
 import { Button, Input } from "@i4g/ui-kit";
 import { SlidersHorizontal, X } from "lucide-react";
+import { entityTypeLabel } from "@/lib/entity-types";
 
 const STATUSES = ["active", "inactive", "flagged"];
 
@@ -65,7 +66,9 @@ export function EntityFilterSidebar({
                 onChange={() => onEntityTypeChange(entityType === t ? "" : t)}
                 className="accent-teal-600"
               />
-              <span className="text-slate-700 dark:text-slate-300">{t}</span>
+              <span className="text-slate-700 dark:text-slate-300" title={t}>
+                {entityTypeLabel(t)}
+              </span>
             </label>
           ))}
         </div>

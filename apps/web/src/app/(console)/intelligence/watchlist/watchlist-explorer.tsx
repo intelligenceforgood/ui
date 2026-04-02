@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Card, Badge, Button } from "@i4g/ui-kit";
+import { entityTypeLabel } from "@/lib/entity-types";
 import {
   Bell,
   BellOff,
@@ -223,7 +224,9 @@ export default function WatchlistExplorer() {
                 <Eye className="h-4 w-4 text-blue-500" />
                 <div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="default">{item.entityType}</Badge>
+                    <Badge variant="default" title={item.entityType}>
+                      {entityTypeLabel(item.entityType)}
+                    </Badge>
                     <span className="font-mono text-sm font-medium text-slate-900 dark:text-white">
                       {item.canonicalValue}
                     </span>

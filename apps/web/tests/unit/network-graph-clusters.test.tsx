@@ -94,13 +94,27 @@ const mockGraphWithClusters = {
   layout: null,
 };
 
+const mockEntityTypes = [
+  { value: "wallet_address", label: "Wallet Address" },
+  { value: "email_address", label: "Email Address" },
+  { value: "phone_number", label: "Phone Number" },
+];
+
 let fetchMock: Mock;
 
 describe("NetworkGraph – cluster visualization", () => {
   beforeEach(() => {
-    fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => mockGraphWithClusters,
+    fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url.includes("type-labels")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => mockEntityTypes,
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => mockGraphWithClusters,
+      });
     });
     global.fetch = fetchMock as unknown as typeof fetch;
 
@@ -129,9 +143,12 @@ describe("NetworkGraph – cluster visualization", () => {
   it("renders Show Communities checkbox after data loads", async () => {
     render(<NetworkGraph />);
 
-    // Trigger data load
-    const input = screen.getByPlaceholderText("entity_type:value");
-    fireEvent.change(input, { target: { value: "wallet:0xAAA" } });
+    // Wait for entity types to load, then trigger data load
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("Enter value…")).toBeInTheDocument();
+    });
+    const valueInput = screen.getByPlaceholderText("Enter value…");
+    fireEvent.change(valueInput, { target: { value: "0xAAA" } });
     const submitBtn = screen.getByTestId("icon-search").closest("button")!;
     fireEvent.click(submitBtn);
 
@@ -145,8 +162,11 @@ describe("NetworkGraph – cluster visualization", () => {
     render(<NetworkGraph />);
 
     // Load data by submitting a seed
-    const input = screen.getByPlaceholderText("entity_type:value");
-    fireEvent.change(input, { target: { value: "wallet:0xAAA" } });
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("Enter value…")).toBeInTheDocument();
+    });
+    const valueInput = screen.getByPlaceholderText("Enter value…");
+    fireEvent.change(valueInput, { target: { value: "0xAAA" } });
     const submitBtn = screen.getByTestId("icon-search").closest("button")!;
     fireEvent.click(submitBtn);
 
@@ -163,8 +183,11 @@ describe("NetworkGraph – cluster visualization", () => {
   it("sends graph API request with correct endpoint", async () => {
     render(<NetworkGraph />);
 
-    const input = screen.getByPlaceholderText("entity_type:value");
-    fireEvent.change(input, { target: { value: "wallet:0xAAA" } });
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("Enter value…")).toBeInTheDocument();
+    });
+    const valueInput = screen.getByPlaceholderText("Enter value…");
+    fireEvent.change(valueInput, { target: { value: "0xAAA" } });
     const submitBtn = screen.getByTestId("icon-search").closest("button")!;
     fireEvent.click(submitBtn);
 

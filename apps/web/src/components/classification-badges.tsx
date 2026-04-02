@@ -71,11 +71,31 @@ export function ClassificationBadges({
 
   return (
     <>
-      {tags.map((tag, idx) => (
-        <Badge key={`${keyPrefix}tag-${tag}-${idx}`} variant="default">
-          #{tag}
-        </Badge>
-      ))}
+      {tags.map((tag, idx) => {
+        // Tags that look like taxonomy codes (e.g. INTENT.ROMANCE) get
+        // resolved to user-friendly labels with the code shown on hover.
+        if (tag.includes(".")) {
+          const label = getTaxonomyLabel(taxonomy, tag);
+          const desc = getTaxonomyDescription(taxonomy, tag);
+          const prefix = tag.split(".")[0]!;
+          const axisPrefix = prefix.charAt(0) + prefix.slice(1).toLowerCase();
+          const tooltip = [tag, desc].filter(Boolean).join(" — ");
+          return (
+            <Badge
+              key={`${keyPrefix}tag-${tag}-${idx}`}
+              variant="default"
+              title={tooltip}
+            >
+              {axisPrefix}: {label}
+            </Badge>
+          );
+        }
+        return (
+          <Badge key={`${keyPrefix}tag-${tag}-${idx}`} variant="default">
+            #{tag}
+          </Badge>
+        );
+      })}
     </>
   );
 }

@@ -4,16 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Card, Button, Input, Badge } from "@i4g/ui-kit";
 import type { GraphPayload, GraphNode, ClusterSummary } from "@i4g/sdk";
 import { Download, Maximize2, Search, ZoomIn, ZoomOut } from "lucide-react";
-
-const ENTITY_COLORS: Record<string, string> = {
-  wallet: "#ef4444",
-  email: "#3b82f6",
-  phone: "#10b981",
-  ip: "#f59e0b",
-  domain: "#8b5cf6",
-  url: "#ec4899",
-  default: "#6b7280",
-};
+import { entityTypeColor, entityTypeLabel } from "@/lib/entity-types";
 
 const EDGE_COLORS: Record<string, string> = {
   "co-occurrence": "#94a3b8",
@@ -52,7 +43,8 @@ export default function NetworkGraph() {
   const [graphData, setGraphData] = useState<GraphPayload | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [seed, setSeed] = useState("");
+  const [seedType, setSeedType] = useState("");
+  const [seedValue, setSeedValue] = useState("");
   const [hops, setHops] = useState(1);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [positions, setPositions] = useState<Map<string, NodePosition>>(
@@ -65,6 +57,26 @@ export default function NetworkGraph() {
   );
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const animRef = useRef<number | null>(null);
+  const [entityTypes, setEntityTypes] = useState<
+    { value: string; label: string }[]
+  >([]);
+
+  // Compute seed string from type + value
+  const seed =
+    seedType && seedValue.trim() ? `${seedType}:${seedValue.trim()}` : "";
+
+  // Fetch available entity types from the API
+  useEffect(() => {
+    fetch("/api/intelligence/entities/type-labels")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((items: { value: string; label: string }[]) => {
+        setEntityTypes(items);
+        if (items.length > 0 && !seedType) {
+          setSeedType(items[0]!.value);
+        }
+      })
+      .catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchGraph = useCallback(async () => {
     if (!seed) return;
@@ -203,8 +215,7 @@ export default function NetworkGraph() {
       for (const p of posArr) {
         const n = p.node;
         const radius = Math.max(6, Math.min(20, 4 + n.caseCount * 2));
-        const baseColor =
-          ENTITY_COLORS[n.entityType] ?? ENTITY_COLORS["default"]!;
+        const baseColor = entityTypeColor(n.entityType);
         const color =
           showClusters && n.clusterId != null
             ? CLUSTER_COLORS[n.clusterId % CLUSTER_COLORS.length] ?? baseColor
@@ -334,15 +345,43 @@ export default function NetworkGraph() {
         </h3>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs text-slate-500">Seed Entity</label>
+            <label
+              htmlFor="seed-entity-type"
+              className="block text-xs text-slate-500"
+            >
+              Entity Type
+            </label>
+            <select
+              id="seed-entity-type"
+              value={seedType}
+              onChange={(e) => setSeedType(e.target.value)}
+              className="mt-1 w-full rounded border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800"
+            >
+              {entityTypes.length === 0 && <option value="">Loading…</option>}
+              {entityTypes.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-slate-500">Entity Value</label>
             <div className="mt-1 flex gap-1">
               <Input
-                value={seed}
-                onChange={(e) => setSeed(e.target.value)}
-                placeholder="entity_type:value"
+                value={seedValue}
+                onChange={(e) => setSeedValue(e.target.value)}
+                placeholder="Enter value…"
                 className="flex-1 text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") fetchGraph();
+                }}
               />
-              <Button size="sm" onClick={fetchGraph} disabled={loading}>
+              <Button
+                size="sm"
+                onClick={fetchGraph}
+                disabled={loading || !seed}
+              >
                 <Search className="h-4 w-4" />
               </Button>
             </div>
@@ -392,34 +431,50 @@ export default function NetworkGraph() {
             </div>
           )}
         </div>
-        {/* Legend */}
+        {/* Legend — derived from current graph nodes */}
         <div className="mt-4 space-y-1">
           <p className="text-xs font-semibold text-slate-500">Entity Types</p>
-          {Object.entries(ENTITY_COLORS)
-            .filter(([k]) => k !== "default")
-            .map(([type, color]) => (
-              <div key={type} className="flex items-center gap-2 text-xs">
-                <span
-                  className="inline-block h-3 w-3 rounded-full"
-                  style={{ backgroundColor: color }}
-                />
-                {type}
-              </div>
-            ))}
+          {graphData
+            ? Array.from(new Set(graphData.nodes.map((n) => n.entityType)))
+                .sort()
+                .map((t) => (
+                  <div key={t} className="flex items-center gap-2 text-xs">
+                    <span
+                      className="inline-block h-3 w-3 rounded-full"
+                      style={{ backgroundColor: entityTypeColor(t) }}
+                    />
+                    {entityTypeLabel(t)}
+                  </div>
+                ))
+            : entityTypes.map(({ value, label }) => (
+                <div key={value} className="flex items-center gap-2 text-xs">
+                  <span
+                    className="inline-block h-3 w-3 rounded-full"
+                    style={{ backgroundColor: entityTypeColor(value) }}
+                  />
+                  {label}
+                </div>
+              ))}
           <p className="mt-2 text-xs font-semibold text-slate-500">
             Edge Types
           </p>
-          {Object.entries(EDGE_COLORS)
-            .filter(([k]) => k !== "default")
-            .map(([type, color]) => (
-              <div key={type} className="flex items-center gap-2 text-xs">
-                <span
-                  className="inline-block h-[2px] w-3"
-                  style={{ backgroundColor: color }}
-                />
-                {type}
-              </div>
-            ))}
+          {(graphData
+            ? Array.from(new Set(graphData.edges.map((e) => e.edgeType)))
+                .sort()
+                .map(
+                  (type) =>
+                    [type, EDGE_COLORS[type] || EDGE_COLORS.default] as const,
+                )
+            : Object.entries(EDGE_COLORS).filter(([k]) => k !== "default")
+          ).map(([type, color]) => (
+            <div key={type} className="flex items-center gap-2 text-xs">
+              <span
+                className="inline-block h-[2px] w-3"
+                style={{ backgroundColor: color }}
+              />
+              {type}
+            </div>
+          ))}
         </div>
       </Card>
 
@@ -476,7 +531,9 @@ export default function NetworkGraph() {
         <Card className="p-4 lg:col-span-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold">{selectedNode.label}</h3>
-            <Badge variant="default">{selectedNode.entityType}</Badge>
+            <Badge variant="default" title={selectedNode.entityType}>
+              {entityTypeLabel(selectedNode.entityType)}
+            </Badge>
           </div>
           <div className="mt-2 grid grid-cols-3 gap-4 text-sm">
             <div>
@@ -491,7 +548,11 @@ export default function NetworkGraph() {
               <Button
                 size="sm"
                 onClick={() => {
-                  setSeed(selectedNode.id);
+                  const parts = selectedNode.id.split(":", 2);
+                  if (parts.length === 2) {
+                    setSeedType(parts[0]!);
+                    setSeedValue(parts[1]!);
+                  }
                   fetchGraph();
                 }}
               >

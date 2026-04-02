@@ -6,6 +6,7 @@ import type { EntityStats } from "@i4g/sdk";
 import { X, Activity, Network, Download, Flag, Eye } from "lucide-react";
 import { AnnotationPanel } from "../components/annotation-panel";
 import { EntityStatusBadge } from "../components/entity-status-badge";
+import { entityTypeLabel } from "@/lib/entity-types";
 
 interface EntityDetailPanelProps {
   entity: EntityStats;
@@ -79,7 +80,9 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white/90 px-6 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
         <div>
           <div className="flex items-center gap-2">
-            <Badge variant="default">{entity.entityType}</Badge>
+            <Badge variant="default" title={entity.entityType}>
+              {entityTypeLabel(entity.entityType)}
+            </Badge>
             <EntityStatusBadge status={entity.status} />
           </div>
           <h2 className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">
@@ -177,8 +180,12 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
                   className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 text-sm dark:border-slate-800"
                 >
                   <div className="flex items-center gap-2">
-                    <Badge variant="default" className="text-[10px]">
-                      {n.entityType}
+                    <Badge
+                      variant="default"
+                      className="text-[10px]"
+                      title={n.entityType}
+                    >
+                      {entityTypeLabel(n.entityType)}
                     </Badge>
                     <span className="font-mono text-xs text-slate-700 dark:text-slate-300">
                       {n.label}

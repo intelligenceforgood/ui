@@ -87,13 +87,27 @@ const mockGraphResponse = {
   layout: null,
 };
 
+const mockEntityTypes = [
+  { value: "wallet_address", label: "Wallet Address" },
+  { value: "email_address", label: "Email Address" },
+  { value: "phone_number", label: "Phone Number" },
+];
+
 let fetchMock: Mock;
 
 describe("NetworkGraph", () => {
   beforeEach(() => {
-    fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => mockGraphResponse,
+    fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url.includes("type-labels")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => mockEntityTypes,
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => mockGraphResponse,
+      });
     });
     global.fetch = fetchMock as unknown as typeof fetch;
 
@@ -129,10 +143,13 @@ describe("NetworkGraph", () => {
     });
   });
 
-  it("renders seed input control", () => {
+  it("renders seed input control", async () => {
     render(<NetworkGraph />);
-    const input = screen.getByPlaceholderText("entity_type:value");
-    expect(input).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("Enter value…")).toBeInTheDocument();
+    });
+    // Entity type dropdown should be rendered
+    expect(screen.getByLabelText("Entity Type")).toBeInTheDocument();
   });
 
   it("renders hop selector", () => {
@@ -145,8 +162,13 @@ describe("NetworkGraph", () => {
   it("fetches graph data on submit", async () => {
     render(<NetworkGraph />);
 
-    const input = screen.getByPlaceholderText("entity_type:value");
-    fireEvent.change(input, { target: { value: "wallet:0xAAA" } });
+    // Wait for entity types to load
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("Enter value…")).toBeInTheDocument();
+    });
+
+    const valueInput = screen.getByPlaceholderText("Enter value…");
+    fireEvent.change(valueInput, { target: { value: "0xAAA" } });
 
     const submitBtn = screen.getByTestId("icon-search").closest("button")!;
     fireEvent.click(submitBtn);
