@@ -8,6 +8,9 @@ import {
   Clock,
   Download,
   ExternalLink,
+  Fingerprint,
+  GitBranch,
+  Network,
   Paperclip,
   ShieldAlert,
   Tag,
@@ -29,11 +32,13 @@ async function CaseDetailView({ id }: { id: string }) {
   const client = getI4GClient();
   let caseData;
   let taxonomy;
+  let relatedCases;
 
   try {
-    [caseData, taxonomy] = await Promise.all([
+    [caseData, taxonomy, relatedCases] = await Promise.all([
       client.getCase(id),
       client.getTaxonomy(),
+      client.getRelatedCases(id).catch(() => ({ caseId: id, related: [] })),
     ]);
   } catch (error) {
     if (error instanceof I4GClientError && error.status === 403) {
@@ -187,7 +192,88 @@ async function CaseDetailView({ id }: { id: string }) {
               </div>
             ) : (
               <p className="text-sm text-slate-500 italic">
-                Not yet classified
+                Classification in progress — typically completes within 2 hours
+                of ingestion.
+              </p>
+            )}
+          </Card>
+
+          {/* Extracted Entities */}
+          <Card className="group p-6">
+            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+              <Fingerprint className="w-5 h-5 text-slate-400" />
+              Extracted Entities
+              {caseData.entities && caseData.entities.length > 0 && (
+                <Badge variant="default" className="text-xs">
+                  {caseData.entities.length}
+                </Badge>
+              )}
+              <FieldHelp helpKey="case.entities" />
+              <FeedbackButton feedbackId="case-detail.entities-card" />
+            </h3>
+            {caseData.entities && caseData.entities.length > 0 ? (
+              <div className="space-y-3">
+                {Object.entries(
+                  caseData.entities.reduce(
+                    (groups, entity) => {
+                      const key = entity.entityTypeLabel;
+                      if (!groups[key]) groups[key] = [];
+                      groups[key].push(entity);
+                      return groups;
+                    },
+                    {} as Record<string, NonNullable<typeof caseData.entities>>,
+                  ),
+                ).map(([typeLabel, entities]) => (
+                  <div key={typeLabel}>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                      {typeLabel} ({entities.length})
+                    </p>
+                    <ul className="space-y-1">
+                      {entities.map((entity) => (
+                        <li
+                          key={`${entity.entityType}:${entity.canonicalValue}`}
+                          className="flex items-center justify-between p-1.5 bg-slate-50 rounded text-sm hover:bg-slate-100 transition-colors"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Link
+                              href={`/intelligence/entities?type=${encodeURIComponent(entity.entityType)}&q=${encodeURIComponent(entity.canonicalValue)}`}
+                              className="text-blue-600 hover:text-blue-800 hover:underline truncate max-w-[160px]"
+                              title={entity.canonicalValue}
+                            >
+                              {entity.canonicalValue}
+                            </Link>
+                            {entity.confidence > 0 && (
+                              <Badge
+                                variant={
+                                  entity.confidence >= 0.8
+                                    ? "success"
+                                    : entity.confidence >= 0.5
+                                      ? "warning"
+                                      : "default"
+                                }
+                                className="text-[10px] px-1 py-0"
+                              >
+                                {(entity.confidence * 100).toFixed(0)}%
+                              </Badge>
+                            )}
+                          </div>
+                          <Link
+                            href={`/intelligence/graph?seed_type=${encodeURIComponent(entity.entityType)}&seed_value=${encodeURIComponent(entity.canonicalValue)}`}
+                            className="text-slate-400 hover:text-blue-600 transition-colors flex-shrink-0"
+                            title="View in graph"
+                          >
+                            <Network className="w-3.5 h-3.5" />
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 italic">
+                No entities extracted yet — extraction runs automatically after
+                ingestion.
               </p>
             )}
           </Card>
@@ -262,6 +348,47 @@ async function CaseDetailView({ id }: { id: string }) {
             investigations={caseData.investigations ?? []}
             caseUrls={caseUrls}
           />
+
+          {/* Related Cases */}
+          {relatedCases.related.length > 0 && (
+            <Card className="group p-6">
+              <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                <GitBranch className="w-5 h-5 text-slate-400" />
+                Related Cases
+                <Badge variant="default" className="text-xs">
+                  {relatedCases.related.length}
+                </Badge>
+              </h3>
+              <ul className="space-y-2">
+                {relatedCases.related.map((rel) => (
+                  <li
+                    key={rel.caseId}
+                    className="flex items-center justify-between p-2 bg-slate-50 rounded text-sm hover:bg-slate-100 transition-colors"
+                  >
+                    <Link
+                      href={`/cases/${rel.caseId}`}
+                      className="text-blue-600 hover:text-blue-800 hover:underline truncate max-w-[160px]"
+                      title={rel.caseId}
+                    >
+                      {rel.caseId.length > 20
+                        ? rel.caseId.slice(0, 8) + "…" + rel.caseId.slice(-8)
+                        : rel.caseId}
+                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="default" className="text-[10px]">
+                        {rel.sharedEntityCount} shared
+                      </Badge>
+                      {rel.classification && (
+                        <Badge variant="default" className="text-[10px]">
+                          {rel.classification}
+                        </Badge>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
         </div>
       </div>
     </div>

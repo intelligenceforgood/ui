@@ -34,14 +34,18 @@ vi.mock("@i4g/ui-kit", () => ({
 }));
 
 vi.mock("lucide-react", () => ({
+  Download: () => <span data-testid="icon-download" />,
+  ExternalLink: () => <span data-testid="icon-external-link" />,
+  HelpCircle: () => <span data-testid="icon-help" />,
+  Maximize2: () => <span data-testid="icon-maximize" />,
   Network: () => <span data-testid="icon-network" />,
+  Search: () => <span data-testid="icon-search" />,
+  X: () => <span data-testid="icon-x" />,
   ZoomIn: () => <span data-testid="icon-zoom-in" />,
   ZoomOut: () => <span data-testid="icon-zoom-out" />,
-  Download: () => <span data-testid="icon-download" />,
-  Search: () => <span data-testid="icon-search" />,
-  Maximize2: () => <span data-testid="icon-maximize" />,
 }));
 
+import { useSearchParams } from "next/navigation";
 import NetworkGraph from "@/app/(console)/intelligence/graph/network-graph";
 
 const mockGraphResponse = {
@@ -97,6 +101,8 @@ let fetchMock: Mock;
 
 describe("NetworkGraph", () => {
   beforeEach(() => {
+    (useSearchParams as Mock).mockReturnValue(new URLSearchParams());
+
     fetchMock = vi.fn().mockImplementation((url: string) => {
       if (url.includes("type-labels")) {
         return Promise.resolve({

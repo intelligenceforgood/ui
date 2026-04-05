@@ -33,6 +33,7 @@ vi.mock("lucide-react", () => ({
   ChevronLeft: () => <span data-testid="icon-left" />,
   ChevronRight: () => <span data-testid="icon-right" />,
   Download: () => <span data-testid="icon-download" />,
+  Network: () => <span data-testid="icon-network" />,
   Search: () => <span data-testid="icon-search" />,
   X: () => <span data-testid="icon-x" />,
 }));

@@ -30,9 +30,17 @@ export async function GET(
     });
 
     if (!response.ok) {
-      console.warn(
-        `[Proxy] Failed: ${response.status} ${response.statusText} for /${path}`,
-      );
+      // Suppress noisy warnings for polling endpoints that routinely get 404/503
+      // (e.g. activity polling every 10s, SSE polling every 2.5s).
+      if (response.status < 500) {
+        console.debug(
+          `[Proxy] ${response.status} ${response.statusText} for /${path}`,
+        );
+      } else {
+        console.warn(
+          `[Proxy] Failed: ${response.status} ${response.statusText} for /${path}`,
+        );
+      }
       return new NextResponse(`Proxy Error: ${response.statusText}`, {
         status: response.status,
       });

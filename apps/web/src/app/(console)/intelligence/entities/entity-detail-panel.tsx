@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Badge, Button, Card } from "@i4g/ui-kit";
 import type { EntityStats } from "@i4g/sdk";
 import { X, Activity, Network, Download, Flag, Eye } from "lucide-react";
+import Link from "next/link";
 import { AnnotationPanel } from "../components/annotation-panel";
 import { EntityStatusBadge } from "../components/entity-status-badge";
 import { entityTypeLabel } from "@/lib/entity-types";
@@ -214,6 +215,14 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
             Actions
           </p>
           <div className="flex flex-wrap gap-2">
+            <Link
+              href={`/intelligence/graph?seed_type=${encodeURIComponent(entity.entityType)}&seed_value=${encodeURIComponent(entity.canonicalValue)}`}
+            >
+              <Button variant="secondary" size="sm">
+                <Network className="mr-1 h-3.5 w-3.5" />
+                Explore in Graph
+              </Button>
+            </Link>
             <Button variant="secondary" size="sm">
               <Download className="mr-1 h-3.5 w-3.5" />
               Export Summary

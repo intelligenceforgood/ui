@@ -252,6 +252,16 @@ const caseGraphNodeSchema = z.object({
 });
 export type CaseGraphNode = z.infer<typeof caseGraphNodeSchema>;
 
+const caseEntitySchema = z.object({
+  entityType: z.string(),
+  entityTypeLabel: z.string(),
+  canonicalValue: z.string(),
+  rawValue: z.string().nullable().optional(),
+  confidence: z.number(),
+  firstSeenAt: z.string().nullable().optional(),
+});
+export type CaseEntity = z.infer<typeof caseEntitySchema>;
+
 const caseGraphLinkSchema = z.object({
   source: z.string(),
   target: z.string(),
@@ -275,6 +285,7 @@ export type CaseInvestigationSummary = z.infer<
 
 export const caseDetailSchema = caseSummarySchema.extend({
   description: z.string().optional(),
+  entities: z.array(caseEntitySchema).optional(),
   artifacts: z.array(caseArtifactSchema),
   timeline: z.array(caseTimelineEventSchema),
   graphNodes: z.array(caseGraphNodeSchema),
@@ -282,6 +293,20 @@ export const caseDetailSchema = caseSummarySchema.extend({
   investigations: z.array(caseInvestigationSummarySchema).optional(),
 });
 export type CaseDetail = z.infer<typeof caseDetailSchema>;
+
+export const relatedCaseItemSchema = z.object({
+  caseId: z.string(),
+  classification: z.string().nullable().optional(),
+  sharedEntityCount: z.number(),
+  sharedEntities: z.array(z.string()).optional(),
+});
+export type RelatedCaseItem = z.infer<typeof relatedCaseItemSchema>;
+
+export const relatedCasesResponseSchema = z.object({
+  caseId: z.string(),
+  related: z.array(relatedCaseItemSchema),
+});
+export type RelatedCasesResponse = z.infer<typeof relatedCasesResponseSchema>;
 
 export const linkedCaseSummarySchema = z.object({
   caseId: z.string(),
@@ -738,6 +763,7 @@ export interface I4GClient {
   deleteReportSchedule(scheduleId: string): Promise<{ deleted: boolean }>;
   // SSI Case Integration (Phase 3)
   getCaseActivity(caseId: string): Promise<CaseActivityResponse>;
+  getRelatedCases(caseId: string): Promise<RelatedCasesResponse>;
   investigateCaseUrl(
     caseId: string,
     body: CaseInvestigateRequest,
@@ -867,6 +893,7 @@ const graphEdgeSchema = z.object({
   target: z.string(),
   weight: z.number(),
   edgeType: z.string(),
+  caseIds: z.array(z.string()).optional(),
 });
 
 const clusterSummarySchema = z.object({
@@ -1914,6 +1941,9 @@ export function createClient(config: ClientConfig): I4GClient {
     // SSI Case Integration (Phase 3)
     getCaseActivity(caseId) {
       return request(`/cases/${caseId}/activity`, caseActivityResponseSchema);
+    },
+    getRelatedCases(caseId) {
+      return request(`/cases/${caseId}/related`, relatedCasesResponseSchema);
     },
     investigateCaseUrl(caseId, body) {
       return request(`/cases/${caseId}/investigate`, z.record(z.unknown()), {

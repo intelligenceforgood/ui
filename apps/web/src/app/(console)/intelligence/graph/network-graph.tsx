@@ -1,9 +1,25 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, Button, Input, Badge } from "@i4g/ui-kit";
-import type { GraphPayload, GraphNode, ClusterSummary } from "@i4g/sdk";
-import { Download, Maximize2, Search, ZoomIn, ZoomOut } from "lucide-react";
+import type {
+  GraphPayload,
+  GraphNode,
+  GraphEdge,
+  ClusterSummary,
+} from "@i4g/sdk";
+import {
+  Download,
+  ExternalLink,
+  HelpCircle,
+  Maximize2,
+  Search,
+  X,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
+import Link from "next/link";
 import { entityTypeColor, entityTypeLabel } from "@/lib/entity-types";
 
 const EDGE_COLORS: Record<string, string> = {
@@ -29,6 +45,17 @@ const CLUSTER_COLORS = [
   "#06b6d4",
 ];
 
+const EDGE_DESCRIPTIONS: Record<string, string> = {
+  "co-occurrence": "These entities appear together in the same fraud case(s).",
+  "shared-ip": "These entities share infrastructure (IP address).",
+  "same-campaign": "These entities are linked to the same threat campaign.",
+  infrastructure:
+    "These entities share hosting or registration infrastructure.",
+  "shared-registrar": "These domains share the same registrar.",
+  "shared-hosting": "These entities share hosting infrastructure.",
+  wallet_cluster: "These wallets belong to the same on-chain cluster.",
+};
+
 interface NodePosition {
   x: number;
   y: number;
@@ -39,14 +66,22 @@ interface NodePosition {
 }
 
 export default function NetworkGraph() {
+  const searchParams = useSearchParams();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [graphData, setGraphData] = useState<GraphPayload | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [seedType, setSeedType] = useState("");
-  const [seedValue, setSeedValue] = useState("");
+  const [seedType, setSeedType] = useState(searchParams.get("seed_type") ?? "");
+  const [seedValue, setSeedValue] = useState(
+    searchParams.get("seed_value") ?? "",
+  );
+  const [autoLoad, setAutoLoad] = useState(
+    !!(searchParams.get("seed_type") && searchParams.get("seed_value")),
+  );
   const [hops, setHops] = useState(1);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [selectedEdge, setSelectedEdge] = useState<GraphEdge | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
   const [positions, setPositions] = useState<Map<string, NodePosition>>(
     new Map(),
   );
@@ -114,6 +149,14 @@ export default function NetworkGraph() {
       setLoading(false);
     }
   }, [seed, hops]);
+
+  // Auto-load graph when arriving with URL params
+  useEffect(() => {
+    if (autoLoad && seed) {
+      setAutoLoad(false);
+      fetchGraph();
+    }
+  }, [autoLoad, seed, fetchGraph]);
 
   // Simple force simulation
   useEffect(() => {
@@ -303,22 +346,49 @@ export default function NetworkGraph() {
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      if (!canvas || !graphData) return;
       const rect = canvas.getBoundingClientRect();
       const mx = (e.clientX - rect.left) / scale;
       const my = (e.clientY - rect.top) / scale;
 
+      // Check node hit first
       for (const p of positions.values()) {
         const dx = p.x - mx;
         const dy = p.y - my;
         if (Math.sqrt(dx * dx + dy * dy) < 20) {
           setSelectedNode(p.node);
+          setSelectedEdge(null);
           return;
         }
       }
+
+      // Check edge hit (point-to-line-segment distance)
+      for (const edge of graphData.edges) {
+        const a = positions.get(edge.source);
+        const b = positions.get(edge.target);
+        if (!a || !b) continue;
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const lenSq = dx * dx + dy * dy;
+        if (lenSq === 0) continue;
+        const t = Math.max(
+          0,
+          Math.min(1, ((mx - a.x) * dx + (my - a.y) * dy) / lenSq),
+        );
+        const px = a.x + t * dx;
+        const py = a.y + t * dy;
+        const dist = Math.sqrt((mx - px) ** 2 + (my - py) ** 2);
+        if (dist < 8) {
+          setSelectedEdge(edge);
+          setSelectedNode(null);
+          return;
+        }
+      }
+
       setSelectedNode(null);
+      setSelectedEdge(null);
     },
-    [positions, scale],
+    [positions, scale, graphData],
   );
 
   const handleExport = useCallback(async () => {
@@ -340,9 +410,19 @@ export default function NetworkGraph() {
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
       {/* Controls sidebar */}
       <Card className="p-4 lg:col-span-1">
-        <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">
-          Graph Controls
-        </h3>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+            Graph Controls
+          </h3>
+          <button
+            type="button"
+            onClick={() => setShowHelp(true)}
+            className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+            title="What am I looking at?"
+          >
+            <HelpCircle className="h-4 w-4" />
+          </button>
+        </div>
         <div className="space-y-3">
           <div>
             <label
@@ -467,7 +547,11 @@ export default function NetworkGraph() {
                 )
             : Object.entries(EDGE_COLORS).filter(([k]) => k !== "default")
           ).map(([type, color]) => (
-            <div key={type} className="flex items-center gap-2 text-xs">
+            <div
+              key={type}
+              className="flex items-center gap-2 text-xs"
+              title={EDGE_DESCRIPTIONS[type] ?? ""}
+            >
               <span
                 className="inline-block h-[2px] w-3"
                 style={{ backgroundColor: color }}
@@ -526,16 +610,25 @@ export default function NetworkGraph() {
         )}
       </Card>
 
-      {/* Detail panel */}
+      {/* Node detail panel */}
       {selectedNode && (
         <Card className="p-4 lg:col-span-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">{selectedNode.label}</h3>
-            <Badge variant="default" title={selectedNode.entityType}>
-              {entityTypeLabel(selectedNode.entityType)}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold">{selectedNode.label}</h3>
+              <Badge variant="default" title={selectedNode.entityType}>
+                {entityTypeLabel(selectedNode.entityType)}
+              </Badge>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelectedNode(null)}
+              className="rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
-          <div className="mt-2 grid grid-cols-3 gap-4 text-sm">
+          <div className="mt-2 flex flex-wrap items-center gap-4 text-sm">
             <div>
               <p className="text-xs text-slate-500">Case Count</p>
               <p className="font-semibold">{selectedNode.caseCount}</p>
@@ -544,7 +637,7 @@ export default function NetworkGraph() {
               <p className="text-xs text-slate-500">Risk Score</p>
               <p className="font-semibold">{selectedNode.riskScore}</p>
             </div>
-            <div>
+            <div className="flex gap-2">
               <Button
                 size="sm"
                 onClick={() => {
@@ -558,9 +651,153 @@ export default function NetworkGraph() {
               >
                 <Maximize2 className="mr-1 h-3 w-3" /> Expand
               </Button>
+              <Link
+                href={`/intelligence/entities?entity_type=${encodeURIComponent(selectedNode.entityType)}`}
+              >
+                <Button size="sm" variant="secondary">
+                  <ExternalLink className="mr-1 h-3 w-3" /> View Entity
+                </Button>
+              </Link>
             </div>
           </div>
         </Card>
+      )}
+
+      {/* Edge detail panel */}
+      {selectedEdge && (
+        <Card className="p-4 lg:col-span-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">
+              Edge: {selectedEdge.source.split(":")[1]} &harr;{" "}
+              {selectedEdge.target.split(":")[1]}
+            </h3>
+            <button
+              type="button"
+              onClick={() => setSelectedEdge(null)}
+              className="rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            {EDGE_DESCRIPTIONS[selectedEdge.edgeType] ??
+              `Relationship type: ${selectedEdge.edgeType}`}
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-4 text-sm">
+            <div>
+              <p className="text-xs text-slate-500">Shared Cases</p>
+              <p className="font-semibold">{selectedEdge.weight}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Edge Type</p>
+              <Badge variant="default">{selectedEdge.edgeType}</Badge>
+            </div>
+          </div>
+          {selectedEdge.caseIds && selectedEdge.caseIds.length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs font-semibold text-slate-500">
+                Linked Cases
+              </p>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {selectedEdge.caseIds.map((cid) => (
+                  <Link key={cid} href={`/cases/${cid}`}>
+                    <Badge
+                      variant="default"
+                      className="cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700"
+                    >
+                      {cid.length > 16
+                        ? cid.slice(0, 6) + "…" + cid.slice(-6)
+                        : cid}
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* Help modal */}
+      {showHelp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="mx-4 max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-2xl dark:bg-slate-900">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                Understanding the Network Graph
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowHelp(false)}
+                className="rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mt-4 space-y-4 text-sm text-slate-600 dark:text-slate-400">
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white">
+                  Nodes
+                </h3>
+                <p>
+                  Each circle represents an <strong>entity</strong> extracted
+                  from fraud complaint cases — wallet addresses, phone numbers,
+                  email addresses, organizations, people, URLs, and more. Node
+                  size is proportional to the number of cases mentioning that
+                  entity.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white">
+                  Edges
+                </h3>
+                <p>
+                  Lines between nodes indicate a <strong>co-occurrence</strong>{" "}
+                  — both entities appear in the same fraud case. Thicker lines
+                  mean more shared cases. Click an edge to see which specific
+                  cases link two entities.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white">
+                  Organizations
+                </h3>
+                <p>
+                  Organization nodes represent business or group names mentioned
+                  in case narratives. These may be{" "}
+                  <strong>
+                    legitimate businesses impersonated by scammers
+                  </strong>{" "}
+                  (e.g., a victim says &quot;they claimed to be from XYZ
+                  Corp&quot;) or actual scam organizations.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white">
+                  Communities
+                </h3>
+                <p>
+                  When enabled, colored rings group tightly connected entities
+                  detected by community analysis. These clusters often represent
+                  a single fraud operation using multiple identifiers.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white">
+                  Risk Indicators
+                </h3>
+                <p>
+                  Nodes with a red border have a risk score above 70, indicating
+                  high-risk entities based on case severity and frequency.
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <Button size="sm" onClick={() => setShowHelp(false)}>
+                Got it
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

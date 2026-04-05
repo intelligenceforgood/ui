@@ -1026,5 +1026,8 @@ export function createMockClient(): I4GClient {
     async investigateCaseUrl() {
       return { triggered: true, scanId: "mock-scan" };
     },
+    async getRelatedCases(caseId: string) {
+      return { caseId, related: [] };
+    },
   };
 }
