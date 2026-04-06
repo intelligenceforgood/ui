@@ -1029,5 +1029,19 @@ export function createMockClient(): I4GClient {
     async getRelatedCases(caseId: string) {
       return { caseId, related: [] };
     },
+    async getEntityCases(
+      entityType: string,
+      canonicalValue: string,
+      options?: { limit?: number; offset?: number },
+    ) {
+      return {
+        entityType,
+        canonicalValue,
+        items: [],
+        count: 0,
+        limit: options?.limit ?? 20,
+        offset: options?.offset ?? 0,
+      };
+    },
   };
 }

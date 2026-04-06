@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import nextDynamic from "next/dynamic";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 const EntityExplorer = nextDynamic(() => import("./entity-explorer"), {
   loading: () => (
@@ -22,6 +23,12 @@ export default async function EntityExplorerPage(props: {
 
   return (
     <div className="space-y-8">
+      <Breadcrumbs
+        items={[
+          { label: "Intelligence", href: "/intelligence" },
+          { label: "Entity Explorer" },
+        ]}
+      />
       <header>
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
           Intelligence

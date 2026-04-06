@@ -291,6 +291,7 @@ export const caseDetailSchema = caseSummarySchema.extend({
   graphNodes: z.array(caseGraphNodeSchema),
   graphLinks: z.array(caseGraphLinkSchema),
   investigations: z.array(caseInvestigationSummarySchema).optional(),
+  campaigns: z.array(z.object({ id: z.string(), name: z.string() })).optional(),
 });
 export type CaseDetail = z.infer<typeof caseDetailSchema>;
 
@@ -643,6 +644,11 @@ export interface I4GClient {
     entityType: string,
     canonicalValue: string,
   ): Promise<NeighborGraph>;
+  getEntityCases(
+    entityType: string,
+    canonicalValue: string,
+    options?: { limit?: number; offset?: number },
+  ): Promise<EntityCasesResponse>;
   // Exports (S2-16)
   exportEntities(options?: {
     fmt?: string;
@@ -1040,6 +1046,32 @@ const neighborGraphSchema = z.object({
 });
 
 export type NeighborGraph = z.infer<typeof neighborGraphSchema>;
+
+// ---------------------------------------------------------------------------
+// Entity → Cases types
+// ---------------------------------------------------------------------------
+
+const entityCaseSummarySchema = z.object({
+  caseId: z.string(),
+  title: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  classification: z.string().nullable().optional(),
+  riskScore: z.number().nullable().optional(),
+  createdAt: z.string().nullable().optional(),
+});
+
+export type EntityCaseSummary = z.infer<typeof entityCaseSummarySchema>;
+
+const entityCasesResponseSchema = z.object({
+  entityType: z.string(),
+  canonicalValue: z.string(),
+  items: z.array(entityCaseSummarySchema),
+  count: z.number(),
+  limit: z.number(),
+  offset: z.number(),
+});
+
+export type EntityCasesResponse = z.infer<typeof entityCasesResponseSchema>;
 
 // ---------------------------------------------------------------------------
 // Impact Dashboard types (S3-19)
@@ -1567,6 +1599,18 @@ export function createClient(config: ClientConfig): I4GClient {
         `/intelligence/entities/${et}/${cv}/neighbors`,
         neighborGraphSchema as z.ZodSchema<NeighborGraph>,
       );
+    },
+    getEntityCases(entityType, canonicalValue, options) {
+      const et = encodeURIComponent(entityType);
+      const cv = encodeURIComponent(canonicalValue);
+      const query = new URLSearchParams();
+      if (options?.limit != null) query.set("limit", String(options.limit));
+      if (options?.offset != null) query.set("offset", String(options.offset));
+      const qs = query.toString();
+      const path = qs
+        ? `/intelligence/entities/${et}/${cv}/cases?${qs}`
+        : `/intelligence/entities/${et}/${cv}/cases`;
+      return request(path, entityCasesResponseSchema);
     },
     // Export methods (S2-16)
     async exportEntities(options) {

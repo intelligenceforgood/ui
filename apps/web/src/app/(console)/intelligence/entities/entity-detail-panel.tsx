@@ -2,8 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Badge, Button, Card } from "@i4g/ui-kit";
-import type { EntityStats } from "@i4g/sdk";
-import { X, Activity, Network, Download, Flag, Eye } from "lucide-react";
+import type { EntityStats, EntityCaseSummary } from "@i4g/sdk";
+import {
+  X,
+  Activity,
+  Network,
+  Download,
+  Flag,
+  Eye,
+  FileText,
+} from "lucide-react";
 import Link from "next/link";
 import { AnnotationPanel } from "../components/annotation-panel";
 import { EntityStatusBadge } from "../components/entity-status-badge";
@@ -29,8 +37,10 @@ interface NeighborNode {
 export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
   const [activity, setActivity] = useState<ActivityPoint[]>([]);
   const [neighbors, setNeighbors] = useState<NeighborNode[]>([]);
+  const [linkedCases, setLinkedCases] = useState<EntityCaseSummary[]>([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
   const [loadingNeighbors, setLoadingNeighbors] = useState(true);
+  const [loadingCases, setLoadingCases] = useState(true);
 
   const fetchActivity = useCallback(async () => {
     setLoadingActivity(true);
@@ -69,10 +79,30 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
     }
   }, [entity.entityType, entity.canonicalValue]);
 
+  const fetchCases = useCallback(async () => {
+    setLoadingCases(true);
+    try {
+      const et = encodeURIComponent(entity.entityType);
+      const cv = encodeURIComponent(entity.canonicalValue);
+      const res = await fetch(
+        `/api/intelligence/entities/${et}/${cv}/cases?limit=10`,
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setLinkedCases(data.items ?? []);
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setLoadingCases(false);
+    }
+  }, [entity.entityType, entity.canonicalValue]);
+
   useEffect(() => {
     fetchActivity();
     fetchNeighbors();
-  }, [fetchActivity, fetchNeighbors]);
+    fetchCases();
+  }, [fetchActivity, fetchNeighbors, fetchCases]);
 
   const maxCount = Math.max(1, ...activity.map((a) => a.caseCount));
 
@@ -200,6 +230,76 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
             </div>
           )}
         </section>
+
+        {/* Linked Cases */}
+        <section className="space-y-2">
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+            <FileText className="h-4 w-4" />
+            Linked Cases
+          </div>
+          {loadingCases ? (
+            <div className="h-24 animate-pulse rounded bg-slate-100" />
+          ) : linkedCases.length === 0 ? (
+            <p className="text-xs text-slate-400">No linked cases found</p>
+          ) : (
+            <div className="space-y-1.5">
+              {linkedCases.map((c) => (
+                <Link
+                  key={c.caseId}
+                  href={`/cases/${c.caseId}`}
+                  className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 text-sm hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-mono text-xs text-blue-600 truncate max-w-[180px]">
+                      {c.caseId.length > 20
+                        ? c.caseId.slice(0, 8) + "…" + c.caseId.slice(-8)
+                        : c.caseId}
+                    </span>
+                    {c.classification && (
+                      <Badge variant="default" className="text-[10px]">
+                        {c.classification}
+                      </Badge>
+                    )}
+                  </div>
+                  {c.riskScore != null && (
+                    <Badge
+                      variant={
+                        c.riskScore >= 75
+                          ? "danger"
+                          : c.riskScore >= 40
+                            ? "warning"
+                            : "default"
+                      }
+                      className="text-[10px]"
+                    >
+                      {c.riskScore.toFixed(0)}
+                    </Badge>
+                  )}
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Campaigns */}
+        {entity.campaignIds && entity.campaignIds.length > 0 && (
+          <section className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+              Campaigns
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {entity.campaignIds.map((cid) => (
+                <Link
+                  key={cid}
+                  href={`/intelligence/campaigns/${cid}`}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-purple-600 hover:text-purple-800 border border-purple-200 hover:border-purple-400 rounded-full px-2.5 py-0.5 bg-purple-50 hover:bg-purple-100 transition-colors"
+                >
+                  {cid.length > 16 ? cid.slice(0, 8) + "…" : cid}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Annotations */}
         <section>

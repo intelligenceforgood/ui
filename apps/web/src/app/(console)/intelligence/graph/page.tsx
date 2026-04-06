@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import NetworkGraphClient from "./network-graph-client";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Network Graph",
@@ -10,6 +11,12 @@ export const metadata: Metadata = {
 export default function NetworkGraphPage() {
   return (
     <div className="space-y-8">
+      <Breadcrumbs
+        items={[
+          { label: "Intelligence", href: "/intelligence" },
+          { label: "Network Graph" },
+        ]}
+      />
       <header>
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
           Intelligence

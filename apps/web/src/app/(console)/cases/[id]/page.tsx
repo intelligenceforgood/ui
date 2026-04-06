@@ -4,7 +4,6 @@ import { getI4GClient } from "@/lib/i4g-client";
 import { I4GClientError } from "@i4g/sdk";
 import { Badge, Card, FeedbackButton } from "@i4g/ui-kit";
 import {
-  ArrowLeft,
   Clock,
   Download,
   ExternalLink,
@@ -18,6 +17,7 @@ import {
 import Link from "next/link";
 import { ClassificationBadges } from "@/components/classification-badges";
 import { FieldHelp, SectionHelp } from "@/components/help";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { RestrictedAccess } from "@/components/restricted-access";
 import { TextWithTokens } from "@/components/text-with-tokens";
 import {
@@ -59,18 +59,17 @@ async function CaseDetailView({ id }: { id: string }) {
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumbs */}
+      <Breadcrumbs
+        items={[
+          { label: "Cases", href: "/cases" },
+          { label: caseData.title || `Case ${id.slice(0, 8)}` },
+        ]}
+      />
+
       {/* Header */}
       <div className="group flex items-start justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Link
-              href="/cases"
-              className="text-sm text-slate-500 hover:text-slate-900 flex items-center gap-1"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Cases
-            </Link>
-          </div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
             <TextWithTokens text={caseData.title} caseId={id} />
           </h1>
@@ -198,19 +197,54 @@ async function CaseDetailView({ id }: { id: string }) {
             )}
           </Card>
 
+          {/* Linked Campaigns */}
+          {caseData.campaigns && caseData.campaigns.length > 0 && (
+            <Card className="group p-6">
+              <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5 text-slate-400" />
+                Threat Campaigns
+                <Badge variant="default" className="text-xs">
+                  {caseData.campaigns.length}
+                </Badge>
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {caseData.campaigns.map((campaign) => (
+                  <Link
+                    key={campaign.id}
+                    href={`/intelligence/campaigns/${campaign.id}`}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-purple-600 hover:text-purple-800 border border-purple-200 hover:border-purple-400 rounded-full px-3 py-1 bg-purple-50 hover:bg-purple-100 transition-colors"
+                  >
+                    {campaign.name || campaign.id.slice(0, 12)}
+                  </Link>
+                ))}
+              </div>
+            </Card>
+          )}
+
           {/* Extracted Entities */}
           <Card className="group p-6">
-            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-              <Fingerprint className="w-5 h-5 text-slate-400" />
-              Extracted Entities
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <Fingerprint className="w-5 h-5 text-slate-400" />
+                Extracted Entities
+                {caseData.entities && caseData.entities.length > 0 && (
+                  <Badge variant="default" className="text-xs">
+                    {caseData.entities.length}
+                  </Badge>
+                )}
+                <FieldHelp helpKey="case.entities" />
+                <FeedbackButton feedbackId="case-detail.entities-card" />
+              </h3>
               {caseData.entities && caseData.entities.length > 0 && (
-                <Badge variant="default" className="text-xs">
-                  {caseData.entities.length}
-                </Badge>
+                <Link
+                  href={`/intelligence/graph?seed_type=case&seed=${encodeURIComponent(id)}`}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded px-2.5 py-1 bg-blue-50 hover:bg-blue-100 transition-colors"
+                >
+                  <Network className="w-3.5 h-3.5" />
+                  View Case Graph
+                </Link>
               )}
-              <FieldHelp helpKey="case.entities" />
-              <FeedbackButton feedbackId="case-detail.entities-card" />
-            </h3>
+            </div>
             {caseData.entities && caseData.entities.length > 0 ? (
               <div className="space-y-3">
                 {Object.entries(

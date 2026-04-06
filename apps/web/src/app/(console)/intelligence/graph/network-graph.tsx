@@ -76,7 +76,10 @@ export default function NetworkGraph() {
     searchParams.get("seed_value") ?? "",
   );
   const [autoLoad, setAutoLoad] = useState(
-    !!(searchParams.get("seed_type") && searchParams.get("seed_value")),
+    !!(
+      searchParams.get("seed_type") &&
+      (searchParams.get("seed_value") || searchParams.get("seed"))
+    ),
   );
   const [hops, setHops] = useState(1);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
@@ -96,9 +99,19 @@ export default function NetworkGraph() {
     { value: string; label: string }[]
   >([]);
 
-  // Compute seed string from type + value
-  const seed =
-    seedType && seedValue.trim() ? `${seedType}:${seedValue.trim()}` : "";
+  // Check if this is a case-seeded graph
+  const isCaseSeed = searchParams.get("seed_type") === "case";
+  const caseSeedId = searchParams.get("seed") ?? "";
+
+  // Compute seed string from type + value (for entity seeds)
+  const seed = isCaseSeed
+    ? caseSeedId
+    : seedType && seedValue.trim()
+      ? `${seedType}:${seedValue.trim()}`
+      : "";
+
+  // The seed_type to pass to the API
+  const apiSeedType = isCaseSeed ? "case" : "entity";
 
   // Fetch available entity types from the API
   useEffect(() => {
@@ -121,7 +134,7 @@ export default function NetworkGraph() {
       const query = new URLSearchParams({
         seed,
         hops: String(hops),
-        seed_type: "entity",
+        seed_type: apiSeedType,
       });
       const res = await fetch(`/api/intelligence/graph?${query}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -148,7 +161,7 @@ export default function NetworkGraph() {
     } finally {
       setLoading(false);
     }
-  }, [seed, hops]);
+  }, [seed, hops, apiSeedType]);
 
   // Auto-load graph when arriving with URL params
   useEffect(() => {
