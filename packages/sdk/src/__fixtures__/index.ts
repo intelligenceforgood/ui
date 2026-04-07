@@ -590,6 +590,9 @@ export function createMockClient(): I4GClient {
     async getDashboardOverview() {
       return mockDashboardData;
     },
+    async getProcessingProgress() {
+      return { totalCases: 0, classifiedCases: 0, casesWithEntities: 0 };
+    },
     async searchIntelligence(request: SearchRequestInput) {
       const payload = searchRequestSchema.parse(request);
       const normalizedQuery = payload.query.trim().toLowerCase();

@@ -34,6 +34,7 @@ vi.mock("@i4g/ui-kit", () => ({
 }));
 
 vi.mock("lucide-react", () => ({
+  Crosshair: () => <span data-testid="icon-crosshair" />,
   Download: () => <span data-testid="icon-download" />,
   ExternalLink: () => <span data-testid="icon-external-link" />,
   HelpCircle: () => <span data-testid="icon-help" />,
@@ -138,6 +139,9 @@ describe("NetworkGraph – cluster visualization", () => {
       save: vi.fn(),
       restore: vi.fn(),
       fillRect: vi.fn(),
+      strokeRect: vi.fn(),
+      translate: vi.fn(),
+      rotate: vi.fn(),
       canvas: { width: 800, height: 600 },
     }) as any;
   });

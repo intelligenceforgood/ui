@@ -84,6 +84,14 @@ const dashboardOverviewSchema = z.object({
 
 export type DashboardOverview = z.infer<typeof dashboardOverviewSchema>;
 
+const processingProgressSchema = z.object({
+  totalCases: z.number(),
+  classifiedCases: z.number(),
+  casesWithEntities: z.number(),
+});
+
+export type ProcessingProgress = z.infer<typeof processingProgressSchema>;
+
 const searchTimeRangeSchema = z.object({
   start: z.string(),
   end: z.string(),
@@ -619,6 +627,7 @@ export interface CasesListOptions {
 
 export interface I4GClient {
   getDashboardOverview(): Promise<DashboardOverview>;
+  getProcessingProgress(): Promise<ProcessingProgress>;
   searchIntelligence(request: SearchRequestInput): Promise<SearchResponse>;
   listCases(options?: CasesListOptions): Promise<CasesResponse>;
   getCase(id: string): Promise<CaseDetail>;
@@ -891,6 +900,7 @@ const graphNodeSchema = z.object({
   caseCount: z.number(),
   riskScore: z.number(),
   clusterId: z.number().optional(),
+  campaignIds: z.array(z.string()).optional(),
   data: z.record(z.unknown()).optional(),
 });
 
@@ -1465,6 +1475,12 @@ export function createClient(config: ClientConfig): I4GClient {
   return {
     getDashboardOverview() {
       return request("/dashboard/overview", dashboardOverviewSchema);
+    },
+    getProcessingProgress() {
+      return request(
+        "/dashboard/processing-progress",
+        processingProgressSchema,
+      );
     },
     searchIntelligence(_requestBody) {
       throw new Error(

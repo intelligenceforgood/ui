@@ -58,8 +58,15 @@ const reminderIconMap: Record<DashboardReminder["category"], ReactNode> = {
 
 export default async function DashboardPage() {
   const client = getI4GClient();
-  const { metrics, alerts, activity, reminders } =
-    await client.getDashboardOverview();
+  const [{ metrics, alerts, activity, reminders }, progress] =
+    await Promise.all([
+      client.getDashboardOverview(),
+      client.getProcessingProgress().catch(() => ({
+        totalCases: 0,
+        classifiedCases: 0,
+        casesWithEntities: 0,
+      })),
+    ]);
 
   return (
     <div className="space-y-8">
@@ -94,6 +101,67 @@ export default async function DashboardPage() {
         ))}
       </section>
 
+      {/* Processing Progress */}
+      {progress.totalCases > 0 && (
+        <section>
+          <Card className="p-6">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400 mb-4">
+              Data Processing Pipeline
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <p className="text-xs text-slate-500">Total Cases Ingested</p>
+                <p className="mt-1 text-2xl font-semibold text-slate-900">
+                  {progress.totalCases.toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Classified</p>
+                <p className="mt-1 text-2xl font-semibold text-slate-900">
+                  {progress.classifiedCases.toLocaleString()}
+                </p>
+                <div className="mt-2 h-2 w-full rounded-full bg-slate-100">
+                  <div
+                    className="h-2 rounded-full bg-teal-500 transition-all"
+                    style={{
+                      width: `${Math.min(100, (progress.classifiedCases / progress.totalCases) * 100)}%`,
+                    }}
+                  />
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  {(
+                    (progress.classifiedCases / progress.totalCases) *
+                    100
+                  ).toFixed(1)}
+                  %
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Entities Extracted</p>
+                <p className="mt-1 text-2xl font-semibold text-slate-900">
+                  {progress.casesWithEntities.toLocaleString()}
+                </p>
+                <div className="mt-2 h-2 w-full rounded-full bg-slate-100">
+                  <div
+                    className="h-2 rounded-full bg-sky-500 transition-all"
+                    style={{
+                      width: `${Math.min(100, (progress.casesWithEntities / progress.totalCases) * 100)}%`,
+                    }}
+                  />
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  {(
+                    (progress.casesWithEntities / progress.totalCases) *
+                    100
+                  ).toFixed(1)}
+                  %
+                </p>
+              </div>
+            </div>
+          </Card>
+        </section>
+      )}
+
       <section className="grid gap-6 xl:grid-cols-[2fr_1fr]">
         <Card className="group space-y-6">
           <div className="flex items-center justify-between">
@@ -113,31 +181,37 @@ export default async function DashboardPage() {
             </div>
           </div>
           <ul className="space-y-4">
-            {alerts.map((alert) => (
-              <li
-                key={alert.id}
-                className="flex items-start justify-between gap-4 rounded-xl bg-slate-50/60 p-4"
-              >
-                <div>
-                  <p className="text-sm font-medium text-slate-900">
-                    <TextWithTokens text={alert.title} />
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    <TextWithTokens text={alert.detail} />
-                  </p>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <Badge variant={alert.variant}>{alert.time}</Badge>
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700"
-                  >
-                    View details
-                    <ArrowUpRight className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+            {alerts.length === 0 ? (
+              <li className="text-sm italic text-slate-400">
+                No active alerts — all monitoring signals are clear.
               </li>
-            ))}
+            ) : (
+              alerts.map((alert) => (
+                <li
+                  key={alert.id}
+                  className="flex items-start justify-between gap-4 rounded-xl bg-slate-50/60 p-4"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">
+                      <TextWithTokens text={alert.title} />
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      <TextWithTokens text={alert.detail} />
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <Badge variant={alert.variant}>{alert.time}</Badge>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700"
+                    >
+                      View details
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </li>
+              ))
+            )}
           </ul>
         </Card>
 
@@ -153,21 +227,27 @@ export default async function DashboardPage() {
               </div>
             </div>
             <ul className="space-y-4">
-              {activity.map((item) => (
-                <li key={item.id} className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                    <Activity className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">
-                      <TextWithTokens text={item.title} />
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {item.actor} · {item.when}
-                    </p>
-                  </div>
+              {activity.length === 0 ? (
+                <li className="text-sm italic text-slate-400">
+                  No recent activity — the platform is quiet right now.
                 </li>
-              ))}
+              ) : (
+                activity.map((item) => (
+                  <li key={item.id} className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                      <Activity className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">
+                        <TextWithTokens text={item.title} />
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {item.actor} · {item.when}
+                      </p>
+                    </div>
+                  </li>
+                ))
+              )}
             </ul>
           </Card>
           <Card className="group space-y-4">
@@ -181,14 +261,20 @@ export default async function DashboardPage() {
               </div>
             </div>
             <div className="space-y-3 text-sm text-slate-500">
-              {reminders.map((reminder) => (
-                <p key={reminder.id} className="flex items-center gap-2">
-                  {reminderIconMap[reminder.category] ?? (
-                    <SignalHigh className="h-4 w-4 text-slate-400" />
-                  )}
-                  {reminder.text}
+              {reminders.length === 0 ? (
+                <p className="italic text-slate-400">
+                  No pending reminders — you&apos;re all caught up.
                 </p>
-              ))}
+              ) : (
+                reminders.map((reminder) => (
+                  <p key={reminder.id} className="flex items-center gap-2">
+                    {reminderIconMap[reminder.category] ?? (
+                      <SignalHigh className="h-4 w-4 text-slate-400" />
+                    )}
+                    {reminder.text}
+                  </p>
+                ))
+              )}
             </div>
           </Card>
         </div>

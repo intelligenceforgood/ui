@@ -10,6 +10,7 @@ import type {
   ClusterSummary,
 } from "@i4g/sdk";
 import {
+  Crosshair,
   Download,
   ExternalLink,
   HelpCircle,
@@ -90,11 +91,15 @@ export default function NetworkGraph() {
   );
   const [scale, setScale] = useState(1);
   const [showClusters, setShowClusters] = useState(false);
+  const [showCampaigns, setShowCampaigns] = useState(false);
   const [hoveredCluster, setHoveredCluster] = useState<ClusterSummary | null>(
     null,
   );
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const animRef = useRef<number | null>(null);
+  const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
+  const [hoveredEdge, setHoveredEdge] = useState<GraphEdge | null>(null);
+  const [graphSearch, setGraphSearch] = useState("");
   const [entityTypes, setEntityTypes] = useState<
     { value: string; label: string }[]
   >([]);
@@ -265,9 +270,28 @@ export default function NetworkGraph() {
         if (edge.edgeType === "same-campaign") ctx.setLineDash([5, 5]);
         else ctx.setLineDash([]);
         ctx.stroke();
+
+        // Edge label on hover
+        if (
+          hoveredEdge &&
+          edge.source === hoveredEdge.source &&
+          edge.target === hoveredEdge.target
+        ) {
+          const midX = (a.x + b.x) / 2;
+          const midY = (a.y + b.y) / 2;
+          ctx.fillStyle = "#475569";
+          ctx.font = "bold 10px Inter, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(
+            `${edge.weight} case${edge.weight !== 1 ? "s" : ""}`,
+            midX,
+            midY - 6,
+          );
+        }
       }
 
       // Draw nodes
+      const searchLower = graphSearch.toLowerCase();
       for (const p of posArr) {
         const n = p.node;
         const radius = Math.max(6, Math.min(20, 4 + n.caseCount * 2));
@@ -276,6 +300,23 @@ export default function NetworkGraph() {
           showClusters && n.clusterId != null
             ? CLUSTER_COLORS[n.clusterId % CLUSTER_COLORS.length] ?? baseColor
             : baseColor;
+        const isSearchMatch =
+          searchLower.length > 0 &&
+          (n.label.toLowerCase().includes(searchLower) ||
+            n.id.toLowerCase().includes(searchLower));
+
+        // Search highlight glow
+        if (isSearchMatch) {
+          ctx.save();
+          ctx.shadowColor = "#f59e0b";
+          ctx.shadowBlur = 16;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, radius + 6, 0, 2 * Math.PI);
+          ctx.strokeStyle = "#f59e0b";
+          ctx.lineWidth = 3;
+          ctx.stroke();
+          ctx.restore();
+        }
 
         // Cluster ring
         if (showClusters && n.clusterId != null) {
@@ -304,6 +345,18 @@ export default function NetworkGraph() {
         ctx.fillStyle = color;
         ctx.fill();
 
+        // Campaign membership indicator (small diamond)
+        if (showCampaigns && n.campaignIds && n.campaignIds.length > 0) {
+          const dx = radius + 5;
+          const dy = -(radius + 2);
+          ctx.save();
+          ctx.translate(p.x + dx, p.y + dy);
+          ctx.rotate(Math.PI / 4);
+          ctx.fillStyle = "#3b82f6";
+          ctx.fillRect(-4, -4, 8, 8);
+          ctx.restore();
+        }
+
         // Label
         ctx.fillStyle = "#1e293b";
         ctx.font = "10px Inter, sans-serif";
@@ -320,29 +373,71 @@ export default function NetworkGraph() {
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };
-  }, [graphData, positions, scale, showClusters]);
+  }, [
+    graphData,
+    positions,
+    scale,
+    showClusters,
+    showCampaigns,
+    hoveredEdge,
+    graphSearch,
+  ]);
 
   const handleCanvasMouseMove = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
-      if (!showClusters || !graphData?.clusters) {
-        setHoveredCluster(null);
-        return;
-      }
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
       const mx = (e.clientX - rect.left) / scale;
       const my = (e.clientY - rect.top) / scale;
 
+      // Node hover tooltip
       for (const p of positions.values()) {
         const dx = p.x - mx;
         const dy = p.y - my;
-        if (Math.sqrt(dx * dx + dy * dy) < 20 && p.node.clusterId != null) {
-          const cluster = graphData.clusters.find(
-            (c) => c.clusterId === p.node.clusterId,
+        if (Math.sqrt(dx * dx + dy * dy) < 20) {
+          setHoveredNode(p.node);
+          setHoveredEdge(null);
+          setTooltipPos({
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+          });
+          // Also check cluster hover
+          if (showClusters && p.node.clusterId != null && graphData?.clusters) {
+            const cluster = graphData.clusters.find(
+              (c) => c.clusterId === p.node.clusterId,
+            );
+            if (cluster) {
+              setHoveredCluster(cluster);
+              return;
+            }
+          }
+          setHoveredCluster(null);
+          return;
+        }
+      }
+
+      // Edge hover tooltip
+      if (graphData) {
+        for (const edge of graphData.edges) {
+          const a = positions.get(edge.source);
+          const b = positions.get(edge.target);
+          if (!a || !b) continue;
+          const edx = b.x - a.x;
+          const edy = b.y - a.y;
+          const lenSq = edx * edx + edy * edy;
+          if (lenSq === 0) continue;
+          const t = Math.max(
+            0,
+            Math.min(1, ((mx - a.x) * edx + (my - a.y) * edy) / lenSq),
           );
-          if (cluster) {
-            setHoveredCluster(cluster);
+          const px = a.x + t * edx;
+          const py = a.y + t * edy;
+          const dist = Math.sqrt((mx - px) ** 2 + (my - py) ** 2);
+          if (dist < 8) {
+            setHoveredEdge(edge);
+            setHoveredNode(null);
+            setHoveredCluster(null);
             setTooltipPos({
               x: e.clientX - rect.left,
               y: e.clientY - rect.top,
@@ -351,6 +446,9 @@ export default function NetworkGraph() {
           }
         }
       }
+
+      setHoveredNode(null);
+      setHoveredEdge(null);
       setHoveredCluster(null);
     },
     [showClusters, graphData, positions, scale],
@@ -418,6 +516,27 @@ export default function NetworkGraph() {
     a.click();
     URL.revokeObjectURL(url);
   }, [seed]);
+
+  const handleZoomToFit = useCallback(() => {
+    if (positions.size === 0) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
+    for (const p of positions.values()) {
+      minX = Math.min(minX, p.x);
+      minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x);
+      maxY = Math.max(maxY, p.y);
+    }
+    const padding = 40;
+    const graphW = maxX - minX + padding * 2;
+    const graphH = maxY - minY + padding * 2;
+    const newScale = Math.min(canvas.width / graphW, canvas.height / graphH, 3);
+    setScale(Math.max(newScale, 0.3));
+  }, [positions]);
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
@@ -496,6 +615,7 @@ export default function NetworkGraph() {
               size="sm"
               variant="secondary"
               onClick={() => setScale((s) => Math.min(s + 0.2, 3))}
+              title="Zoom in"
             >
               <ZoomIn className="h-4 w-4" />
             </Button>
@@ -503,8 +623,17 @@ export default function NetworkGraph() {
               size="sm"
               variant="secondary"
               onClick={() => setScale((s) => Math.max(s - 0.2, 0.3))}
+              title="Zoom out"
             >
               <ZoomOut className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={handleZoomToFit}
+              title="Zoom to fit"
+            >
+              <Crosshair className="h-4 w-4" />
             </Button>
             <Button size="sm" variant="secondary" onClick={handleExport}>
               <Download className="h-4 w-4" />
@@ -521,6 +650,36 @@ export default function NetworkGraph() {
                 />
                 Show Communities
               </label>
+            </div>
+          )}
+          {graphData &&
+            graphData.nodes.some(
+              (n) => n.campaignIds && n.campaignIds.length > 0,
+            ) && (
+              <div>
+                <label className="flex items-center gap-2 text-xs text-slate-500">
+                  <input
+                    type="checkbox"
+                    checked={showCampaigns}
+                    onChange={(e) => setShowCampaigns(e.target.checked)}
+                    className="rounded border-slate-300"
+                  />
+                  Show Campaign Membership
+                </label>
+              </div>
+            )}
+          {/* Search within graph */}
+          {graphData && graphData.nodes.length > 0 && (
+            <div>
+              <label className="block text-xs text-slate-500">
+                Search Graph
+              </label>
+              <Input
+                value={graphSearch}
+                onChange={(e) => setGraphSearch(e.target.value)}
+                placeholder="Highlight node…"
+                className="mt-1 text-sm"
+              />
             </div>
           )}
         </div>
@@ -616,10 +775,48 @@ export default function NetworkGraph() {
             </div>
           </div>
         )}
+        {hoveredNode && !hoveredCluster && (
+          <div
+            className="pointer-events-none absolute z-20 rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-800"
+            style={{ left: tooltipPos.x + 12, top: tooltipPos.y - 10 }}
+          >
+            <p className="text-xs font-semibold text-slate-900 dark:text-white">
+              {hoveredNode.label}
+            </p>
+            <div className="mt-1 space-y-0.5 text-xs text-slate-500">
+              <p>{entityTypeLabel(hoveredNode.entityType)}</p>
+              <p>
+                {hoveredNode.caseCount} case
+                {hoveredNode.caseCount !== 1 ? "s" : ""}
+              </p>
+              {hoveredNode.riskScore > 0 && (
+                <p>Risk: {hoveredNode.riskScore.toFixed(1)}</p>
+              )}
+            </div>
+          </div>
+        )}
+        {hoveredEdge && !hoveredNode && !hoveredCluster && (
+          <div
+            className="pointer-events-none absolute z-20 rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-800"
+            style={{ left: tooltipPos.x + 12, top: tooltipPos.y - 10 }}
+          >
+            <p className="text-xs font-semibold text-slate-900 dark:text-white">
+              {hoveredEdge.weight} shared case
+              {hoveredEdge.weight !== 1 ? "s" : ""}
+            </p>
+            <p className="text-xs text-slate-500">
+              {EDGE_DESCRIPTIONS[hoveredEdge.edgeType] ?? hoveredEdge.edgeType}
+            </p>
+          </div>
+        )}
         {graphData && (
           <div className="absolute bottom-2 left-2 text-xs text-slate-400">
             {graphData.nodeCount} nodes · {graphData.edgeCount} edges
           </div>
+        )}
+        {/* Minimap */}
+        {graphData && positions.size > 0 && (
+          <MiniMap positions={positions} edges={graphData.edges} />
         )}
       </Card>
 
@@ -650,6 +847,26 @@ export default function NetworkGraph() {
               <p className="text-xs text-slate-500">Risk Score</p>
               <p className="font-semibold">{selectedNode.riskScore}</p>
             </div>
+            {selectedNode.campaignIds &&
+              selectedNode.campaignIds.length > 0 && (
+                <div>
+                  <p className="text-xs text-slate-500">Campaigns</p>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedNode.campaignIds.map((cid) => (
+                      <Link key={cid} href={`/intelligence/campaigns/${cid}`}>
+                        <Badge
+                          variant="default"
+                          className="cursor-pointer text-blue-600 hover:bg-blue-100"
+                        >
+                          {cid.length > 12
+                            ? cid.slice(0, 6) + "…" + cid.slice(-4)
+                            : cid}
+                        </Badge>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
             <div className="flex gap-2">
               <Button
                 size="sm"
@@ -813,5 +1030,83 @@ export default function NetworkGraph() {
         </div>
       )}
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// MiniMap — small overview of the full graph in the corner
+// ---------------------------------------------------------------------------
+
+function MiniMap({
+  positions,
+  edges,
+}: {
+  positions: Map<string, NodePosition>;
+  edges: GraphEdge[];
+}) {
+  const miniRef = useRef<HTMLCanvasElement>(null);
+  const W = 160;
+  const H = 120;
+
+  useEffect(() => {
+    const canvas = miniRef.current;
+    if (!canvas || positions.size === 0) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
+    for (const p of positions.values()) {
+      minX = Math.min(minX, p.x);
+      minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x);
+      maxY = Math.max(maxY, p.y);
+    }
+    const pad = 10;
+    const rangeX = maxX - minX || 1;
+    const rangeY = maxY - minY || 1;
+    const sx = (W - pad * 2) / rangeX;
+    const sy = (H - pad * 2) / rangeY;
+    const s = Math.min(sx, sy);
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = "#e2e8f0";
+    ctx.strokeRect(0, 0, W, H);
+
+    // Edges
+    ctx.strokeStyle = "#cbd5e1";
+    ctx.lineWidth = 0.5;
+    for (const edge of edges) {
+      const a = positions.get(edge.source);
+      const b = positions.get(edge.target);
+      if (!a || !b) continue;
+      ctx.beginPath();
+      ctx.moveTo(pad + (a.x - minX) * s, pad + (a.y - minY) * s);
+      ctx.lineTo(pad + (b.x - minX) * s, pad + (b.y - minY) * s);
+      ctx.stroke();
+    }
+
+    // Nodes
+    for (const p of positions.values()) {
+      const nx = pad + (p.x - minX) * s;
+      const ny = pad + (p.y - minY) * s;
+      ctx.beginPath();
+      ctx.arc(nx, ny, 2, 0, 2 * Math.PI);
+      ctx.fillStyle = entityTypeColor(p.node.entityType);
+      ctx.fill();
+    }
+  }, [positions, edges]);
+
+  return (
+    <canvas
+      ref={miniRef}
+      width={W}
+      height={H}
+      className="absolute bottom-2 right-2 rounded border border-slate-200 shadow-sm"
+    />
   );
 }

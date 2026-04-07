@@ -384,15 +384,17 @@ async function CaseDetailView({ id }: { id: string }) {
           />
 
           {/* Related Cases */}
-          {relatedCases.related.length > 0 && (
-            <Card className="group p-6">
-              <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                <GitBranch className="w-5 h-5 text-slate-400" />
-                Related Cases
+          <Card className="group p-6">
+            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+              <GitBranch className="w-5 h-5 text-slate-400" />
+              Related Cases
+              {relatedCases.related.length > 0 && (
                 <Badge variant="default" className="text-xs">
                   {relatedCases.related.length}
                 </Badge>
-              </h3>
+              )}
+            </h3>
+            {relatedCases.related.length > 0 ? (
               <ul className="space-y-2">
                 {relatedCases.related.map((rel) => (
                   <li
@@ -421,8 +423,13 @@ async function CaseDetailView({ id }: { id: string }) {
                   </li>
                 ))}
               </ul>
-            </Card>
-          )}
+            ) : (
+              <p className="text-sm text-slate-500 italic">
+                No related cases found &mdash; this case&apos;s entities are
+                unique so far.
+              </p>
+            )}
+          </Card>
         </div>
       </div>
     </div>
