@@ -39,6 +39,7 @@ function makeRequest(
     body: body ?? null,
     nextUrl: base,
     headers: new Headers({ "content-type": "application/json" }),
+    cookies: { get: () => undefined },
   };
 }
 

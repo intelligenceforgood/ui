@@ -18,7 +18,7 @@ import {
   UserCheck,
 } from "lucide-react";
 
-const ROLES = ["user", "analyst", "leo", "admin"] as const;
+const ROLES = ["user", "analyst", "manager", "leo", "admin"] as const;
 
 const roleConfig: Record<
   string,
@@ -33,6 +33,11 @@ const roleConfig: Record<
     icon: ShieldCheck,
     color: "text-amber-600 bg-amber-50",
     label: "LEO",
+  },
+  manager: {
+    icon: ShieldCheck,
+    color: "text-purple-600 bg-purple-50",
+    label: "Manager",
   },
   analyst: {
     icon: Shield,

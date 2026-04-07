@@ -33,6 +33,7 @@ import {
   Map,
   GitBranch,
   Eye,
+  Briefcase,
 } from "lucide-react";
 import { UserPreferences } from "@/components/user-preferences";
 import { FeedbackButton } from "@i4g/ui-kit";
@@ -167,6 +168,12 @@ const navItems: NavItem[] = [
         minRole: "analyst",
       },
     ],
+  },
+  {
+    href: "/admin/engagements",
+    label: "Engagements",
+    icon: Briefcase,
+    minRole: "manager",
   },
   {
     href: "/admin/users",

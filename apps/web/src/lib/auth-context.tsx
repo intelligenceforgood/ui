@@ -3,7 +3,13 @@
 import { createContext, useContext, type ReactNode } from "react";
 
 /** Role constants matching the backend Role enum. */
-export type UserRole = "researcher" | "user" | "analyst" | "admin" | "leo";
+export type UserRole =
+  | "researcher"
+  | "user"
+  | "analyst"
+  | "manager"
+  | "admin"
+  | "leo";
 
 export interface AuthUser {
   email: string;
@@ -31,8 +37,9 @@ const ROLE_HIERARCHY: Record<UserRole, Set<UserRole>> = {
   researcher: new Set(),
   user: new Set(["researcher"]),
   analyst: new Set(["researcher", "user"]),
-  leo: new Set(["researcher", "user", "analyst"]),
-  admin: new Set(["researcher", "user", "analyst", "leo"]),
+  manager: new Set(["researcher", "user", "analyst"]),
+  leo: new Set(["researcher", "user", "analyst", "manager"]),
+  admin: new Set(["researcher", "user", "analyst", "manager", "leo"]),
 };
 
 function checkRole(userRole: UserRole, requiredRole: UserRole): boolean {

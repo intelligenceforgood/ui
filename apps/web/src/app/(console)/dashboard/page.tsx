@@ -16,6 +16,7 @@ import { Badge, Card, FeedbackButton } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
 import type { DashboardReminder } from "@i4g/sdk";
 import { TextWithTokens } from "@/components/text-with-tokens";
+import { EngagementSummaryCard } from "@/components/engagement-summary-card";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -84,6 +85,8 @@ export default async function DashboardPage() {
           </p>
         </div>
       </section>
+
+      <EngagementSummaryCard />
 
       <section className="group relative grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <FeedbackButton

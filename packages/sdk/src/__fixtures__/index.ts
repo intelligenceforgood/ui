@@ -1046,5 +1046,76 @@ export function createMockClient(): I4GClient {
         offset: options?.offset ?? 0,
       };
     },
+    // Engagements (Phase 2)
+    async listEngagements() {
+      return [];
+    },
+    async getEngagement(id: string) {
+      return {
+        engagementId: id,
+        name: "Mock Engagement",
+        description: null,
+        status: "active",
+        startsAt: null,
+        endsAt: null,
+        createdBy: null,
+        metadata: null,
+        createdAt: null,
+        updatedAt: null,
+      };
+    },
+    async createEngagement(data) {
+      return {
+        engagementId: "mock-eng-id",
+        name: data.name,
+        description: data.description ?? null,
+        status: data.status ?? "draft",
+        startsAt: data.starts_at ?? null,
+        endsAt: data.ends_at ?? null,
+        createdBy: null,
+        metadata: data.metadata ?? null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    },
+    async updateEngagement(id, data) {
+      return {
+        engagementId: id,
+        name: data.name ?? "Mock Engagement",
+        description: data.description ?? null,
+        status: data.status ?? "active",
+        startsAt: data.starts_at ?? null,
+        endsAt: data.ends_at ?? null,
+        createdBy: null,
+        metadata: data.metadata ?? null,
+        createdAt: null,
+        updatedAt: new Date().toISOString(),
+      };
+    },
+    async deleteEngagement() {},
+    async assignCases() {
+      return { count: 0 };
+    },
+    async removeCases() {
+      return { count: 0 };
+    },
+    async getEngagementSummary(id: string) {
+      return {
+        engagementId: id,
+        name: "Mock Engagement",
+        description: null,
+        status: "active",
+        startsAt: null,
+        endsAt: null,
+        createdBy: null,
+        metadata: null,
+        createdAt: null,
+        updatedAt: null,
+        caseCount: 0,
+        casesReviewed: 0,
+        casesRemaining: 0,
+        reviewCompletionPct: 0,
+      };
+    },
   };
 }

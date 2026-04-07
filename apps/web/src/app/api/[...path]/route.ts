@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIapHeaders } from "@/lib/server/auth-helpers";
+import { ENGAGEMENT_COOKIE_NAME } from "@/lib/engagement-cookie";
 
 export const runtime = "nodejs"; // Ensure Node.js runtime for auth libraries
+
+/** Read the engagement ID from the request cookie. */
+function getEngagementId(request: NextRequest): string | null {
+  return request.cookies.get(ENGAGEMENT_COOKIE_NAME)?.value ?? null;
+}
 
 export async function GET(
   request: NextRequest,
@@ -20,12 +26,16 @@ export async function GET(
   // Get Auth Headers (IAP support)
   const headers = await getIapHeaders();
 
+  // Inject engagement scope header if cookie present
+  const engagementId = getEngagementId(request);
+  if (engagementId) {
+    headers["X-Engagement-Id"] = engagementId;
+  }
+
   try {
     const response = await fetch(targetUrl, {
       headers: {
         ...headers,
-        // Forward client headers if needed (e.g. Accept)?
-        // Be careful with Host header.
       },
     });
 
@@ -114,6 +124,11 @@ async function proxyRequest(
   // Merge auth headers
   for (const [key, value] of Object.entries(headers)) {
     clientHeaders.set(key, value);
+  }
+  // Inject engagement scope header if cookie present
+  const engagementId = getEngagementId(request);
+  if (engagementId) {
+    clientHeaders.set("X-Engagement-Id", engagementId);
   }
 
   try {

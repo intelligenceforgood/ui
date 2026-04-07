@@ -591,6 +591,60 @@ export type DossierVerificationReport = z.infer<
   typeof dossierVerificationSchema
 >;
 
+// ---------------------------------------------------------------------------
+// Engagement types (Phase 2)
+// ---------------------------------------------------------------------------
+
+const engagementSchema = z.object({
+  engagementId: z.string(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  status: z.string(),
+  startsAt: z.string().nullable().optional(),
+  endsAt: z.string().nullable().optional(),
+  createdBy: z.string().nullable().optional(),
+  metadata: z.record(z.unknown()).nullable().optional(),
+  createdAt: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional(),
+});
+
+export type Engagement = z.infer<typeof engagementSchema>;
+
+export interface EngagementCreate {
+  name: string;
+  description?: string | null;
+  status?: string;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface EngagementUpdate {
+  name?: string;
+  description?: string | null;
+  status?: string;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  metadata?: Record<string, unknown> | null;
+}
+
+const engagementSummarySchema = engagementSchema.extend({
+  caseCount: z.number(),
+  casesReviewed: z.number(),
+  casesRemaining: z.number(),
+  reviewCompletionPct: z.number(),
+});
+
+export type EngagementSummary = z.infer<typeof engagementSummarySchema>;
+
+const caseAssignmentResultSchema = z.object({
+  count: z.number(),
+});
+
+export type CaseAssignmentResult = z.infer<typeof caseAssignmentResultSchema>;
+
+const engagementListSchema = z.array(engagementSchema);
+
 const planIdSchema = z.string().min(1, "planId is required");
 
 export class I4GClientError extends Error {
@@ -634,6 +688,15 @@ export interface I4GClient {
   getTaxonomy(): Promise<TaxonomyResponse>;
   getAnalyticsOverview(): Promise<AnalyticsOverview>;
   listDossiers(options?: DossierListOptions): Promise<DossierListResponse>;
+  // Engagements (Phase 2)
+  listEngagements(params?: { status?: string }): Promise<Engagement[]>;
+  getEngagement(id: string): Promise<Engagement>;
+  createEngagement(data: EngagementCreate): Promise<Engagement>;
+  updateEngagement(id: string, data: EngagementUpdate): Promise<Engagement>;
+  deleteEngagement(id: string): Promise<void>;
+  assignCases(id: string, caseIds: string[]): Promise<CaseAssignmentResult>;
+  removeCases(id: string, caseIds: string[]): Promise<CaseAssignmentResult>;
+  getEngagementSummary(id: string): Promise<EngagementSummary>;
   verifyDossier(planId: string): Promise<DossierVerificationReport>;
   detokenize(token: string, caseId?: string): Promise<DetokenizeResponse>;
   // Intelligence (S2-15)
@@ -1509,6 +1572,81 @@ export function createClient(config: ClientConfig): I4GClient {
     getAnalyticsOverview() {
       return request("/analytics/overview", analyticsOverviewSchema);
     },
+    // Engagements (Phase 2)
+    listEngagements(params) {
+      const query = new URLSearchParams();
+      if (params?.status) query.set("status", params.status);
+      const qs = query.toString();
+      return request(
+        qs ? `/engagements?${qs}` : "/engagements",
+        engagementListSchema,
+      );
+    },
+    getEngagement(id) {
+      return request(
+        `/engagements/${encodeURIComponent(id)}`,
+        engagementSchema,
+      );
+    },
+    createEngagement(data) {
+      return request(`/engagements`, engagementSchema, {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    updateEngagement(id, data) {
+      return request(
+        `/engagements/${encodeURIComponent(id)}`,
+        engagementSchema,
+        {
+          method: "PATCH",
+          body: JSON.stringify(data),
+        },
+      );
+    },
+    async deleteEngagement(id) {
+      const url = buildUrl(baseUrl, `/engagements/${encodeURIComponent(id)}`);
+      const headers: Record<string, string> = {
+        Accept: "application/json",
+        ...additionalHeaders,
+      };
+      if (apiKey) headers["X-API-KEY"] = apiKey;
+      const response = await fetcher(url, { method: "DELETE", headers });
+      if (!response.ok) {
+        const errorPayload = await parseJson(response);
+        throw new I4GClientError(
+          `Request failed with status ${response.status}`,
+          response.status,
+          errorPayload,
+        );
+      }
+    },
+    assignCases(id, caseIds) {
+      return request(
+        `/engagements/${encodeURIComponent(id)}/cases`,
+        caseAssignmentResultSchema,
+        {
+          method: "POST",
+          body: JSON.stringify({ case_ids: caseIds }),
+        },
+      );
+    },
+    removeCases(id, caseIds) {
+      return request(
+        `/engagements/${encodeURIComponent(id)}/cases`,
+        caseAssignmentResultSchema,
+        {
+          method: "DELETE",
+          body: JSON.stringify({ case_ids: caseIds }),
+        },
+      );
+    },
+    getEngagementSummary(id) {
+      return request(
+        `/engagements/${encodeURIComponent(id)}/summary`,
+        engagementSummarySchema,
+      );
+    },
     async listDossiers(options) {
       const payload = dossierListRequestSchema.parse(options ?? {});
       const query = new URLSearchParams({
@@ -2025,6 +2163,7 @@ export {
   annotationSchema,
   bulkActionResultSchema,
   campaignTimelinePointSchema,
+  caseAssignmentResultSchema,
   casesResponseSchema,
   clusterSummarySchema,
   countryDetailResponseSchema,
@@ -2032,6 +2171,9 @@ export {
   dashboardOverviewSchema,
   detectionVelocityPointSchema,
   dossierListRequestSchema,
+  engagementListSchema,
+  engagementSchema,
+  engagementSummarySchema,
   geographySummarySchema,
   graphPayloadSchema,
   heatmapCellSchema,
