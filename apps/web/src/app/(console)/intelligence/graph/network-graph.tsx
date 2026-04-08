@@ -103,6 +103,12 @@ export default function NetworkGraph() {
   const [entityTypes, setEntityTypes] = useState<
     { value: string; label: string }[]
   >([]);
+  const [hiddenEntityTypes, setHiddenEntityTypes] = useState<Set<string>>(
+    new Set(),
+  );
+  const [hiddenEdgeTypes, setHiddenEdgeTypes] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Check if this is a case-seeded graph
   const isCaseSeed = searchParams.get("seed_type") === "case";
@@ -259,9 +265,15 @@ export default function NetworkGraph() {
 
       // Draw edges
       for (const edge of edgeArr) {
+        if (hiddenEdgeTypes.has(edge.edgeType)) continue;
         const a = positions.get(edge.source);
         const b = positions.get(edge.target);
         if (!a || !b) continue;
+        if (
+          hiddenEntityTypes.has(a.node.entityType) ||
+          hiddenEntityTypes.has(b.node.entityType)
+        )
+          continue;
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
         ctx.lineTo(b.x, b.y);
@@ -294,6 +306,7 @@ export default function NetworkGraph() {
       const searchLower = graphSearch.toLowerCase();
       for (const p of posArr) {
         const n = p.node;
+        if (hiddenEntityTypes.has(n.entityType)) continue;
         const radius = Math.max(6, Math.min(20, 4 + n.caseCount * 2));
         const baseColor = entityTypeColor(n.entityType);
         const color =
@@ -381,6 +394,8 @@ export default function NetworkGraph() {
     showCampaigns,
     hoveredEdge,
     graphSearch,
+    hiddenEntityTypes,
+    hiddenEdgeTypes,
   ]);
 
   const handleCanvasMouseMove = useCallback(
@@ -393,6 +408,7 @@ export default function NetworkGraph() {
 
       // Node hover tooltip
       for (const p of positions.values()) {
+        if (hiddenEntityTypes.has(p.node.entityType)) continue;
         const dx = p.x - mx;
         const dy = p.y - my;
         if (Math.sqrt(dx * dx + dy * dy) < 20) {
@@ -420,9 +436,15 @@ export default function NetworkGraph() {
       // Edge hover tooltip
       if (graphData) {
         for (const edge of graphData.edges) {
+          if (hiddenEdgeTypes.has(edge.edgeType)) continue;
           const a = positions.get(edge.source);
           const b = positions.get(edge.target);
           if (!a || !b) continue;
+          if (
+            hiddenEntityTypes.has(a.node.entityType) ||
+            hiddenEntityTypes.has(b.node.entityType)
+          )
+            continue;
           const edx = b.x - a.x;
           const edy = b.y - a.y;
           const lenSq = edx * edx + edy * edy;
@@ -451,7 +473,14 @@ export default function NetworkGraph() {
       setHoveredEdge(null);
       setHoveredCluster(null);
     },
-    [showClusters, graphData, positions, scale],
+    [
+      showClusters,
+      graphData,
+      positions,
+      scale,
+      hiddenEntityTypes,
+      hiddenEdgeTypes,
+    ],
   );
 
   const handleCanvasClick = useCallback(
@@ -464,6 +493,7 @@ export default function NetworkGraph() {
 
       // Check node hit first
       for (const p of positions.values()) {
+        if (hiddenEntityTypes.has(p.node.entityType)) continue;
         const dx = p.x - mx;
         const dy = p.y - my;
         if (Math.sqrt(dx * dx + dy * dy) < 20) {
@@ -475,9 +505,15 @@ export default function NetworkGraph() {
 
       // Check edge hit (point-to-line-segment distance)
       for (const edge of graphData.edges) {
+        if (hiddenEdgeTypes.has(edge.edgeType)) continue;
         const a = positions.get(edge.source);
         const b = positions.get(edge.target);
         if (!a || !b) continue;
+        if (
+          hiddenEntityTypes.has(a.node.entityType) ||
+          hiddenEntityTypes.has(b.node.entityType)
+        )
+          continue;
         const dx = b.x - a.x;
         const dy = b.y - a.y;
         const lenSq = dx * dx + dy * dy;
@@ -499,7 +535,7 @@ export default function NetworkGraph() {
       setSelectedNode(null);
       setSelectedEdge(null);
     },
-    [positions, scale, graphData],
+    [positions, scale, graphData, hiddenEntityTypes, hiddenEdgeTypes],
   );
 
   const handleExport = useCallback(async () => {
@@ -683,21 +719,41 @@ export default function NetworkGraph() {
             </div>
           )}
         </div>
-        {/* Legend — derived from current graph nodes */}
+        {/* Legend — derived from current graph nodes, clickable filters */}
         <div className="mt-4 space-y-1">
           <p className="text-xs font-semibold text-slate-500">Entity Types</p>
           {graphData
             ? Array.from(new Set(graphData.nodes.map((n) => n.entityType)))
                 .sort()
-                .map((t) => (
-                  <div key={t} className="flex items-center gap-2 text-xs">
-                    <span
-                      className="inline-block h-3 w-3 rounded-full"
-                      style={{ backgroundColor: entityTypeColor(t) }}
-                    />
-                    {entityTypeLabel(t)}
-                  </div>
-                ))
+                .map((t) => {
+                  const hidden = hiddenEntityTypes.has(t);
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      className={`flex w-full items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-slate-100 transition-opacity ${hidden ? "opacity-40 line-through" : ""}`}
+                      onClick={() =>
+                        setHiddenEntityTypes((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(t)) next.delete(t);
+                          else next.add(t);
+                          return next;
+                        })
+                      }
+                      title={
+                        hidden
+                          ? `Show ${entityTypeLabel(t)}`
+                          : `Hide ${entityTypeLabel(t)}`
+                      }
+                    >
+                      <span
+                        className="inline-block h-3 w-3 rounded-full shrink-0"
+                        style={{ backgroundColor: entityTypeColor(t) }}
+                      />
+                      {entityTypeLabel(t)}
+                    </button>
+                  );
+                })
             : entityTypes.map(({ value, label }) => (
                 <div key={value} className="flex items-center gap-2 text-xs">
                   <span
@@ -718,19 +774,44 @@ export default function NetworkGraph() {
                     [type, EDGE_COLORS[type] || EDGE_COLORS.default] as const,
                 )
             : Object.entries(EDGE_COLORS).filter(([k]) => k !== "default")
-          ).map(([type, color]) => (
-            <div
-              key={type}
-              className="flex items-center gap-2 text-xs"
-              title={EDGE_DESCRIPTIONS[type] ?? ""}
-            >
-              <span
-                className="inline-block h-[2px] w-3"
-                style={{ backgroundColor: color }}
-              />
-              {type}
-            </div>
-          ))}
+          ).map(([type, color]) => {
+            const hidden = hiddenEdgeTypes.has(type);
+            return (
+              <button
+                key={type}
+                type="button"
+                className={`flex w-full items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-slate-100 transition-opacity ${hidden ? "opacity-40 line-through" : ""}`}
+                onClick={() =>
+                  setHiddenEdgeTypes((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(type)) next.delete(type);
+                    else next.add(type);
+                    return next;
+                  })
+                }
+                title={`${hidden ? "Show" : "Hide"} ${type}${EDGE_DESCRIPTIONS[type] ? ` — ${EDGE_DESCRIPTIONS[type]}` : ""}`}
+              >
+                <span
+                  className="inline-block h-[2px] w-3 shrink-0"
+                  style={{ backgroundColor: color }}
+                />
+                {type}
+              </button>
+            );
+          })}
+          {graphData &&
+            (hiddenEntityTypes.size > 0 || hiddenEdgeTypes.size > 0) && (
+              <button
+                type="button"
+                className="mt-1 text-xs text-blue-600 hover:underline"
+                onClick={() => {
+                  setHiddenEntityTypes(new Set());
+                  setHiddenEdgeTypes(new Set());
+                }}
+              >
+                Reset filters
+              </button>
+            )}
         </div>
       </Card>
 

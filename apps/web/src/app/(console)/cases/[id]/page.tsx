@@ -20,6 +20,7 @@ import { FieldHelp, SectionHelp } from "@/components/help";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { RestrictedAccess } from "@/components/restricted-access";
 import { TextWithTokens } from "@/components/text-with-tokens";
+import { FormattedNarrative } from "@/components/formatted-narrative";
 import {
   ActivityBarClient,
   InvestigationPanelClient,
@@ -105,13 +106,15 @@ async function CaseDetailView({ id }: { id: string }) {
               Case Narrative
               <FieldHelp helpKey="case.narrative" />
             </h3>
-            <p className="text-slate-600 leading-relaxed">
+            <div className="text-sm text-slate-600 leading-relaxed max-h-96 overflow-y-auto">
               {caseData.description ? (
-                <TextWithTokens text={caseData.description} caseId={id} />
+                <FormattedNarrative text={caseData.description} caseId={id} />
               ) : (
-                "No description provided."
+                <p className="italic text-slate-400">
+                  No description provided.
+                </p>
               )}
-            </p>
+            </div>
           </Card>
 
           <Card className="group p-6">
