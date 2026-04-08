@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition, useState, useCallback } from "react";
+import Link from "next/link";
 import {
   createEngagement,
   updateEngagement,
@@ -8,7 +9,7 @@ import {
 } from "@/lib/server/engagements-service";
 import { Badge } from "@i4g/ui-kit";
 import type { Engagement } from "@i4g/sdk";
-import { Plus, Play, CheckCircle2, Archive } from "lucide-react";
+import { Plus, Play, CheckCircle2, Archive, Trophy } from "lucide-react";
 
 const statusVariant: Record<
   string,
@@ -324,6 +325,16 @@ export function EngagementsTable({
                     >
                       + Cases
                     </button>
+                    {(eng.status === "active" ||
+                      eng.status === "completed") && (
+                      <Link
+                        href={`/admin/engagements/${eng.engagementId}/leaderboard`}
+                        title="Leaderboard"
+                        className="rounded-md p-1.5 text-purple-600 transition hover:bg-purple-50 dark:hover:bg-purple-950"
+                      >
+                        <Trophy className="h-4 w-4" />
+                      </Link>
+                    )}
                   </div>
                 </td>
               </tr>

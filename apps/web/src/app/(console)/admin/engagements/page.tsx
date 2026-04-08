@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { listEngagements } from "@/lib/server/engagements-service";
 import { Card, SectionLabel } from "@i4g/ui-kit";
 import { FeedbackButton } from "@i4g/ui-kit";
@@ -56,6 +57,14 @@ export default async function AdminEngagementsPage() {
           {engagements.length} engagement{engagements.length !== 1 ? "s" : ""} (
           {active.length} active, {past.length} past)
         </p>
+        {past.length > 0 && (
+          <Link
+            href="/admin/engagements/compare"
+            className="inline-block rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            Compare Engagements
+          </Link>
+        )}
       </header>
 
       <EngagementsTable engagements={engagements} />

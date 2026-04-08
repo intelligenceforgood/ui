@@ -6,6 +6,8 @@ import type {
   EngagementCreate,
   EngagementUpdate,
   EngagementSummary,
+  EngagementExtendedSummary,
+  LeaderboardResponse,
   CaseAssignmentResult,
 } from "@i4g/sdk";
 
@@ -79,5 +81,21 @@ export async function getEngagementSummary(
 ): Promise<EngagementSummary> {
   return apiFetch<EngagementSummary>(
     `/engagements/${encodeURIComponent(id)}/summary`,
+  );
+}
+
+export async function getEngagementAnalytics(
+  id: string,
+): Promise<EngagementExtendedSummary> {
+  return apiFetch<EngagementExtendedSummary>(
+    `/engagements/${encodeURIComponent(id)}/analytics`,
+  );
+}
+
+export async function getEngagementLeaderboard(
+  id: string,
+): Promise<LeaderboardResponse> {
+  return apiFetch<LeaderboardResponse>(
+    `/engagements/${encodeURIComponent(id)}/leaderboard`,
   );
 }

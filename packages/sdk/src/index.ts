@@ -643,6 +643,44 @@ const caseAssignmentResultSchema = z.object({
 
 export type CaseAssignmentResult = z.infer<typeof caseAssignmentResultSchema>;
 
+// Engagement Phase 3 — Analytics & Leaderboard
+// ---------------------------------------------------------------------------
+
+const engagementExtendedSummarySchema = engagementSummarySchema.extend({
+  classificationDistribution: z.record(z.number()).optional(),
+  topClassifications: z.array(z.string()).optional(),
+  analystCount: z.number().optional(),
+  daysElapsed: z.number().nullable().optional(),
+  daysRemaining: z.number().nullable().optional(),
+  avgReviewTimeHours: z.number().nullable().optional(),
+});
+
+export type EngagementExtendedSummary = z.infer<
+  typeof engagementExtendedSummarySchema
+>;
+
+const leaderboardEntrySchema = z.object({
+  rank: z.number(),
+  analystEmail: z.string(),
+  casesReviewed: z.number(),
+  avgReviewTimeSeconds: z.number().nullable().optional(),
+  classificationAccuracy: z.number(),
+  riskScoreMae: z.number().nullable().optional(),
+  actionsLogged: z.number(),
+  lastActivityAt: z.string().nullable().optional(),
+  compositeScore: z.number(),
+});
+
+export type LeaderboardEntry = z.infer<typeof leaderboardEntrySchema>;
+
+const leaderboardResponseSchema = z.object({
+  engagementId: z.string(),
+  entries: z.array(leaderboardEntrySchema),
+  totalAnalysts: z.number(),
+});
+
+export type LeaderboardResponse = z.infer<typeof leaderboardResponseSchema>;
+
 const engagementListSchema = z.array(engagementSchema);
 
 const planIdSchema = z.string().min(1, "planId is required");
@@ -697,6 +735,10 @@ export interface I4GClient {
   assignCases(id: string, caseIds: string[]): Promise<CaseAssignmentResult>;
   removeCases(id: string, caseIds: string[]): Promise<CaseAssignmentResult>;
   getEngagementSummary(id: string): Promise<EngagementSummary>;
+  // Engagements (Phase 3 — Analytics & Leaderboard)
+  getEngagementAnalytics(id: string): Promise<EngagementExtendedSummary>;
+  getEngagementLeaderboard(id: string): Promise<LeaderboardResponse>;
+  exportEngagement(id: string, fmt?: "csv" | "json"): Promise<Blob>;
   verifyDossier(planId: string): Promise<DossierVerificationReport>;
   detokenize(token: string, caseId?: string): Promise<DetokenizeResponse>;
   // Intelligence (S2-15)
@@ -1646,6 +1688,36 @@ export function createClient(config: ClientConfig): I4GClient {
         `/engagements/${encodeURIComponent(id)}/summary`,
         engagementSummarySchema,
       );
+    },
+    getEngagementAnalytics(id) {
+      return request(
+        `/engagements/${encodeURIComponent(id)}/analytics`,
+        engagementExtendedSummarySchema,
+      );
+    },
+    getEngagementLeaderboard(id) {
+      return request(
+        `/engagements/${encodeURIComponent(id)}/leaderboard`,
+        leaderboardResponseSchema,
+      );
+    },
+    async exportEngagement(id, fmt = "csv") {
+      const query = new URLSearchParams({ fmt });
+      const path = `/engagements/${encodeURIComponent(id)}/export?${query.toString()}`;
+
+      const headers: Record<string, string> = {
+        ...additionalHeaders,
+      };
+      if (apiKey) headers["X-API-KEY"] = apiKey;
+
+      const response = await fetcher(buildUrl(baseUrl, path), { headers });
+      if (!response.ok) {
+        throw new I4GClientError(
+          `Export failed: ${response.status}`,
+          response.status,
+        );
+      }
+      return response.blob();
     },
     async listDossiers(options) {
       const payload = dossierListRequestSchema.parse(options ?? {});

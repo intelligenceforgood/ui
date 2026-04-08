@@ -1117,5 +1117,39 @@ export function createMockClient(): I4GClient {
         reviewCompletionPct: 0,
       };
     },
+    async getEngagementAnalytics(id: string) {
+      return {
+        engagementId: id,
+        name: "Mock Engagement",
+        description: null,
+        status: "active",
+        startsAt: null,
+        endsAt: null,
+        createdBy: null,
+        metadata: null,
+        createdAt: null,
+        updatedAt: null,
+        caseCount: 0,
+        casesReviewed: 0,
+        casesRemaining: 0,
+        reviewCompletionPct: 0,
+        classificationDistribution: {},
+        topClassifications: [],
+        analystCount: 0,
+        daysElapsed: null,
+        daysRemaining: null,
+        avgReviewTimeHours: null,
+      };
+    },
+    async getEngagementLeaderboard(id: string) {
+      return {
+        engagementId: id,
+        entries: [],
+        totalAnalysts: 0,
+      };
+    },
+    async exportEngagement() {
+      return new Blob([""], { type: "text/csv" });
+    },
   };
 }
