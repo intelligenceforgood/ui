@@ -37,7 +37,7 @@ function trendColor(
 }
 
 export default async function ImpactPage() {
-  const client = getI4GClient();
+  const client = await getI4GClient();
   const [dashboard, lossByTaxonomy, velocity, funnel, cumulative] =
     await Promise.all([
       client.getImpactDashboard(),

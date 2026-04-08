@@ -29,7 +29,7 @@ import {
 export const dynamic = "force-dynamic";
 
 async function CaseDetailView({ id }: { id: string }) {
-  const client = getI4GClient();
+  const client = await getI4GClient();
   let caseData;
   let taxonomy;
   let relatedCases;

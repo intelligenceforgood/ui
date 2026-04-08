@@ -58,7 +58,7 @@ const reminderIconMap: Record<DashboardReminder["category"], ReactNode> = {
 };
 
 export default async function DashboardPage() {
-  const client = getI4GClient();
+  const client = await getI4GClient();
   const [{ metrics, alerts, activity, reminders }, progress] =
     await Promise.all([
       client.getDashboardOverview(),

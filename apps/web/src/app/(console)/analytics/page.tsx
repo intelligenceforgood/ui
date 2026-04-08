@@ -36,7 +36,7 @@ const trendColorMap: Record<
 };
 
 export default async function AnalyticsPage() {
-  const client = getI4GClient();
+  const client = await getI4GClient();
   const analytics = await client.getAnalyticsOverview();
 
   return (

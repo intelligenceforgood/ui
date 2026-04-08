@@ -19,7 +19,7 @@ const statusVariant: Record<string, "default" | "success" | "danger"> = {
 };
 
 export default async function ThreatCampaignsPage() {
-  const client = getI4GClient();
+  const client = await getI4GClient();
   const { items: campaigns, count } = await client.listThreatCampaigns({
     limit: 50,
   });

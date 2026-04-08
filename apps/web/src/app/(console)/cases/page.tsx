@@ -53,7 +53,7 @@ export default async function CasesPage(props: {
   const dueDate =
     typeof searchParams?.due === "string" ? searchParams.due : undefined;
 
-  const client = getI4GClient();
+  const client = await getI4GClient();
   const casesPromise = client.listCases({
     status,
     priority,

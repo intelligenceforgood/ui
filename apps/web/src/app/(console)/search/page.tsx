@@ -61,7 +61,7 @@ function parseTimeRangeParams(
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const client = getI4GClient();
+  const client = await getI4GClient();
   const resolvedSearchParams = (await searchParams) ?? {};
   const payload = parseSearchPayloadParam(resolvedSearchParams.payload);
   const payloadRecord = payload as Record<string, unknown> | null;

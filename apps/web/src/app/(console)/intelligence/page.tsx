@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export default async function IntelligenceDashboardPage() {
-  const client = getI4GClient();
+  const client = await getI4GClient();
   const watchlistAlertsPromise = client
     .getWatchlistAlerts({ unreadOnly: true, limit: 10 })
     .catch(() => [] as WatchlistAlert[]);

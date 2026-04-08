@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const client = getI4GClient();
+    const client = await getI4GClient();
     const report = await client.verifyDossier(parsed.data.planId);
 
     return NextResponse.json(report);

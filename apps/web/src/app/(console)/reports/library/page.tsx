@@ -19,7 +19,7 @@ const tlpColor: Record<string, "default" | "success" | "danger"> = {
 };
 
 export default async function ReportLibraryPage() {
-  const client = getI4GClient();
+  const client = await getI4GClient();
   const { items: reports, count } = await client.listReports({ limit: 50 });
 
   return (

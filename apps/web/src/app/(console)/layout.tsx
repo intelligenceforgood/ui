@@ -28,7 +28,7 @@ export default async function ConsoleLayout({
     : null;
 
   // Pre-fetch engagements server-side to avoid loading flash.
-  const engagements = await getI4GClient()
+  const engagements = await (await getI4GClient())
     .listEngagements()
     .catch(() => []);
 

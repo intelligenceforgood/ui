@@ -22,14 +22,14 @@ test.describe("intelligence smoke", () => {
 
     // Wait for table to load (entities should appear)
     // Use a generous timeout since data relies on the backend
-    const firstRow = page.locator("tr").nth(1);
+    const firstRow = page.locator("tbody tr").first();
     await expect(firstRow).toBeVisible({ timeout: 10000 });
 
     // Click the first entity row to open detail panel
-    await firstRow.click();
+    await firstRow.locator("td").nth(1).click();
 
     // Detail panel should appear with entity info
-    await expect(page.getByText(/related cases/i)).toBeVisible({
+    await expect(page.getByText(/actions/i)).toBeVisible({
       timeout: 5000,
     });
   });
@@ -42,12 +42,18 @@ test.describe("intelligence smoke", () => {
     ).toBeVisible();
 
     // Segmentation tabs visible
-    await expect(page.getByText("All")).toBeVisible();
-    await expect(page.getByText("Bank")).toBeVisible();
-    await expect(page.getByText("Crypto")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "All", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Bank", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Crypto", exact: true }),
+    ).toBeVisible();
 
     // Click Bank tab
-    await page.getByText("Bank").click();
+    await page.getByRole("button", { name: "Bank", exact: true }).click();
 
     // Wait for re-fetch
     await page.waitForResponse(
@@ -65,10 +71,14 @@ test.describe("intelligence smoke", () => {
     ).toBeVisible();
 
     // Widget cards should be visible
-    await expect(page.getByText(/active threats/i)).toBeVisible({
-      timeout: 10000,
-    });
-    await expect(page.getByText(/new indicators/i)).toBeVisible();
+    await expect(page.getByText("Active Threats", { exact: true })).toBeVisible(
+      {
+        timeout: 10000,
+      },
+    );
+    await expect(
+      page.getByText("New Indicators", { exact: true }),
+    ).toBeVisible();
   });
 
   test("old /accounts redirects to /intelligence/indicators", async ({

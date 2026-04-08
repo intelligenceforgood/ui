@@ -49,7 +49,7 @@ export default async function EvidenceDossiersPage({
 }: DossierPageProps) {
   const resolvedParams = searchParams ? await searchParams : undefined;
   const filters = parseFilters(resolvedParams);
-  const client = getI4GClient();
+  const client = await getI4GClient();
   const response = await client.listDossiers({
     status: filters.status,
     limit: filters.limit,

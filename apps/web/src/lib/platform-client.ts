@@ -13,6 +13,7 @@ interface PlatformClientConfig {
   baseUrl: string;
   apiKey?: string;
   iapClientId?: string;
+  additionalHeaders?: Record<string, string>;
 }
 
 interface CoreStructuredRecord {
@@ -449,6 +450,7 @@ export function createPlatformClient(config: PlatformClientConfig): I4GClient {
     baseUrl: config.baseUrl,
     apiKey: config.apiKey,
     fetchImpl,
+    additionalHeaders: config.additionalHeaders,
   });
 
   return {

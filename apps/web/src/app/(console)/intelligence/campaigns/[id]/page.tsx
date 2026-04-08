@@ -26,7 +26,7 @@ export default async function CampaignDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const client = getI4GClient();
+  const client = await getI4GClient();
   const [campaign, timeline, graph] = await Promise.all([
     client.getThreatCampaign(id),
     client.getCampaignTimeline(id),

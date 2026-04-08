@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const client = getI4GClient();
+    const client = await getI4GClient();
     const results = await client.searchIntelligence(parsed.data);
 
     return NextResponse.json(results);
