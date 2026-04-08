@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIapHeaders } from "@/lib/server/auth-helpers";
-import { ENGAGEMENT_COOKIE_NAME } from "@/lib/engagement-cookie";
+import {
+  ENGAGEMENT_COOKIE_NAME,
+  ALL_ENGAGEMENTS,
+} from "@/lib/engagement-cookie";
 
 export const runtime = "nodejs"; // Ensure Node.js runtime for auth libraries
 
 /** Read the engagement ID from the request cookie. */
 function getEngagementId(request: NextRequest): string | null {
-  return request.cookies.get(ENGAGEMENT_COOKIE_NAME)?.value ?? null;
+  const value = request.cookies.get(ENGAGEMENT_COOKIE_NAME)?.value ?? null;
+  return value === ALL_ENGAGEMENTS ? null : value;
 }
 
 export async function GET(

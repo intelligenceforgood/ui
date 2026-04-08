@@ -1,6 +1,9 @@
 const COOKIE_NAME = "i4g-engagement-id";
 const MAX_AGE = 60 * 60 * 24 * 90; // 90 days
 
+/** Sentinel value stored when the user explicitly selects "All Engagements". */
+export const ALL_ENGAGEMENTS = "__all__";
+
 /** Read the engagement cookie (client-side). */
 export function getEngagementCookie(): string | null {
   if (typeof document === "undefined") return null;
@@ -15,9 +18,14 @@ export function setEngagementCookie(engagementId: string): void {
   document.cookie = `${COOKIE_NAME}=${encodeURIComponent(engagementId)};path=/;max-age=${MAX_AGE};SameSite=Lax`;
 }
 
+/** Store "All Engagements" selection so it survives page refresh. */
+export function setAllEngagementsCookie(): void {
+  document.cookie = `${COOKIE_NAME}=${ALL_ENGAGEMENTS};path=/;max-age=${MAX_AGE};SameSite=Lax`;
+}
+
 /** Clear the engagement cookie (client-side). */
 export function clearEngagementCookie(): void {
-  document.cookie = `${COOKIE_NAME}=;path=/;max-age=0`;
+  document.cookie = `${COOKIE_NAME}=;path=/;max-age=0;SameSite=Lax`;
 }
 
 /** Cookie name exported for server-side reads. */

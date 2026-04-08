@@ -13,7 +13,8 @@ import type { Engagement } from "@i4g/sdk";
 import {
   getEngagementCookie,
   setEngagementCookie,
-  clearEngagementCookie,
+  setAllEngagementsCookie,
+  ALL_ENGAGEMENTS,
 } from "./engagement-cookie";
 
 interface EngagementContextValue {
@@ -81,6 +82,12 @@ export function EngagementProvider({
     const cookieEngagement = getEngagementCookie();
     const resolved = urlEngagement ?? cookieEngagement;
 
+    // User explicitly chose "All Engagements" — respect that.
+    if (resolved === ALL_ENGAGEMENTS) {
+      setSelectedId(null);
+      return;
+    }
+
     if (resolved && engagements.some((e) => e.engagementId === resolved)) {
       setSelectedId(resolved);
       setEngagementCookie(resolved);
@@ -109,7 +116,7 @@ export function EngagementProvider({
 
   const clear = useCallback(() => {
     setSelectedId(null);
-    clearEngagementCookie();
+    setAllEngagementsCookie();
     const params = new URLSearchParams(searchParams.toString());
     params.delete("engagement");
     const qs = params.toString();

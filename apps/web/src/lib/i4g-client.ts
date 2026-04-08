@@ -1,6 +1,9 @@
 import { createClient, type I4GClient } from "@i4g/sdk";
 import { createPlatformClient } from "@/lib/platform-client";
-import { ENGAGEMENT_COOKIE_NAME } from "@/lib/engagement-cookie";
+import {
+  ENGAGEMENT_COOKIE_NAME,
+  ALL_ENGAGEMENTS,
+} from "@/lib/engagement-cookie";
 
 let cachedClient: I4GClient | null = null;
 
@@ -62,7 +65,7 @@ export async function getI4GClient(): Promise<I4GClient> {
     const { cookies } = await import("next/headers");
     const store = await cookies();
     const engagementId = store.get(ENGAGEMENT_COOKIE_NAME)?.value;
-    if (engagementId) {
+    if (engagementId && engagementId !== ALL_ENGAGEMENTS) {
       headers["X-Engagement-Id"] = engagementId;
     }
   } catch {
