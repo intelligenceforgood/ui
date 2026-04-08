@@ -3,7 +3,7 @@ import {
   getEngagementLeaderboard,
   getEngagementAnalytics,
 } from "@/lib/server/engagements-service";
-import { Card, SectionLabel, Badge } from "@i4g/ui-kit";
+import { Badge, Card, FeedbackButton, SectionLabel } from "@i4g/ui-kit";
 import { LeaderboardTable } from "./leaderboard-table";
 import { EngagementAnalyticsSummary } from "./analytics-summary";
 
@@ -48,7 +48,11 @@ export default async function EngagementLeaderboardPage({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="group relative space-y-8">
+      <FeedbackButton
+        feedbackId="admin-engagements.leaderboard"
+        className="absolute top-1 right-0 z-10"
+      />
       <header className="flex items-center justify-between">
         <div className="space-y-2">
           <SectionLabel>Engagement</SectionLabel>

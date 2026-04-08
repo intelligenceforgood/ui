@@ -33,6 +33,7 @@ vi.mock("@i4g/ui-kit", () => ({
     children: ReactNode;
     className?: string;
   }) => <div className={className}>{children}</div>,
+  FeedbackButton: () => null,
 }));
 
 import EcxFeedPage from "@/app/(console)/ssi/ecx-feed/page";

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
-import { Card } from "@i4g/ui-kit";
+import { Card, FeedbackButton } from "@i4g/ui-kit";
 import {
   BarChart,
   Bar,
@@ -143,7 +143,11 @@ export default function TrendDashboardPage() {
     .map(([date, counts]) => ({ date, ...counts }));
 
   return (
-    <div className="space-y-6">
+    <div className="group relative space-y-6">
+      <FeedbackButton
+        feedbackId="ssi-ecx-dashboard.page"
+        className="absolute top-1 right-0 z-10"
+      />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">eCX Trend Dashboard</h1>

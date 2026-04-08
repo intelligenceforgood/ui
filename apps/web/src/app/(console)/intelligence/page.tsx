@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Card, Badge } from "@i4g/ui-kit";
+import { Badge, Card, FeedbackButton } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
 import type { LeaSuggestion, WatchlistAlert } from "@i4g/sdk";
 import {
@@ -33,7 +33,11 @@ export default async function IntelligenceDashboardPage() {
   ]);
 
   return (
-    <div className="space-y-8">
+    <div className="group relative space-y-8">
+      <FeedbackButton
+        feedbackId="intelligence.dashboard"
+        className="absolute top-1 right-0 z-10"
+      />
       <header>
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
           Intelligence

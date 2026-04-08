@@ -3,7 +3,7 @@ import {
   listEngagements,
   getEngagementAnalytics,
 } from "@/lib/server/engagements-service";
-import { Card, SectionLabel } from "@i4g/ui-kit";
+import { Card, FeedbackButton, SectionLabel } from "@i4g/ui-kit";
 import { ComparisonGrid } from "./comparison-grid";
 
 export const metadata: Metadata = {
@@ -56,7 +56,11 @@ export default async function EngagementComparisonPage() {
     .map((r) => r.value);
 
   return (
-    <div className="space-y-8">
+    <div className="group relative space-y-8">
+      <FeedbackButton
+        feedbackId="admin-engagements.compare"
+        className="absolute top-1 right-0 z-10"
+      />
       <header className="space-y-2">
         <SectionLabel>Administration</SectionLabel>
         <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">

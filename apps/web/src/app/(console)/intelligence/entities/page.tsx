@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import nextDynamic from "next/dynamic";
+import { FeedbackButton } from "@i4g/ui-kit";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 
 const EntityExplorer = nextDynamic(() => import("./entity-explorer"), {
@@ -22,7 +23,11 @@ export default async function EntityExplorerPage(props: {
   const searchParams = await props.searchParams;
 
   return (
-    <div className="space-y-8">
+    <div className="group relative space-y-8">
+      <FeedbackButton
+        feedbackId="intelligence.entities"
+        className="absolute top-1 right-0 z-10"
+      />
       <Breadcrumbs
         items={[
           { label: "Intelligence", href: "/intelligence" },

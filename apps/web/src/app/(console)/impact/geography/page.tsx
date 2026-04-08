@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { FeedbackButton } from "@i4g/ui-kit";
 import GeographyClient from "./geography-client";
 
 export const metadata: Metadata = {
@@ -9,7 +10,11 @@ export const metadata: Metadata = {
 
 export default function GeographyPage() {
   return (
-    <div className="space-y-8">
+    <div className="group relative space-y-8">
+      <FeedbackButton
+        feedbackId="impact.geography"
+        className="absolute top-1 right-0 z-10"
+      />
       <header>
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
           Impact

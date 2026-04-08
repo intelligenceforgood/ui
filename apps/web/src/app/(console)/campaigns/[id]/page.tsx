@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Clock, Layers, ShieldAlert } from "lucide-react";
-import { Badge, Card } from "@i4g/ui-kit";
+import { Badge, Card, FeedbackButton } from "@i4g/ui-kit";
 import { apiFetch } from "@/lib/server/api-client";
 
 export const metadata: Metadata = {
@@ -60,7 +60,11 @@ export default async function CampaignDetailPage({
     : [];
 
   return (
-    <div className="space-y-6">
+    <div className="group relative space-y-6">
+      <FeedbackButton
+        feedbackId="campaigns.detail"
+        className="absolute top-1 right-0 z-10"
+      />
       <Link
         href="/campaigns"
         className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900"

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { FeedbackButton } from "@i4g/ui-kit";
 import NetworkGraphClient from "./network-graph-client";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 
@@ -10,7 +11,11 @@ export const metadata: Metadata = {
 
 export default function NetworkGraphPage() {
   return (
-    <div className="space-y-8">
+    <div className="group relative space-y-8">
+      <FeedbackButton
+        feedbackId="intelligence.graph"
+        className="absolute top-1 right-0 z-10"
+      />
       <Breadcrumbs
         items={[
           { label: "Intelligence", href: "/intelligence" },

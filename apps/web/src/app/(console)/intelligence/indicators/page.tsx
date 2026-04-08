@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import nextDynamic from "next/dynamic";
+import { FeedbackButton } from "@i4g/ui-kit";
 
 const IndicatorRegistry = nextDynamic(() => import("./indicator-registry"), {
   loading: () => (
@@ -20,7 +21,11 @@ export default async function IndicatorRegistryPage(props: {
   const searchParams = await props.searchParams;
 
   return (
-    <div className="space-y-8">
+    <div className="group relative space-y-8">
+      <FeedbackButton
+        feedbackId="intelligence.indicators"
+        className="absolute top-1 right-0 z-10"
+      />
       <header>
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
           Intelligence

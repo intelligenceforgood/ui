@@ -8,7 +8,7 @@ import {
   ShieldAlert,
   Zap,
 } from "lucide-react";
-import { Badge, Card } from "@i4g/ui-kit";
+import { Badge, Card, FeedbackButton } from "@i4g/ui-kit";
 import type {
   EcxFeedRecord,
   EcxFeedResponse,
@@ -100,7 +100,11 @@ export default function EcxFeedPage() {
   const currentPolling = pollingStates.find((s) => s.module === module);
 
   return (
-    <div className="space-y-6">
+    <div className="group relative space-y-6">
+      <FeedbackButton
+        feedbackId="ssi-ecx-feed.page"
+        className="absolute top-1 right-0 z-10"
+      />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">eCX Intelligence Feed</h1>

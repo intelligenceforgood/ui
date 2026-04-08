@@ -46,6 +46,7 @@ vi.mock("@i4g/ui-kit", () => ({
     children: ReactNode;
     className?: string;
   }) => <div className={className}>{children}</div>,
+  FeedbackButton: () => null,
 }));
 
 // Mock apiFetch — placed before importing the component
