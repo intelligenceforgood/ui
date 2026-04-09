@@ -158,10 +158,11 @@ export function AccountsTable({ accounts: initial }: AccountsTableProps) {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-          {accounts.map((account) => {
+          {accounts.map((account, index) => {
             const rc = roleConfig[account.role] ?? roleConfig.user;
             const RoleIcon = rc.icon;
             const self = isSelf(account.email);
+            const openUp = index >= accounts.length - 2;
             const feedbackItem =
               feedback?.email === account.email ? feedback : null;
 
@@ -242,7 +243,9 @@ export function AccountsTable({ accounts: initial }: AccountsTableProps) {
                         <MoreVertical className="h-4 w-4" />
                       </button>
                       {actionMenu === account.email && (
-                        <div className="absolute right-0 z-10 mt-1 w-44 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+                        <div
+                          className={`absolute right-0 z-10 w-44 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800 ${openUp ? "bottom-full mb-1" : "mt-1"}`}
+                        >
                           {account.isActive ? (
                             <button
                               type="button"
