@@ -16,6 +16,7 @@ import Link from "next/link";
 import { EntityFilterSidebar } from "./entity-filter-sidebar";
 import { EntityDetailPanel } from "./entity-detail-panel";
 import { entityTypeLabel } from "@/lib/entity-types";
+import { formatEntityValue } from "@/lib/entity-format";
 
 interface EntityExplorerProps {
   initialParams: Record<string, string | string[] | undefined>;
@@ -278,8 +279,14 @@ export default function EntityExplorer({ initialParams }: EntityExplorerProps) {
                         {entityTypeLabel(entity.entityType)}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 font-mono text-sm text-slate-900 dark:text-white">
-                      {entity.canonicalValue}
+                    <td
+                      className="px-4 py-3 font-mono text-sm text-slate-900 dark:text-white"
+                      title={entity.canonicalValue}
+                    >
+                      {formatEntityValue(
+                        entity.entityType,
+                        entity.canonicalValue,
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right font-semibold">
                       {entity.caseCount}

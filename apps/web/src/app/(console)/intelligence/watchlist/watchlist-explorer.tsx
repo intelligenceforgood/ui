@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Card, Badge, Button } from "@i4g/ui-kit";
 import { entityTypeLabel } from "@/lib/entity-types";
+import { formatEntityValue } from "@/lib/entity-format";
 import {
   Bell,
   BellOff,
@@ -227,8 +228,11 @@ export default function WatchlistExplorer() {
                     <Badge variant="default" title={item.entityType}>
                       {entityTypeLabel(item.entityType)}
                     </Badge>
-                    <span className="font-mono text-sm font-medium text-slate-900 dark:text-white">
-                      {item.canonicalValue}
+                    <span
+                      className="font-mono text-sm font-medium text-slate-900 dark:text-white"
+                      title={item.canonicalValue}
+                    >
+                      {formatEntityValue(item.entityType, item.canonicalValue)}
                     </span>
                   </div>
                   {item.note && (

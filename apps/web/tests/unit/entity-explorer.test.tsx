@@ -110,7 +110,8 @@ describe("EntityExplorer", () => {
       expect(screen.getByText("0xABCDEF")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("1234567890")).toBeInTheDocument();
+    // bank_account values are formatted with spaces every 4 digits
+    expect(screen.getByText("1234 5678 90")).toBeInTheDocument();
   });
 
   it("fetches entities on mount", async () => {

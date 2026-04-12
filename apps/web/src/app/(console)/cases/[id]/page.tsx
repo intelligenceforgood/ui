@@ -21,6 +21,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { RestrictedAccess } from "@/components/restricted-access";
 import { TextWithTokens } from "@/components/text-with-tokens";
 import { FormattedNarrative } from "@/components/formatted-narrative";
+import { formatEntityValue } from "@/lib/entity-format";
 import {
   ActivityBarClient,
   InvestigationPanelClient,
@@ -277,7 +278,10 @@ async function CaseDetailView({ id }: { id: string }) {
                               className="text-blue-600 hover:text-blue-800 hover:underline truncate max-w-[160px]"
                               title={entity.canonicalValue}
                             >
-                              {entity.canonicalValue}
+                              {formatEntityValue(
+                                entity.entityType,
+                                entity.canonicalValue,
+                              )}
                             </Link>
                             {entity.confidence > 0 && (
                               <Badge

@@ -16,6 +16,7 @@ import Link from "next/link";
 import { AnnotationPanel } from "../components/annotation-panel";
 import { EntityStatusBadge } from "../components/entity-status-badge";
 import { entityTypeLabel } from "@/lib/entity-types";
+import { formatEntityValue } from "@/lib/entity-format";
 
 interface EntityDetailPanelProps {
   entity: EntityStats;
@@ -116,8 +117,11 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
             </Badge>
             <EntityStatusBadge status={entity.status} />
           </div>
-          <h2 className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">
-            {entity.canonicalValue}
+          <h2
+            className="mt-1 text-lg font-semibold text-slate-900 dark:text-white"
+            title={entity.canonicalValue}
+          >
+            {formatEntityValue(entity.entityType, entity.canonicalValue)}
           </h2>
         </div>
         <button
