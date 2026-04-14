@@ -42,7 +42,7 @@ export default async function ConsoleLayout({
               <div className="flex flex-col lg:flex-row">
                 <Navigation />
                 <main className="flex-1 min-h-screen px-4 py-6 sm:px-10 lg:px-12 lg:py-10">
-                  <div className="mx-auto w-full max-w-6xl space-y-8">
+                  <div className="w-full max-w-7xl space-y-8">
                     <div className="flex justify-end">
                       <EngagementSelector />
                     </div>
