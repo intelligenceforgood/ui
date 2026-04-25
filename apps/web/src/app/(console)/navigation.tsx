@@ -119,6 +119,12 @@ const navItems: NavItem[] = [
         label: "Watchlist",
         icon: Eye,
       },
+      {
+        href: "/discoveries",
+        label: "Discoveries",
+        icon: Radar,
+        minRole: "analyst",
+      },
     ],
   },
   {
