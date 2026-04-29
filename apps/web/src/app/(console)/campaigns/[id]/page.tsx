@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Clock, Layers, ShieldAlert } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock,
+  Layers,
+  ShieldAlert,
+  DollarSign,
+  Server,
+  Users,
+} from "lucide-react";
 import { Badge, Card, FeedbackButton } from "@i4g/ui-kit";
 import { apiFetch } from "@/lib/server/api-client";
 
@@ -28,6 +36,17 @@ interface CampaignDetail {
   status: string;
   created_at: string | null;
   linked_cases: LinkedCase[];
+  damage_ledger?: {
+    currency: string;
+    claimed: number;
+    confirmed: number;
+  }[];
+  infrastructure_profile?: {
+    tech_stack: string[];
+    subdomain_roles: Record<string, string>;
+    source_maps_exposed: boolean;
+    auth_model: string;
+  };
 }
 
 export default async function CampaignDetailPage({
@@ -113,6 +132,128 @@ export default async function CampaignDetailPage({
           )}
         </div>
       </Card>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Damage Ledger */}
+        <div className="space-y-3">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
+            <DollarSign className="h-5 w-5 text-slate-500" />
+            Damage Ledger
+          </h2>
+          {campaign.damage_ledger && campaign.damage_ledger.length > 0 ? (
+            <div className="space-y-2">
+              {campaign.damage_ledger.map((ledger, idx) => (
+                <Card key={idx} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold">{ledger.currency}</span>
+                    <div className="flex gap-4 text-sm">
+                      <div className="flex flex-col items-end">
+                        <span className="text-slate-500">Claimed</span>
+                        <span>{ledger.claimed.toLocaleString()}</span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="text-slate-500">Confirmed</span>
+                        <span className="font-medium text-emerald-600">
+                          {ledger.confirmed.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="p-4 text-center text-sm text-slate-400 border-dashed">
+              No damage data available.
+            </Card>
+          )}
+        </div>
+
+        {/* Infrastructure Profile */}
+        <div className="space-y-3">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
+            <Server className="h-5 w-5 text-slate-500" />
+            Infrastructure Profile
+          </h2>
+          {campaign.infrastructure_profile ? (
+            <Card className="p-4 space-y-4">
+              <div>
+                <span className="text-sm font-medium text-slate-500">
+                  Tech Stack
+                </span>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  {campaign.infrastructure_profile.tech_stack.map((tech) => (
+                    <Badge key={tech} variant="default">
+                      {tech}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-sm font-medium text-slate-500">
+                    Auth Model
+                  </span>
+                  <p className="mt-1 text-sm">
+                    {campaign.infrastructure_profile.auth_model}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-slate-500">
+                    Source Maps
+                  </span>
+                  <p className="mt-1 text-sm">
+                    {campaign.infrastructure_profile.source_maps_exposed ? (
+                      <span className="text-red-600 font-medium">Exposed</span>
+                    ) : (
+                      <span className="text-emerald-600 font-medium">
+                        Secure
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+              {Object.keys(campaign.infrastructure_profile.subdomain_roles)
+                .length > 0 && (
+                <div>
+                  <span className="text-sm font-medium text-slate-500">
+                    Subdomain Roles
+                  </span>
+                  <div className="mt-1 space-y-1">
+                    {Object.entries(
+                      campaign.infrastructure_profile.subdomain_roles,
+                    ).map(([sub, role]) => (
+                      <div key={sub} className="flex justify-between text-sm">
+                        <span className="font-mono text-slate-600">{sub}</span>
+                        <span>{role}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Card>
+          ) : (
+            <Card className="p-4 text-center text-sm text-slate-400 border-dashed">
+              No infrastructure profile available.
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* Actors Placeholder */}
+      <div className="space-y-3">
+        <h2 className="flex items-center gap-2 text-lg font-semibold">
+          <Users className="h-5 w-5 text-slate-500" />
+          Actors
+        </h2>
+        <Card className="p-8 text-center border-dashed">
+          <Users className="mx-auto h-8 w-8 text-slate-400 mb-2" />
+          <p className="text-sm font-medium text-slate-600">Actors Tracking</p>
+          <p className="text-xs text-slate-500 mt-1">
+            To be fully hydrated in Sprint 3.
+          </p>
+        </Card>
+      </div>
 
       {/* Linked cases timeline */}
       <div className="space-y-3">

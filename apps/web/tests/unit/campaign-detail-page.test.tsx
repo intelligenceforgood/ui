@@ -32,6 +32,15 @@ vi.mock("lucide-react", () => ({
   ShieldAlert: ({ className }: { className?: string }) => (
     <span data-testid="icon-shield" className={className} />
   ),
+  DollarSign: ({ className }: { className?: string }) => (
+    <span data-testid="icon-dollar-sign" className={className} />
+  ),
+  Server: ({ className }: { className?: string }) => (
+    <span data-testid="icon-server" className={className} />
+  ),
+  Users: ({ className }: { className?: string }) => (
+    <span data-testid="icon-users" className={className} />
+  ),
 }));
 
 // Mock @i4g/ui-kit
@@ -49,7 +58,7 @@ vi.mock("@i4g/ui-kit", () => ({
   FeedbackButton: () => null,
 }));
 
-// Mock apiFetch — placed before importing the component
+// Mock apiFetch â€” placed before importing the component
 const mockApiFetch = vi.fn();
 vi.mock("@/lib/server/api-client", () => ({
   apiFetch: (...args: unknown[]) => mockApiFetch(...args),
