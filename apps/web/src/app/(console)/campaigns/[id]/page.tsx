@@ -7,9 +7,9 @@ import {
   ShieldAlert,
   DollarSign,
   Server,
-  Users,
 } from "lucide-react";
 import { Badge, Card, FeedbackButton } from "@i4g/ui-kit";
+import CampaignActors from "./campaign-actors";
 import { apiFetch } from "@/lib/server/api-client";
 
 export const metadata: Metadata = {
@@ -240,20 +240,7 @@ export default async function CampaignDetailPage({
         </div>
       </div>
 
-      {/* Actors Placeholder */}
-      <div className="space-y-3">
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <Users className="h-5 w-5 text-slate-500" />
-          Actors
-        </h2>
-        <Card className="p-8 text-center border-dashed">
-          <Users className="mx-auto h-8 w-8 text-slate-400 mb-2" />
-          <p className="text-sm font-medium text-slate-600">Actors Tracking</p>
-          <p className="text-xs text-slate-500 mt-1">
-            To be fully hydrated in Sprint 3.
-          </p>
-        </Card>
-      </div>
+      <CampaignActors campaignId={campaign.id} />
 
       {/* Linked cases timeline */}
       <div className="space-y-3">
