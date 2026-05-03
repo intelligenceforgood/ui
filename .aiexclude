@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js & Build outputs
+.next/
+out/
+build/
+dist/
+
+# Turborepo
+.turbo/
+
+# Caches
+.cache/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+
+# Testing & Coverage (Vitest, Playwright)
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.nyc_output/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# OS, IDE, and Deployments
+.DS_Store
+.vscode/
+.idea/
+.git/
+.vercel/
+
+# Large Media / Static Assets
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.gif
+*.ico
+*.webp
+*.avif
+*.mp4
+*.webm
+*.pdf
