@@ -1029,6 +1029,15 @@ export function createMockClient(): I4GClient {
     async investigateCaseUrl() {
       return { triggered: true, scanId: "mock-scan" };
     },
+    async getPhishDestroyStats() {
+      return { totalActors: 15, activeDomains: 300 };
+    },
+    async getPhishDestroyActors() {
+      return [];
+    },
+    async getPhishDestroyGraph() {
+      return { nodes: [], links: [] };
+    },
     async getRelatedCases(caseId: string) {
       return { caseId, related: [] };
     },

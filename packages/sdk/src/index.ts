@@ -685,6 +685,46 @@ const engagementListSchema = z.array(engagementSchema);
 
 const planIdSchema = z.string().min(1, "planId is required");
 
+// ---------------------------------------------------------------------------
+// PhishDestroy Dashboard types
+// ---------------------------------------------------------------------------
+
+const phishDestroyStatsSchema = z.object({
+  totalActors: z.number(),
+  activeDomains: z.number(),
+});
+
+export type PhishDestroyStats = z.infer<typeof phishDestroyStatsSchema>;
+
+const phishDestroyActorSchema = z.object({
+  name: z.string(),
+  aliases: z.array(z.string()),
+  stolenAmount: z.number(),
+  domains: z.array(z.string()),
+  status: z.enum(["active", "inactive"]).catch("active"),
+});
+
+export type PhishDestroyActor = z.infer<typeof phishDestroyActorSchema>;
+
+const phishDestroyGraphNodeSchema = z.object({
+  id: z.string(),
+  group: z.number(),
+  label: z.string(),
+});
+
+const phishDestroyGraphLinkSchema = z.object({
+  source: z.string(),
+  target: z.string(),
+  value: z.number(),
+});
+
+const phishDestroyGraphSchema = z.object({
+  nodes: z.array(phishDestroyGraphNodeSchema),
+  links: z.array(phishDestroyGraphLinkSchema),
+});
+
+export type PhishDestroyGraph = z.infer<typeof phishDestroyGraphSchema>;
+
 export class I4GClientError extends Error {
   status: number;
   details?: unknown;
@@ -888,6 +928,10 @@ export interface I4GClient {
     caseId: string,
     body: CaseInvestigateRequest,
   ): Promise<Record<string, unknown>>;
+  // PhishDestroy Dashboard
+  getPhishDestroyStats(): Promise<PhishDestroyStats>;
+  getPhishDestroyActors(): Promise<PhishDestroyActor[]>;
+  getPhishDestroyGraph(): Promise<PhishDestroyGraph>;
 }
 
 const detokenizeResponseSchema = z.object({
@@ -2220,6 +2264,19 @@ export function createClient(config: ClientConfig): I4GClient {
         method: "POST",
         body: JSON.stringify(body),
       });
+    },
+    // PhishDestroy Dashboard
+    getPhishDestroyStats() {
+      return request("/phishdestroy/dashboard/stats", phishDestroyStatsSchema);
+    },
+    getPhishDestroyActors() {
+      return request(
+        "/phishdestroy/dashboard/actors",
+        z.array(phishDestroyActorSchema),
+      );
+    },
+    getPhishDestroyGraph() {
+      return request("/phishdestroy/dashboard/graph", phishDestroyGraphSchema);
     },
   };
 }
