@@ -10,8 +10,3 @@ export * from "./components/info-popover";
 export * from "./components/feedback-provider";
 export * from "./components/feedback-button";
 export * from "./components/feedback-dialog";
-
-// Dashboard Components
-export * from "./components/stats/stats-card";
-export * from "./components/tables/threat-actor-table";
-export * from "./components/graph/relationship-graph";

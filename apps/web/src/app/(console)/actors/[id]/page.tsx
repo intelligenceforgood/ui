@@ -6,13 +6,11 @@ export const metadata: Metadata = {
   description: "Comprehensive view of a threat actor profile.",
 };
 
-export default async function ActorDetailPage({
+export default function ActorDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = await params;
-
   return (
     <div className="space-y-6">
       <header>
@@ -23,7 +21,7 @@ export default async function ActorDetailPage({
           Actor Profile
         </h1>
       </header>
-      <ActorDetail actorId={id} />
+      <ActorDetail actorId={params.id} />
     </div>
   );
 }
