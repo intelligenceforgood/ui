@@ -17,6 +17,7 @@ import { getI4GClient } from "@/lib/i4g-client";
 import type { DashboardReminder } from "@i4g/sdk";
 import { TextWithTokens } from "@/components/text-with-tokens";
 import { EngagementSummaryCard } from "@/components/engagement-summary-card";
+import { DashboardKpiCards } from "@/components/dashboard-kpi-cards";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -88,21 +89,7 @@ export default async function DashboardPage() {
 
       <EngagementSummaryCard />
 
-      <section className="group relative grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <FeedbackButton
-          feedbackId="dashboard.metrics"
-          className="absolute -top-1 right-0 z-10"
-        />
-        {metrics.map((metric) => (
-          <Card key={metric.label}>
-            <p className="text-sm text-slate-500">{metric.label}</p>
-            <p className="mt-4 text-3xl font-semibold text-slate-900">
-              {metric.value}
-            </p>
-            <p className="mt-2 text-xs text-slate-400">{metric.change}</p>
-          </Card>
-        ))}
-      </section>
+      <DashboardKpiCards metrics={metrics} />
 
       {/* Processing Progress */}
       {progress.totalCases > 0 && (

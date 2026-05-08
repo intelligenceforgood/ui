@@ -10,3 +10,5 @@ export * from "./components/info-popover";
 export * from "./components/feedback-provider";
 export * from "./components/feedback-button";
 export * from "./components/feedback-dialog";
+export * from "./components/kpi-card";
+export * from "./components/progress-ring";
