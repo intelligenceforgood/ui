@@ -3,6 +3,7 @@ import nextDynamic from "next/dynamic";
 import { Badge, Card, FeedbackButton } from "@i4g/ui-kit";
 import { getI4GClient } from "@/lib/i4g-client";
 import { Shield, Calendar, DollarSign, Users } from "lucide-react";
+import { ManageCampaignModal } from "./manage-campaign-modal";
 
 const CampaignTimeline = nextDynamic(() => import("./campaign-timeline"), {
   loading: () => (
@@ -47,12 +48,21 @@ export default async function CampaignDetailPage({
       />
 
       <header className="space-y-2">
-        <div className="flex items-center gap-3">
-          <Shield className="h-6 w-6 text-slate-400" />
-          <h1 className="text-2xl font-bold text-slate-900">{campaign.name}</h1>
-          <Badge variant={statusVariant[campaign.status] ?? "default"}>
-            {campaign.status}
-          </Badge>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Shield className="h-6 w-6 text-slate-400" />
+            <h1 className="text-2xl font-bold text-slate-900">
+              {campaign.name}
+            </h1>
+            <Badge variant={statusVariant[campaign.status] ?? "default"}>
+              {campaign.status}
+            </Badge>
+          </div>
+          <ManageCampaignModal
+            campaignId={campaign.id}
+            initialStatus={campaign.status}
+            initialName={campaign.name}
+          />
         </div>
         <p className="text-sm text-slate-500">Campaign ID: {campaign.id}</p>
       </header>

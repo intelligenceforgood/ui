@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card, Button, Input, Badge } from "@i4g/ui-kit";
 import type {
@@ -22,6 +22,41 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { entityTypeColor, entityTypeLabel } from "@/lib/entity-types";
+
+interface ApiCluster {
+  id: string;
+  size: number;
+  members: string[];
+  density: number;
+  avg_risk_score: number;
+}
+
+interface ApiTemporalNode {
+  id: string;
+  label?: string;
+  entity_type?: string;
+  entityType?: string;
+  case_count?: number;
+  caseCount?: number;
+  risk_score?: number;
+  riskScore?: number;
+}
+
+interface ApiTemporalEdge {
+  source: string;
+  target: string;
+  weight?: number;
+  edge_type?: string;
+  edgeType?: string;
+}
+
+interface ApiTemporalSnapshot {
+  date: string;
+  nodes: ApiTemporalNode[];
+  edges: ApiTemporalEdge[];
+  nodeCount?: number;
+  edgeCount?: number;
+}
 
 const EDGE_COLORS: Record<string, string> = {
   "co-occurrence": "#94a3b8",
@@ -110,6 +145,18 @@ export default function NetworkGraph() {
     new Set(),
   );
 
+  // Clusters logic
+  const [globalClusters, setGlobalClusters] = useState<ApiCluster[]>([]);
+  const [selectedClusterId, setSelectedClusterId] = useState<string | null>(
+    null,
+  );
+
+  // Temporal logic
+  const [temporalSnapshots, setTemporalSnapshots] = useState<
+    ApiTemporalSnapshot[]
+  >([]);
+  const [temporalIndex, setTemporalIndex] = useState(0);
+
   // Check if this is a case-seeded graph
   const isCaseSeed = searchParams.get("seed_type") === "case";
   const caseSeedId = searchParams.get("seed") ?? "";
@@ -174,6 +221,71 @@ export default function NetworkGraph() {
     }
   }, [seed, hops, apiSeedType]);
 
+  const fetchTemporalGraph = useCallback(async () => {
+    if (!seed) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const query = new URLSearchParams({ seed, hops: String(hops) });
+      const res = await fetch(`/api/intelligence/graph/temporal?${query}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setTemporalSnapshots(data);
+      setTemporalIndex(Math.max(0, data.length - 1));
+
+      if (data.length > 0) {
+        const lastSnap = data[data.length - 1];
+        const payload: GraphPayload = {
+          nodes: lastSnap.nodes.map((n: ApiTemporalNode) => ({
+            id: n.id,
+            label: n.label || n.id,
+            entityType:
+              n.entity_type || n.entityType || n.id.split(":")[0] || "unknown",
+            caseCount: n.case_count || n.caseCount || 0,
+            riskScore: n.risk_score || n.riskScore || 0,
+            campaignIds: [],
+          })),
+          edges: lastSnap.edges.map((e: ApiTemporalEdge) => ({
+            source: e.source,
+            target: e.target,
+            weight: e.weight || 1,
+            edgeType: e.edge_type || e.edgeType || "co-occurrence",
+          })),
+          nodeCount: lastSnap.nodeCount || lastSnap.nodes.length,
+          edgeCount: lastSnap.edgeCount || lastSnap.edges.length,
+        };
+        setGraphData(payload);
+
+        const posMap = new Map<string, NodePosition>();
+        payload.nodes.forEach((n, i) => {
+          const angle = (2 * Math.PI * i) / payload.nodes.length;
+          posMap.set(n.id, {
+            x: 400 + 200 * Math.cos(angle),
+            y: 300 + 200 * Math.sin(angle),
+            vx: 0,
+            vy: 0,
+            node: n,
+            pinned: false,
+          });
+        });
+        setPositions(posMap);
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to load temporal graph",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [seed, hops]);
+
+  useEffect(() => {
+    fetch("/api/intelligence/graph/clusters?min_size=3")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setGlobalClusters(data))
+      .catch(() => {});
+  }, []);
+
   // Auto-load graph when arriving with URL params
   useEffect(() => {
     if (autoLoad && seed) {
@@ -181,6 +293,27 @@ export default function NetworkGraph() {
       fetchGraph();
     }
   }, [autoLoad, seed, fetchGraph]);
+
+  const currentSnapshot =
+    temporalSnapshots.length > 0 ? temporalSnapshots[temporalIndex] : null;
+  const currentNodesSet = useMemo(() => {
+    if (!currentSnapshot) return null;
+    return new Set(currentSnapshot.nodes.map((n: ApiTemporalNode) => n.id));
+  }, [currentSnapshot]);
+  const currentEdgesSet = useMemo(() => {
+    if (!currentSnapshot) return null;
+    return new Set(
+      currentSnapshot.edges.map(
+        (e: ApiTemporalEdge) => `${e.source}|${e.target}`,
+      ),
+    );
+  }, [currentSnapshot]);
+
+  const highlightedNodes = useMemo(() => {
+    if (!selectedClusterId) return new Set<string>();
+    const cluster = globalClusters.find((c) => c.id === selectedClusterId);
+    return new Set<string>(cluster?.members || []);
+  }, [selectedClusterId, globalClusters]);
 
   // Simple force simulation
   useEffect(() => {
@@ -203,9 +336,11 @@ export default function NetworkGraph() {
 
       // Repulsion
       for (let i = 0; i < posArr.length; i++) {
+        const a = posArr[i]!;
+        if (currentNodesSet && !currentNodesSet.has(a.node.id)) continue;
         for (let j = i + 1; j < posArr.length; j++) {
-          const a = posArr[i]!;
           const b = posArr[j]!;
+          if (currentNodesSet && !currentNodesSet.has(b.node.id)) continue;
           const dx = b.x - a.x;
           const dy = b.y - a.y;
           const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
@@ -225,6 +360,12 @@ export default function NetworkGraph() {
 
       // Attraction along edges
       for (const edge of edgeArr) {
+        if (
+          currentEdgesSet &&
+          !currentEdgesSet.has(`${edge.source}|${edge.target}`) &&
+          !currentEdgesSet.has(`${edge.target}|${edge.source}`)
+        )
+          continue;
         const a = positions.get(edge.source);
         const b = positions.get(edge.target);
         if (!a || !b) continue;
@@ -266,6 +407,12 @@ export default function NetworkGraph() {
       // Draw edges
       for (const edge of edgeArr) {
         if (hiddenEdgeTypes.has(edge.edgeType)) continue;
+        if (
+          currentEdgesSet &&
+          !currentEdgesSet.has(`${edge.source}|${edge.target}`) &&
+          !currentEdgesSet.has(`${edge.target}|${edge.source}`)
+        )
+          continue;
         const a = positions.get(edge.source);
         const b = positions.get(edge.target);
         if (!a || !b) continue;
@@ -279,9 +426,19 @@ export default function NetworkGraph() {
         ctx.lineTo(b.x, b.y);
         ctx.strokeStyle = EDGE_COLORS[edge.edgeType] ?? EDGE_COLORS["default"]!;
         ctx.lineWidth = Math.min(edge.weight, 4);
+
+        let edgeAlpha = 1;
+        if (selectedClusterId) {
+          const isAHigh = highlightedNodes.has(edge.source);
+          const isBHigh = highlightedNodes.has(edge.target);
+          edgeAlpha = isAHigh && isBHigh ? 1 : 0.1;
+        }
+        ctx.globalAlpha = edgeAlpha;
+
         if (edge.edgeType === "same-campaign") ctx.setLineDash([5, 5]);
         else ctx.setLineDash([]);
         ctx.stroke();
+        ctx.globalAlpha = 1;
 
         // Edge label on hover
         if (
@@ -307,12 +464,18 @@ export default function NetworkGraph() {
       for (const p of posArr) {
         const n = p.node;
         if (hiddenEntityTypes.has(n.entityType)) continue;
+        if (currentNodesSet && !currentNodesSet.has(n.id)) continue;
         const radius = Math.max(6, Math.min(20, 4 + n.caseCount * 2));
         const baseColor = entityTypeColor(n.entityType);
         const color =
           showClusters && n.clusterId != null
             ? CLUSTER_COLORS[n.clusterId % CLUSTER_COLORS.length] ?? baseColor
             : baseColor;
+
+        const isHighlighted =
+          highlightedNodes.size > 0 ? highlightedNodes.has(n.id) : true;
+        ctx.globalAlpha = selectedClusterId ? (isHighlighted ? 1 : 0.1) : 1;
+
         const isSearchMatch =
           searchLower.length > 0 &&
           (n.label.toLowerCase().includes(searchLower) ||
@@ -377,6 +540,8 @@ export default function NetworkGraph() {
         const label =
           n.label.length > 16 ? n.label.slice(0, 14) + "…" : n.label;
         ctx.fillText(label, p.x, p.y + radius + 12);
+
+        ctx.globalAlpha = 1;
       }
 
       ctx.restore();
@@ -396,6 +561,10 @@ export default function NetworkGraph() {
     graphSearch,
     hiddenEntityTypes,
     hiddenEdgeTypes,
+    currentEdgesSet,
+    currentNodesSet,
+    highlightedNodes,
+    selectedClusterId,
   ]);
 
   const handleCanvasMouseMove = useCallback(
@@ -627,7 +796,10 @@ export default function NetworkGraph() {
               />
               <Button
                 size="sm"
-                onClick={fetchGraph}
+                onClick={() => {
+                  if (temporalSnapshots.length > 0) fetchTemporalGraph();
+                  else fetchGraph();
+                }}
                 disabled={loading || !seed}
               >
                 <Search className="h-4 w-4" />
@@ -704,6 +876,61 @@ export default function NetworkGraph() {
                 </label>
               </div>
             )}
+          <div className="flex flex-col gap-2 border-t pt-2 border-slate-200 dark:border-slate-700 mt-2">
+            <label className="flex items-center gap-2 text-xs text-slate-500">
+              <input
+                type="checkbox"
+                checked={temporalSnapshots.length > 0}
+                onChange={(e) => {
+                  if (e.target.checked) fetchTemporalGraph();
+                  else {
+                    setTemporalSnapshots([]);
+                    fetchGraph();
+                  }
+                }}
+                className="rounded border-slate-300"
+              />
+              Enable Temporal Analysis
+            </label>
+            {temporalSnapshots.length > 0 && (
+              <div className="px-2 pb-2">
+                <input
+                  type="range"
+                  min={0}
+                  max={temporalSnapshots.length - 1}
+                  value={temporalIndex}
+                  onChange={(e) => setTemporalIndex(Number(e.target.value))}
+                  className="w-full"
+                />
+                <div className="text-center text-xs text-slate-500 font-semibold mt-1">
+                  {temporalSnapshots[temporalIndex]?.date}
+                </div>
+              </div>
+            )}
+          </div>
+          {globalClusters.length > 0 && (
+            <div className="mt-4 space-y-2 border-t pt-4 border-slate-200 dark:border-slate-700">
+              <p className="text-xs font-semibold text-slate-500">
+                Detected Communities
+              </p>
+              <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
+                {globalClusters.map((cluster) => (
+                  <button
+                    key={cluster.id}
+                    type="button"
+                    className={`w-full text-left text-xs px-2 py-1 rounded ${selectedClusterId === cluster.id ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300" : "hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+                    onClick={() =>
+                      setSelectedClusterId((prev) =>
+                        prev === cluster.id ? null : cluster.id,
+                      )
+                    }
+                  >
+                    Community {cluster.id} ({cluster.size} nodes)
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {/* Search within graph */}
           {graphData && graphData.nodes.length > 0 && (
             <div>

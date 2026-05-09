@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { AnnotationPanel } from "../components/annotation-panel";
-import { EntityStatusBadge } from "../components/entity-status-badge";
 import { entityTypeLabel } from "@/lib/entity-types";
 import { formatEntityValue } from "@/lib/entity-format";
 
@@ -42,6 +41,22 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
   const [loadingActivity, setLoadingActivity] = useState(true);
   const [loadingNeighbors, setLoadingNeighbors] = useState(true);
   const [loadingCases, setLoadingCases] = useState(true);
+  const [currentStatus, setCurrentStatus] = useState<string>(
+    (entity as EntityStats & { status?: string }).status ?? "active",
+  );
+
+  const handleStatusChange = async (newStatus: string) => {
+    setCurrentStatus(newStatus);
+    await fetch("/api/intelligence/entities/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        entityType: entity.entityType,
+        canonicalValue: entity.canonicalValue,
+        status: newStatus,
+      }),
+    }).catch(console.error);
+  };
 
   const fetchActivity = useCallback(async () => {
     setLoadingActivity(true);
@@ -115,7 +130,16 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
             <Badge variant="default" title={entity.entityType}>
               {entityTypeLabel(entity.entityType)}
             </Badge>
-            <EntityStatusBadge status={entity.status} />
+            <select
+              className="text-xs rounded border border-slate-200 bg-white px-2 py-1 dark:border-slate-800 dark:bg-slate-950 text-slate-700 dark:text-slate-300"
+              value={currentStatus}
+              onChange={(e) => handleStatusChange(e.target.value)}
+            >
+              <option value="active">Active</option>
+              <option value="flagged">Flagged</option>
+              <option value="resolved">Resolved</option>
+              <option value="ignored">Ignored</option>
+            </select>
           </div>
           <h2
             className="mt-1 text-lg font-semibold text-slate-900 dark:text-white"

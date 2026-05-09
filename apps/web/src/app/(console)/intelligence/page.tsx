@@ -11,6 +11,8 @@ import {
   Scale,
   Bell,
 } from "lucide-react";
+import { LossTrendChart } from "./components/loss-trend-chart";
+import { ShareDashboardButton } from "./components/share-dashboard-button";
 
 export const dynamic = "force-dynamic";
 
@@ -42,9 +44,12 @@ export default async function IntelligenceDashboardPage() {
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
           Intelligence
         </p>
-        <h1 className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">
-          Intelligence Dashboard
-        </h1>
+        <div className="mt-2 flex items-center justify-between">
+          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">
+            Intelligence Dashboard
+          </h1>
+          <ShareDashboardButton />
+        </div>
         <p className="mt-2 max-w-3xl text-sm text-slate-500 dark:text-slate-400">
           Real-time overview of active threats, emerging campaigns, indicator
           pipeline health, and cumulative loss trends.
@@ -82,19 +87,22 @@ export default async function IntelligenceDashboardPage() {
           </p>
         </Card>
 
-        <Card className="space-y-2">
-          <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
-            <TrendingUp className="h-4 w-4 text-amber-500" />
-            Loss Trend
+        <Card className="flex flex-col">
+          <div className="space-y-2 flex-grow">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+              <TrendingUp className="h-4 w-4 text-amber-500" />
+              Loss Trend
+            </div>
+            <p className="text-3xl font-semibold text-slate-900 dark:text-white">
+              $
+              {widgets.lossTrend.length > 0
+                ? widgets.lossTrend[
+                    widgets.lossTrend.length - 1
+                  ].loss.toLocaleString()
+                : "0"}
+            </p>
           </div>
-          <p className="text-3xl font-semibold text-slate-900 dark:text-white">
-            $
-            {widgets.lossTrend.length > 0
-              ? widgets.lossTrend[
-                  widgets.lossTrend.length - 1
-                ].loss.toLocaleString()
-              : "0"}
-          </p>
+          <LossTrendChart data={widgets.lossTrend} />
         </Card>
       </section>
 

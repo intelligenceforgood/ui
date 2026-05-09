@@ -201,7 +201,13 @@ export function Navigation() {
   const navLinks = (
     <ul className="space-y-2">
       {visibleItems.map(({ href, label, icon: Icon, children }) => {
-        const sectionActive = pathname.startsWith(href);
+        const sectionActive =
+          pathname.startsWith(href) ||
+          children?.some(
+            (child) =>
+              pathname === child.href ||
+              (child.href !== href && pathname.startsWith(child.href)),
+          );
         return (
           <li key={href}>
             <Link

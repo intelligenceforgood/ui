@@ -56,6 +56,9 @@ export default function EntityExplorer({ initialParams }: EntityExplorerProps) {
   const [offset, setOffset] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [entityTypes, setEntityTypes] = useState<string[]>([]);
+  const [selectedEntities, setSelectedEntities] = useState<Set<string>>(
+    new Set(),
+  );
 
   useEffect(() => {
     fetch("/api/intelligence/entities/types")
@@ -221,6 +224,59 @@ export default function EntityExplorer({ initialParams }: EntityExplorerProps) {
           </Card>
         )}
 
+        {/* Bulk action bar */}
+        {selectedEntities.size > 0 && (
+          <div className="flex items-center gap-3 rounded-lg bg-teal-50 p-3 border border-teal-200 dark:bg-teal-900/20 dark:border-teal-800">
+            <span className="text-sm font-medium text-teal-800 dark:text-teal-200">
+              {selectedEntities.size} entities selected
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={async () => {
+                const entities = Array.from(selectedEntities).map((id) => {
+                  const [entityType, canonicalValue] = id.split("|");
+                  return { entityType, canonicalValue };
+                });
+                await fetch("/api/intelligence/entities/bulk", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    entities,
+                    action: "change_status",
+                    status: "flagged",
+                  }),
+                });
+                setSelectedEntities(new Set());
+                fetchEntities();
+              }}
+            >
+              Flag Selected
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={async () => {
+                const entities = Array.from(selectedEntities).map((id) => {
+                  const [entityType, canonicalValue] = id.split("|");
+                  return { entityType, canonicalValue };
+                });
+                await fetch("/api/intelligence/entities/bulk", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    entities,
+                    action: "add_to_watchlist",
+                  }),
+                });
+                setSelectedEntities(new Set());
+              }}
+            >
+              Add to Watchlist
+            </Button>
+          </div>
+        )}
+
         {/* Table */}
         <Card className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -274,6 +330,31 @@ export default function EntityExplorer({ initialParams }: EntityExplorerProps) {
                     className="cursor-pointer border-b border-slate-100 transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900/40"
                     onClick={() => setSelected(entity)}
                   >
+                    <td
+                      className="px-4 py-3 text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedEntities.has(
+                          `${entity.entityType}|${entity.canonicalValue}`,
+                        )}
+                        onChange={(e) => {
+                          const newSet = new Set(selectedEntities);
+                          if (e.target.checked) {
+                            newSet.add(
+                              `${entity.entityType}|${entity.canonicalValue}`,
+                            );
+                          } else {
+                            newSet.delete(
+                              `${entity.entityType}|${entity.canonicalValue}`,
+                            );
+                          }
+                          setSelectedEntities(newSet);
+                        }}
+                        className="rounded border-slate-300 dark:border-slate-700"
+                      />
+                    </td>
                     <td className="px-4 py-3">
                       <Badge variant="default" title={entity.entityType}>
                         {entityTypeLabel(entity.entityType)}
