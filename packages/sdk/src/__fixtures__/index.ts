@@ -40,6 +40,7 @@ import type {
   ThreatCampaignDetail,
   ThreatCampaignList,
   TimelineResponse,
+  VictimAnalyticsResponse,
 } from "../index";
 import { searchRequestSchema, dossierListRequestSchema } from "../index";
 
@@ -827,6 +828,14 @@ export function createMockClient(): I4GClient {
     },
     async getCumulativeIndicators() {
       return [] as CumulativeIndicatorPoint[];
+    },
+    async getVictimAnalytics() {
+      return {
+        totalVictims: 0,
+        byAgeRange: [],
+        byCountry: [],
+        byContactChannel: [],
+      } as VictimAnalyticsResponse;
     },
     // Campaign Intelligence (Sprint 3)
     async listThreatCampaigns() {

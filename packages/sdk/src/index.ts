@@ -782,6 +782,7 @@ export interface I4GClient {
   getDetectionVelocity(): Promise<DetectionVelocityPoint[]>;
   getPipelineFunnel(): Promise<PipelineFunnelStage[]>;
   getCumulativeIndicators(): Promise<CumulativeIndicatorPoint[]>;
+  getVictimAnalytics(period?: string): Promise<VictimAnalyticsResponse>;
   // Campaign Intelligence (S3-20)
   listThreatCampaigns(
     options?: CampaignListOptions,
@@ -1453,6 +1454,32 @@ const annotationSchema = z.object({
 export type Annotation = z.infer<typeof annotationSchema>;
 
 // ---------------------------------------------------------------------------
+// Victim Analytics
+// ---------------------------------------------------------------------------
+
+const victimDemographicBreakdownSchema = z.object({
+  label: z.string(),
+  count: z.number(),
+  lossSum: z.number().default(0),
+  percentage: z.number().default(0),
+});
+
+export type VictimDemographicBreakdown = z.infer<
+  typeof victimDemographicBreakdownSchema
+>;
+
+const victimAnalyticsResponseSchema = z.object({
+  totalVictims: z.number(),
+  byAgeRange: z.array(victimDemographicBreakdownSchema),
+  byCountry: z.array(victimDemographicBreakdownSchema),
+  byContactChannel: z.array(victimDemographicBreakdownSchema),
+});
+
+export type VictimAnalyticsResponse = z.infer<
+  typeof victimAnalyticsResponseSchema
+>;
+
+// ---------------------------------------------------------------------------
 // Sprint 4: Bulk action types
 // ---------------------------------------------------------------------------
 
@@ -1913,6 +1940,15 @@ export function createClient(config: ClientConfig): I4GClient {
       return request(
         "/impact/cumulative-indicators",
         z.array(cumulativeIndicatorPointSchema),
+      );
+    },
+    getVictimAnalytics(period) {
+      const query = new URLSearchParams();
+      if (period) query.set("period", period);
+      const qs = query.toString();
+      return request(
+        qs ? `/impact/victims?${qs}` : "/impact/victims",
+        victimAnalyticsResponseSchema,
       );
     },
     // Campaign Intelligence (S3-20)

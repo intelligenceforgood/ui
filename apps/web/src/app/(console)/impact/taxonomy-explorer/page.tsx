@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { FeedbackButton } from "@i4g/ui-kit";
+import { getI4GClient } from "@/lib/i4g-client";
 import TaxonomyExplorerClient from "./taxonomy-explorer-client";
 
 export const metadata: Metadata = {
@@ -8,7 +9,10 @@ export const metadata: Metadata = {
     "Interactive taxonomy exploration with Sankey, heatmap, and trend visualizations.",
 };
 
-export default function TaxonomyExplorerPage() {
+export default async function TaxonomyExplorerPage() {
+  const client = await getI4GClient();
+  const initialSankeyData = await client.getTaxonomySankey("90d");
+
   return (
     <div className="group relative space-y-8">
       <FeedbackButton
@@ -27,7 +31,7 @@ export default function TaxonomyExplorerPage() {
           heatmaps, and trend analysis.
         </p>
       </header>
-      <TaxonomyExplorerClient />
+      <TaxonomyExplorerClient initialSankeyData={initialSankeyData} />
     </div>
   );
 }

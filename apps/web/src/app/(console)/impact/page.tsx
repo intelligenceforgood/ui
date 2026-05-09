@@ -12,6 +12,12 @@ const ImpactCharts = nextDynamic(() => import("./impact-charts"), {
   ),
 });
 
+const VictimDemographics = nextDynamic(() => import("./victim-demographics"), {
+  loading: () => (
+    <div className="h-64 animate-pulse rounded-2xl bg-slate-100" />
+  ),
+});
+
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -38,14 +44,21 @@ function trendColor(
 
 export default async function ImpactPage() {
   const client = await getI4GClient();
-  const [dashboard, lossByTaxonomy, velocity, funnel, cumulative] =
-    await Promise.all([
-      client.getImpactDashboard(),
-      client.getImpactLoss(),
-      client.getDetectionVelocity(),
-      client.getPipelineFunnel(),
-      client.getCumulativeIndicators(),
-    ]);
+  const [
+    dashboard,
+    lossByTaxonomy,
+    velocity,
+    funnel,
+    cumulative,
+    victimAnalytics,
+  ] = await Promise.all([
+    client.getImpactDashboard(),
+    client.getImpactLoss(),
+    client.getDetectionVelocity(),
+    client.getPipelineFunnel(),
+    client.getCumulativeIndicators(),
+    client.getVictimAnalytics(),
+  ]);
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -89,6 +102,14 @@ export default async function ImpactPage() {
           </Card>
         ))}
       </section>
+
+      <div className="group relative">
+        <VictimDemographics data={victimAnalytics} />
+        <FeedbackButton
+          feedbackId="impact.demographics"
+          className="absolute top-2 right-2 z-10"
+        />
+      </div>
 
       <div className="group relative">
         <ImpactCharts

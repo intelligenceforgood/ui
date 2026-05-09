@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import type { GeographySummary } from "@i4g/sdk";
 
 const GeographyView = dynamic(() => import("./geography-view"), {
   ssr: false,
@@ -9,6 +10,10 @@ const GeographyView = dynamic(() => import("./geography-view"), {
   ),
 });
 
-export default function GeographyClient() {
-  return <GeographyView />;
+interface Props {
+  initialSummaries: GeographySummary[];
+}
+
+export default function GeographyClient({ initialSummaries }: Props) {
+  return <GeographyView initialSummaries={initialSummaries} />;
 }

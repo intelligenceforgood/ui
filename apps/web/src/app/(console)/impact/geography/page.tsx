@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { FeedbackButton } from "@i4g/ui-kit";
+import { getI4GClient } from "@/lib/i4g-client";
 import GeographyClient from "./geography-client";
 
 export const metadata: Metadata = {
@@ -8,7 +9,10 @@ export const metadata: Metadata = {
     "Geographic distribution of fraud activity with country-level drill-down.",
 };
 
-export default function GeographyPage() {
+export default async function GeographyPage() {
+  const client = await getI4GClient();
+  const initialSummaries = await client.getGeographySummary("90d");
+
   return (
     <div className="group relative space-y-8">
       <FeedbackButton
@@ -27,7 +31,7 @@ export default function GeographyPage() {
           detailed case records.
         </p>
       </header>
-      <GeographyClient />
+      <GeographyClient initialSummaries={initialSummaries} />
     </div>
   );
 }

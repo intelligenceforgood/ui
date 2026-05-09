@@ -46,6 +46,34 @@ vi.mock("lucide-react", () => ({
   ),
 }));
 
+vi.mock("recharts", () => ({
+  ResponsiveContainer: ({ children }: any) => (
+    <div data-testid="responsive-container">{children}</div>
+  ),
+  Sankey: ({ data }: any) => (
+    <div data-testid="sankey">
+      {data?.nodes?.map((n: any, i: number) => (
+        <span key={i}>{n.label || n.name}</span>
+      ))}
+    </div>
+  ),
+  ScatterChart: ({ children }: any) => (
+    <div data-testid="scatter-chart">{children}</div>
+  ),
+  LineChart: ({ children }: any) => (
+    <div data-testid="line-chart">{children}</div>
+  ),
+  XAxis: () => null,
+  YAxis: () => null,
+  ZAxis: () => null,
+  CartesianGrid: () => null,
+  Tooltip: () => null,
+  Legend: () => null,
+  Scatter: () => null,
+  Cell: () => null,
+  Line: () => null,
+}));
+
 // --- Timeline tests ---
 
 import TimelineView from "@/app/(console)/intelligence/timeline/timeline-view";
@@ -149,23 +177,14 @@ describe("TaxonomyExplorer", () => {
   });
 
   it("renders view mode buttons", () => {
-    render(<TaxonomyExplorer />);
+    render(<TaxonomyExplorer initialSankeyData={mockSankey} />);
     expect(screen.getByText("Sankey")).toBeInTheDocument();
     expect(screen.getByText("Heatmap")).toBeInTheDocument();
     expect(screen.getByText("Trend")).toBeInTheDocument();
   });
 
-  it("fetches sankey data on mount", async () => {
-    render(<TaxonomyExplorer />);
-    await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining("/api/impact/taxonomy/sankey"),
-      );
-    });
-  });
-
-  it("displays sankey data after fetch", async () => {
-    render(<TaxonomyExplorer />);
+  it("displays sankey data immediately from props", async () => {
+    render(<TaxonomyExplorer initialSankeyData={mockSankey} />);
     await waitFor(() => {
       expect(screen.getByText("Crypto Fraud")).toBeInTheDocument();
       expect(screen.getByText("Pig Butchering")).toBeInTheDocument();
@@ -196,22 +215,13 @@ describe("GeographyView", () => {
   });
 
   it("renders period controls", () => {
-    render(<GeographyView />);
+    render(<GeographyView initialSummaries={mockGeoSummary} />);
     expect(screen.getByText("90d")).toBeInTheDocument();
     expect(screen.getByText("30d")).toBeInTheDocument();
   });
 
-  it("fetches geography data on mount", async () => {
-    render(<GeographyView />);
-    await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining("/api/impact/geography"),
-      );
-    });
-  });
-
-  it("displays summary stats after fetch", async () => {
-    render(<GeographyView />);
+  it("displays summary stats immediately from props", async () => {
+    render(<GeographyView initialSummaries={mockGeoSummary} />);
     await waitFor(() => {
       expect(screen.getByText("Countries")).toBeInTheDocument();
       expect(screen.getByText("Total Cases")).toBeInTheDocument();
@@ -219,11 +229,13 @@ describe("GeographyView", () => {
     });
   });
 
-  it("displays country list after fetch", async () => {
-    render(<GeographyView />);
+  it("displays country list immediately from props", async () => {
+    render(<GeographyView initialSummaries={mockGeoSummary} />);
     await waitFor(() => {
-      expect(screen.getByText("US")).toBeInTheDocument();
-      expect(screen.getByText("GB")).toBeInTheDocument();
+      // Because we use countriesData internally to lookup names,
+      // it might render "United States of America" and "United Kingdom"
+      expect(screen.getByText("United States of America")).toBeInTheDocument();
+      expect(screen.getByText("United Kingdom")).toBeInTheDocument();
     });
   });
 });

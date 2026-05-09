@@ -18,6 +18,7 @@ import {
   LineChart,
   ResponsiveContainer,
   Tooltip,
+  Treemap,
   XAxis,
   YAxis,
 } from "recharts";
@@ -29,6 +30,47 @@ const palette = {
   warning: "#eab308",
   purple: "#8b5cf6",
 };
+
+const treemapColors = [
+  "#0ea5e9",
+  "#14b8a6",
+  "#f97316",
+  "#eab308",
+  "#8b5cf6",
+  "#ec4899",
+  "#10b981",
+];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CustomizedTreemapContent(props: any) {
+  const { x, y, width, height, index, name, value } = props;
+
+  return (
+    <g>
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        style={{
+          fill: treemapColors[index % treemapColors.length],
+          stroke: "#fff",
+          strokeWidth: 2,
+        }}
+      />
+      {width > 50 && height > 30 ? (
+        <text x={x + 4} y={y + 18} fill="#fff" fontSize={12} fontWeight="bold">
+          {name}
+        </text>
+      ) : null}
+      {width > 50 && height > 50 && value !== undefined ? (
+        <text x={x + 4} y={y + 36} fill="#fff" fillOpacity={0.8} fontSize={12}>
+          ${(value / 1000).toFixed(0)}k
+        </text>
+      ) : null}
+    </g>
+  );
+}
 
 interface ImpactChartsProps {
   lossByTaxonomy: TaxonomyLossItem[];
@@ -77,33 +119,15 @@ export default function ImpactCharts({
         </div>
         <div className="mt-4 flex-1">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={lossByTaxonomy} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis
-                type="number"
-                tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-                stroke="#94a3b8"
-                fontSize={12}
-                tickLine={false}
-              />
-              <YAxis
-                type="category"
-                dataKey="label"
-                width={120}
-                stroke="#94a3b8"
-                fontSize={12}
-                tickLine={false}
-              />
-              <Tooltip
-                content={<LossTooltipContent />}
-                cursor={{ fill: "rgba(148,163,184,0.1)" }}
-              />
-              <Bar
-                dataKey="lossSum"
-                fill={palette.accent}
-                radius={[0, 4, 4, 0]}
-              />
-            </BarChart>
+            <Treemap
+              data={lossByTaxonomy}
+              dataKey="lossSum"
+              nameKey="label"
+              stroke="#fff"
+              content={<CustomizedTreemapContent />}
+            >
+              <Tooltip content={<LossTooltipContent />} />
+            </Treemap>
           </ResponsiveContainer>
         </div>
       </Card>

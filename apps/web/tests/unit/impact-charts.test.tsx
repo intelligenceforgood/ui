@@ -28,6 +28,7 @@ vi.mock("recharts", () => ({
   YAxis: () => null,
   Tooltip: () => null,
   Legend: () => null,
+  Treemap: () => <div data-testid="treemap" />,
 }));
 
 // Mock @i4g/ui-kit

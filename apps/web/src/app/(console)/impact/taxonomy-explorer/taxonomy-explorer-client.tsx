@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import type { SankeyResponse } from "@i4g/sdk";
 
 const TaxonomyExplorer = dynamic(() => import("./taxonomy-explorer"), {
   ssr: false,
@@ -9,6 +10,10 @@ const TaxonomyExplorer = dynamic(() => import("./taxonomy-explorer"), {
   ),
 });
 
-export default function TaxonomyExplorerClient() {
-  return <TaxonomyExplorer />;
+interface Props {
+  initialSankeyData: SankeyResponse;
+}
+
+export default function TaxonomyExplorerClient({ initialSankeyData }: Props) {
+  return <TaxonomyExplorer initialSankeyData={initialSankeyData} />;
 }
