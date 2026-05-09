@@ -35,16 +35,28 @@ vi.mock("@i4g/ui-kit", () => ({
 import CampaignTimeline from "@/app/(console)/intelligence/campaigns/[id]/campaign-timeline";
 
 const sampleTimeline = [
-  { date: "2025-06-01", count: 3 },
-  { date: "2025-06-02", count: 5 },
+  { date: "2025-06-01", caseCount: 3 },
+  { date: "2025-06-02", caseCount: 5 },
 ];
 
 const sampleGraph = {
   nodes: [
-    { id: "n1", label: "Entity A", type: "wallet" },
-    { id: "n2", label: "Entity B", type: "domain" },
+    {
+      id: "n1",
+      label: "Entity A",
+      entityType: "wallet",
+      riskScore: 50,
+      caseCount: 1,
+    },
+    {
+      id: "n2",
+      label: "Entity B",
+      entityType: "domain",
+      riskScore: 50,
+      caseCount: 1,
+    },
   ],
-  edges: [{ source: "n1", target: "n2", label: "linked" }],
+  edges: [{ source: "n1", target: "n2", weight: 1, edgeType: "linked" }],
 };
 
 const sampleEntityTypes = ["wallet", "domain", "ip"];

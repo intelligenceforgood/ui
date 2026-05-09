@@ -151,8 +151,13 @@ import TaxonomyExplorer from "@/app/(console)/impact/taxonomy-explorer/taxonomy-
 
 const mockSankey = {
   nodes: [
-    { id: "Crypto Fraud", label: "Crypto Fraud", value: 20 },
-    { id: "Crypto Fraud:Pig Butchering", label: "Pig Butchering", value: 15 },
+    { id: "Crypto Fraud", label: "Crypto Fraud", value: 20, code: "crypto" },
+    {
+      id: "Crypto Fraud:Pig Butchering",
+      label: "Pig Butchering",
+      value: 15,
+      code: "pig_butchering",
+    },
   ],
   links: [
     {

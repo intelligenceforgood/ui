@@ -134,10 +134,11 @@ const navItems: NavItem[] = [
     minRole: "analyst",
     children: [
       { href: "/impact", label: "Analytics", icon: LineChart },
+      { href: "/impact/taxonomy", label: "Taxonomy", icon: Layers },
       {
         href: "/impact/taxonomy-explorer",
-        label: "Taxonomy",
-        icon: Layers,
+        label: "Taxonomy Explorer",
+        icon: BarChart3,
       },
       { href: "/impact/geography", label: "Geography", icon: Map },
     ],
