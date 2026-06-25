@@ -1,7 +1,7 @@
 /* ─── Types & helpers for the Discovery panel ─── */
 
 export const textAreaClasses =
-  "min-h-[120px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100";
+  "min-h-[120px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:border-teal-400 focus:outline-hidden focus:ring-2 focus:ring-teal-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100";
 
 export const initialFormState = {
   query: "",
@@ -48,7 +48,7 @@ export type DiscoverySearchResponse = {
 function extractDocumentSegment(value: string) {
   const withDocuments = value.split("/documents/").pop() ?? value;
   return withDocuments.includes("/")
-    ? withDocuments.split("/").pop() ?? withDocuments
+    ? (withDocuments.split("/").pop() ?? withDocuments)
     : withDocuments;
 }
 

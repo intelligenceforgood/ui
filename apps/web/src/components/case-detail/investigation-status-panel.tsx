@@ -113,10 +113,10 @@ function buildRows(
 
   rows.sort((a, b) => {
     const aOrder = a.investigation
-      ? order[a.investigation.status] ?? 2
+      ? (order[a.investigation.status] ?? 2)
       : order.uninvestigated;
     const bOrder = b.investigation
-      ? order[b.investigation.status] ?? 2
+      ? (order[b.investigation.status] ?? 2)
       : order.uninvestigated;
     return aOrder - bOrder;
   });

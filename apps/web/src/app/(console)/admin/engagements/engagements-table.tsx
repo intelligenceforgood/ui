@@ -125,7 +125,7 @@ export function EngagementsTable({
         <button
           type="button"
           onClick={() => setShowCreate(!showCreate)}
-          className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
+          className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-xs transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
         >
           <Plus className="h-4 w-4" />
           New Engagement
@@ -136,7 +136,7 @@ export function EngagementsTable({
       {showCreate && (
         <form
           action={handleCreate}
-          className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+          className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-700 dark:bg-slate-900"
         >
           <h3 className="mb-4 text-sm font-semibold text-slate-900 dark:text-white">
             Create Engagement
@@ -153,7 +153,7 @@ export function EngagementsTable({
                 id="eng-name"
                 name="name"
                 required
-                className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-hidden focus:ring-1 focus:ring-teal-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
               />
             </div>
             <div>
@@ -166,7 +166,7 @@ export function EngagementsTable({
               <input
                 id="eng-desc"
                 name="description"
-                className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-hidden focus:ring-1 focus:ring-teal-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
               />
             </div>
             <div>
@@ -180,7 +180,7 @@ export function EngagementsTable({
                 id="eng-start"
                 name="starts_at"
                 type="date"
-                className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-hidden focus:ring-1 focus:ring-teal-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
               />
             </div>
             <div>
@@ -194,7 +194,7 @@ export function EngagementsTable({
                 id="eng-end"
                 name="ends_at"
                 type="date"
-                className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                className="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-hidden focus:ring-1 focus:ring-teal-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
               />
             </div>
           </div>
@@ -202,7 +202,7 @@ export function EngagementsTable({
             <button
               type="submit"
               disabled={isPending}
-              className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 disabled:opacity-50"
+              className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-xs transition hover:bg-teal-500 disabled:opacity-50"
             >
               Create
             </button>
@@ -218,7 +218,7 @@ export function EngagementsTable({
       )}
 
       {/* Engagements table */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-700 dark:bg-slate-900">
         {isPending && (
           <div className="border-b border-sky-200 bg-sky-50 px-4 py-2 text-xs text-sky-700 dark:border-sky-800 dark:bg-sky-950 dark:text-sky-300">
             Saving changes…
@@ -355,7 +355,7 @@ export function EngagementsTable({
 
       {/* Bulk case assignment panel */}
       {bulkTarget && (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-700 dark:bg-slate-900">
           <h3 className="mb-2 text-sm font-semibold text-slate-900 dark:text-white">
             Assign Cases to{" "}
             {engagements.find((e) => e.engagementId === bulkTarget)?.name}
@@ -368,14 +368,14 @@ export function EngagementsTable({
             onChange={(e) => setBulkCaseIds(e.target.value)}
             rows={3}
             placeholder="case-001, case-002, case-003"
-            className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+            className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-hidden focus:ring-1 focus:ring-teal-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
           />
           <div className="mt-2 flex gap-2">
             <button
               type="button"
               disabled={isPending || !bulkCaseIds.trim()}
               onClick={handleBulkAssign}
-              className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 disabled:opacity-50"
+              className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-xs transition hover:bg-teal-500 disabled:opacity-50"
             >
               Assign
             </button>

@@ -112,7 +112,7 @@ export default function IndicatorRegistry({
             }}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
               tab === t.key
-                ? "bg-white text-slate-900 shadow dark:bg-slate-800 dark:text-white"
+                ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-white"
                 : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
             }`}
           >
@@ -230,7 +230,7 @@ export default function IndicatorRegistry({
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
                   <td colSpan={7} className="px-4 py-3">
-                    <div className="h-4 animate-pulse rounded bg-slate-100" />
+                    <div className="h-4 animate-pulse rounded-sm bg-slate-100" />
                   </td>
                 </tr>
               ))

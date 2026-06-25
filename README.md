@@ -1,9 +1,15 @@
 # i4g Analyst UI
 
-[![Node](https://img.shields.io/badge/Node-20%2B-green.svg)](https://nodejs.org/)
-[![PNPM](https://img.shields.io/badge/PNPM-9-blue.svg)](https://pnpm.io/)
-[![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org/)
-[![Tests](https://img.shields.io/badge/Tests-Vitest%20%2B%20Playwright-lightgrey.svg)](apps/web/tests)
+[![CI](https://github.com/intelligenceforgood/ui/actions/workflows/ui-ci.yml/badge.svg?branch=main)](https://github.com/intelligenceforgood/ui/actions/workflows/ui-ci.yml)
+[![Node](https://img.shields.io/badge/Node-24%20LTS-5FA04E?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![pnpm](https://img.shields.io/badge/pnpm-11-F69220?logo=pnpm&logoColor=white)](https://pnpm.io/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Turborepo](https://img.shields.io/badge/Turborepo-2-EF4444?logo=turborepo&logoColor=white)](https://turbo.build/)
+[![Tests](https://img.shields.io/badge/Tests-Vitest%20%2B%20Playwright-6E9F18?logo=vitest&logoColor=white)](apps/web/tests)
+[![License](https://img.shields.io/badge/License-Private-lightgrey)](#)
 
 A Turborepo/PNPM monorepo that hosts the next-generation Intelligence for Good analyst console, shared UI kits, design tokens, and an SDK for the FastAPI backend.
 
@@ -12,7 +18,7 @@ A Turborepo/PNPM monorepo that hosts the next-generation Intelligence for Good a
 ```text
 ui/
 ├── apps/
-│   └── web/            # Next.js 15 analyst console (App Router)
+│   └── web/            # Next.js 16 analyst console (App Router)
 ├── packages/
 │   ├── ui-kit/         # Tailwind/Radix component primitives used across apps
 │   ├── tokens/         # Design tokens (color, typography, spacing)
@@ -24,8 +30,8 @@ ui/
 
 ## Prerequisites
 
-- Node.js 20+
-- PNPM 9 (enable via `corepack enable` if needed)
+- Node.js 24+ LTS
+- pnpm 11 (enable via `corepack enable` if needed)
 - Optional: Playwright browsers (`npx playwright install --with-deps`) for E2E smoke tests
 
 ## Installation
@@ -96,7 +102,7 @@ The hook runs `pnpm prettier --check .`, `pnpm --filter web lint`, and `pnpm --f
 ### Production Preview & Deployment
 
 - `pnpm --filter web build` followed by `pnpm --filter web start` serves the production bundle locally.
-- A ready-to-use Dockerfile lives at `docker/ui-console.Dockerfile`; see `docs/deployment-guide.md` for Buildx commands, container pushes, and environment variable guidance.
+- A ready-to-use Dockerfile lives at `docker/i4g-console.Dockerfile`; see `docs/deployment-guide.md` for Buildx commands, container pushes, and environment variable guidance.
 
 ## Mock vs. Live Data
 

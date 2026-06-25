@@ -24,7 +24,7 @@ export function RestrictedAccess({
 }: RestrictedAccessProps) {
   return (
     <div className="flex min-h-[50vh] items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-6 rounded-2xl border border-amber-100 bg-white/80 p-8 text-center shadow-sm backdrop-blur dark:border-amber-900 dark:bg-slate-900/80">
+      <div className="w-full max-w-md space-y-6 rounded-2xl border border-amber-100 bg-white/80 p-8 text-center shadow-xs backdrop-blur-sm dark:border-amber-900 dark:bg-slate-900/80">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400">
           <ShieldAlert className="h-6 w-6" />
         </div>

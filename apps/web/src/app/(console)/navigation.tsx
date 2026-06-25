@@ -269,7 +269,7 @@ export function Navigation() {
       </button>
       <aside
         className={clsx(
-          "fixed inset-y-0 left-0 z-30 w-64 border-r border-slate-100 bg-white/90 backdrop-blur transition-transform duration-300 dark:border-slate-900 dark:bg-slate-950/80 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:flex lg:flex-col",
+          "fixed inset-y-0 left-0 z-30 w-64 border-r border-slate-100 bg-white/90 backdrop-blur-sm transition-transform duration-300 dark:border-slate-900 dark:bg-slate-950/80 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:flex lg:flex-col",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >

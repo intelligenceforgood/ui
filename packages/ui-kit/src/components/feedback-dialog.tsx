@@ -138,7 +138,7 @@ export function FeedbackDialog({ onSubmit }: FeedbackDialogProps) {
   return (
     <DialogPrimitive.Root open={isOpen} onOpenChange={() => handleClose()}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <DialogPrimitive.Content
           className={clsx(
             "fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2",
@@ -169,7 +169,7 @@ export function FeedbackDialog({ onSubmit }: FeedbackDialogProps) {
                   value={feedbackType}
                   onChange={(e) => setFeedbackType(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-hidden focus:ring-1 focus:ring-teal-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 >
                   {FEEDBACK_TYPES.map((t) => (
                     <option key={t} value={t}>
@@ -186,7 +186,7 @@ export function FeedbackDialog({ onSubmit }: FeedbackDialogProps) {
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-hidden focus:ring-1 focus:ring-teal-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 >
                   {PRIORITIES.map((p) => (
                     <option key={p} value={p}>
@@ -209,7 +209,7 @@ export function FeedbackDialog({ onSubmit }: FeedbackDialogProps) {
                 required
                 maxLength={120}
                 placeholder="Short summary…"
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-hidden focus:ring-1 focus:ring-teal-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
             </label>
 
@@ -225,7 +225,7 @@ export function FeedbackDialog({ onSubmit }: FeedbackDialogProps) {
                 maxLength={2000}
                 rows={4}
                 placeholder="Describe the issue, suggestion, or question…"
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-hidden focus:ring-1 focus:ring-teal-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
             </label>
 
@@ -249,7 +249,7 @@ export function FeedbackDialog({ onSubmit }: FeedbackDialogProps) {
               <button
                 type="submit"
                 disabled={submitting || !subject.trim() || !description.trim()}
-                className="rounded-full bg-gradient-to-r from-sky-500 to-teal-400 px-5 py-2 text-sm font-medium text-white shadow-lg transition hover:shadow-xl disabled:opacity-50"
+                className="rounded-full bg-linear-to-r from-sky-500 to-teal-400 px-5 py-2 text-sm font-medium text-white shadow-lg transition hover:shadow-xl disabled:opacity-50"
               >
                 {submitting ? "Submitting…" : "Submit"}
               </button>
@@ -257,7 +257,7 @@ export function FeedbackDialog({ onSubmit }: FeedbackDialogProps) {
           </form>
 
           <DialogPrimitive.Close
-            className="absolute right-4 top-4 rounded-full p-1 text-slate-400 hover:text-slate-600 focus:outline-none dark:hover:text-slate-300"
+            className="absolute right-4 top-4 rounded-full p-1 text-slate-400 hover:text-slate-600 focus:outline-hidden dark:hover:text-slate-300"
             aria-label="Close"
           >
             <svg

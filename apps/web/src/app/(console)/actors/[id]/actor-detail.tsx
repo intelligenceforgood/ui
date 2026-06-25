@@ -55,7 +55,7 @@ export default function ActorDetail({ actorId }: { actorId: string }) {
   if (loading && !data)
     return <p className="text-sm text-slate-500">Loading actor profile...</p>;
   if (error && !data)
-    return <div className="text-red-600 bg-red-50 p-4 rounded">{error}</div>;
+    return <div className="text-red-600 bg-red-50 p-4 rounded-sm">{error}</div>;
   if (!data) return null;
 
   const {
@@ -165,7 +165,7 @@ export default function ActorDetail({ actorId }: { actorId: string }) {
               value={piiReason}
               onChange={(e) => setPiiReason(e.target.value)}
               placeholder="e.g. Case #1234 investigation"
-              className="w-full border rounded p-2 mb-4 dark:bg-slate-800 dark:border-slate-700"
+              className="w-full border rounded-sm p-2 mb-4 dark:bg-slate-800 dark:border-slate-700"
             />
             <div className="flex justify-end gap-3">
               <Button variant="ghost" onClick={() => setPiiModalOpen(false)}>
@@ -193,7 +193,7 @@ export default function ActorDetail({ actorId }: { actorId: string }) {
             {identities.map((id) => (
               <li
                 key={id.identityId}
-                className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded"
+                className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-sm"
               >
                 <div>
                   <span className="font-mono text-sm font-medium text-blue-600 dark:text-blue-400">
@@ -220,7 +220,7 @@ export default function ActorDetail({ actorId }: { actorId: string }) {
             {leaks.map((leak) => (
               <li
                 key={leak.leakId}
-                className="p-3 bg-red-50 dark:bg-red-900/10 rounded border border-red-100 dark:border-red-900/30"
+                className="p-3 bg-red-50 dark:bg-red-900/10 rounded-sm border border-red-100 dark:border-red-900/30"
               >
                 <div className="flex justify-between">
                   <span className="text-sm font-medium text-red-800 dark:text-red-400">
@@ -257,7 +257,7 @@ export default function ActorDetail({ actorId }: { actorId: string }) {
             {damage.map((d, i) => (
               <li
                 key={i}
-                className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded flex justify-between"
+                className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-sm flex justify-between"
               >
                 <span className="text-sm">{d.currency || "USD"}</span>
                 <span className="text-sm font-mono text-red-600">
@@ -282,13 +282,13 @@ export default function ActorDetail({ actorId }: { actorId: string }) {
             {chats.map((chat, i) => (
               <li
                 key={chat.sessionId || i}
-                className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded"
+                className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-sm"
               >
                 <div className="text-xs text-slate-500 mb-2">
                   Session ID: {chat.sessionId}
                 </div>
                 {chat.transcript ? (
-                  <pre className="text-xs p-2 bg-white dark:bg-slate-900 border rounded overflow-x-auto max-h-32">
+                  <pre className="text-xs p-2 bg-white dark:bg-slate-900 border rounded-sm overflow-x-auto max-h-32">
                     {chat.transcript}
                   </pre>
                 ) : (
@@ -309,7 +309,7 @@ export default function ActorDetail({ actorId }: { actorId: string }) {
           <h3 className="font-semibold text-lg mb-4 text-slate-800 dark:text-slate-200">
             Co-membership Graph
           </h3>
-          <div className="bg-slate-50 dark:bg-slate-900 border rounded h-64 flex flex-col items-center justify-center relative overflow-hidden">
+          <div className="bg-slate-50 dark:bg-slate-900 border rounded-sm h-64 flex flex-col items-center justify-center relative overflow-hidden">
             {/* Simple circular layout rendering of nodes and edges */}
             <svg width="100%" height="100%">
               {edges.map((e, i) => {
@@ -342,7 +342,7 @@ export default function ActorDetail({ actorId }: { actorId: string }) {
                 Graph requires identities and edges.
               </span>
             )}
-            <div className="absolute bottom-4 left-4 text-xs text-slate-500 bg-white/80 dark:bg-slate-800/80 px-2 py-1 rounded">
+            <div className="absolute bottom-4 left-4 text-xs text-slate-500 bg-white/80 dark:bg-slate-800/80 px-2 py-1 rounded-sm">
               {identities.length} nodes, {edges.length} edges
             </div>
           </div>

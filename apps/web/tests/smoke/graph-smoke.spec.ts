@@ -22,7 +22,7 @@ test.describe("graph + Sprint 4 views smoke", () => {
 
     // Seeded graph request fires on load
     await expect(page.getByLabel(/entity type/i).locator("option")).toHaveCount(
-      12,
+      11,
       {
         timeout: 10000,
       },
@@ -57,11 +57,13 @@ test.describe("graph + Sprint 4 views smoke", () => {
     await expect(page.getByText("Heatmap")).toBeVisible();
     await expect(page.getByText("Trend")).toBeVisible();
 
-    // Wait for sankey data
-    await page.waitForResponse(
+    // Click "30d" to trigger client-side fetch of sankey data
+    const promise = page.waitForResponse(
       (resp) => resp.url().includes("/api/impact/taxonomy/sankey"),
       { timeout: 10000 },
     );
+    await page.getByRole("button", { name: "30d", exact: true }).click();
+    await promise;
   });
 
   test("geography view loads country summary", async ({ page }) => {

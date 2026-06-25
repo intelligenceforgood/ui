@@ -16,8 +16,8 @@ export function LossTrendChart({ data }: LossTrendChartProps) {
         <AreaChart data={data}>
           <Tooltip
             contentStyle={{ fontSize: "12px", borderRadius: "4px" }}
-            formatter={(value: number) => [
-              `$${value.toLocaleString()}`,
+            formatter={(value: any) => [
+              `$${Number(value ?? 0).toLocaleString()}`,
               "Loss",
             ]}
             labelStyle={{ color: "black" }}

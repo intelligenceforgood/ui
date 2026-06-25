@@ -268,11 +268,11 @@ export default function TrendDashboardPage() {
                     width={100}
                   />
                   <Tooltip
-                    formatter={(value: number, _name: string, props) => {
+                    formatter={(value: any, _name: any, props: any) => {
                       const entry = (props as { payload?: WalletTopEntry })
                         .payload;
                       return [
-                        `${value} occurrences`,
+                        `${value ?? 0} occurrences`,
                         `${entry?.token_symbol ?? ""} (${entry?.network_short ?? ""})`,
                       ];
                     }}

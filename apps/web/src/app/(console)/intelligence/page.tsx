@@ -88,7 +88,7 @@ export default async function IntelligenceDashboardPage() {
         </Card>
 
         <Card className="flex flex-col">
-          <div className="space-y-2 flex-grow">
+          <div className="space-y-2 grow">
             <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
               <TrendingUp className="h-4 w-4 text-amber-500" />
               Loss Trend

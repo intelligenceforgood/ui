@@ -14,3 +14,7 @@ apps/web/out
 .turbo/cache/
 .turbo/cookies/
 .turbo/daemon/
+
+# Gemini context & Storybook static outputs
+.gemini/
+packages/ui-kit/storybook-static/

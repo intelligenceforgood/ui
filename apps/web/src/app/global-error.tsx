@@ -19,7 +19,7 @@ export default function GlobalError({
     <html lang="en">
       <body className="bg-slate-50 font-sans antialiased">
         <div className="flex min-h-screen items-center justify-center px-4">
-          <div className="w-full max-w-md space-y-6 rounded-2xl border border-rose-100 bg-white/80 p-8 text-center shadow-sm backdrop-blur">
+          <div className="w-full max-w-md space-y-6 rounded-2xl border border-rose-100 bg-white/80 p-8 text-center shadow-xs backdrop-blur-sm">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-600">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -52,7 +52,7 @@ export default function GlobalError({
             <button
               type="button"
               onClick={reset}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:border-teal-300 hover:text-teal-600"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-xs transition hover:border-teal-300 hover:text-teal-600"
             >
               Try again
             </button>

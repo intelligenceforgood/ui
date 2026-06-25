@@ -225,7 +225,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </p>
       </header>
 
-      <Card className="flex flex-col gap-3 border-slate-100 bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6">
+      <Card className="flex flex-col gap-3 border-slate-100 bg-linear-to-br from-slate-50 via-white to-slate-100 p-6">
         <div className="flex items-center gap-3 text-sm text-slate-600">
           <Sparkles className="h-4 w-4 text-teal-500" />
           <span>

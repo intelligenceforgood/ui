@@ -158,7 +158,7 @@ export default function GeographyView({
             </h3>
             <div className="aspect-video w-full rounded-lg bg-slate-50 dark:bg-slate-900 relative border border-slate-100 dark:border-slate-800">
               {tooltipContent && (
-                <div className="absolute top-4 left-4 z-10 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm px-3 py-2 rounded-md shadow-sm text-sm border border-slate-200 dark:border-slate-700 pointer-events-none">
+                <div className="absolute top-4 left-4 z-10 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xs px-3 py-2 rounded-md shadow-xs text-sm border border-slate-200 dark:border-slate-700 pointer-events-none">
                   {tooltipContent}
                 </div>
               )}
@@ -194,7 +194,7 @@ export default function GeographyView({
                             key={geo.rsmKey}
                             geography={geo}
                             fill={fill}
-                            className="dark:fill-[var(--dark-fill)] stroke-white dark:stroke-slate-900 stroke-[0.5] outline-none transition-colors"
+                            className="dark:fill-(--dark-fill) stroke-white dark:stroke-slate-900 stroke-[0.5] outline-hidden transition-colors"
                             style={{
                               default: {
                                 outline: "none",
@@ -308,7 +308,7 @@ export default function GeographyView({
                       setSelectedCountry(null);
                       setDetail(null);
                     }}
-                    className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
+                    className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-sm transition-colors"
                   >
                     <X className="h-5 w-5 text-slate-400" />
                   </button>
@@ -341,7 +341,7 @@ export default function GeographyView({
                 <h4 className="text-sm font-semibold mb-3 text-slate-900 dark:text-white">
                   Recent Cases
                 </h4>
-                <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[20rem]">
+                <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-80">
                   {detail.records.map((r, i) => (
                     <div
                       key={i}

@@ -204,7 +204,7 @@ export function DossierList({ response, includeManifest }: DossierListProps) {
         return (
           <Card
             key={record.planId}
-            className="group space-y-5 rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 dark:border-slate-900 dark:bg-slate-900/70"
+            className="group space-y-5 rounded-3xl border border-slate-100 bg-white/80 p-6 shadow-xs transition hover:-translate-y-0.5 hover:border-teal-200 dark:border-slate-900 dark:bg-slate-900/70"
           >
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>

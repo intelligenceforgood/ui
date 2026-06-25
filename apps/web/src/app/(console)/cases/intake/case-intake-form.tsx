@@ -167,7 +167,7 @@ export default function CaseIntakeForm() {
               name="source"
               value={form.source}
               onChange={handleChange}
-              className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-600 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+              className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-600 focus:border-teal-400 focus:outline-hidden focus:ring-2 focus:ring-teal-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
             >
               {sourceOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -254,7 +254,7 @@ export default function CaseIntakeForm() {
               name="preferredContact"
               value={form.preferredContact}
               onChange={handleChange}
-              className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-600 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+              className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-600 focus:border-teal-400 focus:outline-hidden focus:ring-2 focus:ring-teal-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
             >
               {preferredContactOptions.map((option) => (
                 <option key={option.value} value={option.value}>

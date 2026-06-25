@@ -124,14 +124,14 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
 
   return (
     <div className="fixed inset-y-0 right-0 z-40 w-[420px] overflow-y-auto border-l border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white/90 px-6 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white/90 px-6 py-4 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/90">
         <div>
           <div className="flex items-center gap-2">
             <Badge variant="default" title={entity.entityType}>
               {entityTypeLabel(entity.entityType)}
             </Badge>
             <select
-              className="text-xs rounded border border-slate-200 bg-white px-2 py-1 dark:border-slate-800 dark:bg-slate-950 text-slate-700 dark:text-slate-300"
+              className="text-xs rounded-sm border border-slate-200 bg-white px-2 py-1 dark:border-slate-800 dark:bg-slate-950 text-slate-700 dark:text-slate-300"
               value={currentStatus}
               onChange={(e) => handleStatusChange(e.target.value)}
             >
@@ -199,7 +199,7 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
             Activity Over Time
           </div>
           {loadingActivity ? (
-            <div className="h-20 animate-pulse rounded bg-slate-100" />
+            <div className="h-20 animate-pulse rounded-sm bg-slate-100" />
           ) : activity.length === 0 ? (
             <p className="text-xs text-slate-400">No activity data</p>
           ) : (
@@ -226,7 +226,7 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
             Related Entities
           </div>
           {loadingNeighbors ? (
-            <div className="h-24 animate-pulse rounded bg-slate-100" />
+            <div className="h-24 animate-pulse rounded-sm bg-slate-100" />
           ) : neighbors.length === 0 ? (
             <p className="text-xs text-slate-400">
               No co-occurring entities found
@@ -266,7 +266,7 @@ export function EntityDetailPanel({ entity, onClose }: EntityDetailPanelProps) {
             Linked Cases
           </div>
           {loadingCases ? (
-            <div className="h-24 animate-pulse rounded bg-slate-100" />
+            <div className="h-24 animate-pulse rounded-sm bg-slate-100" />
           ) : linkedCases.length === 0 ? (
             <p className="text-xs text-slate-400">No linked cases found</p>
           ) : (

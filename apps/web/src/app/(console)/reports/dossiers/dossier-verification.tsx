@@ -69,7 +69,7 @@ export function VerificationPanel({
         {report.artifacts.map((artifact) => (
           <div
             key={`${artifact.label}-${artifact.path ?? "unknown"}`}
-            className="rounded-2xl border border-white/50 bg-white/80 p-3 text-xs text-slate-600 shadow-sm dark:border-teal-200/20 dark:bg-slate-950/30 dark:text-teal-50"
+            className="rounded-2xl border border-white/50 bg-white/80 p-3 text-xs text-slate-600 shadow-xs dark:border-teal-200/20 dark:bg-slate-950/30 dark:text-teal-50"
           >
             <p className="text-sm font-semibold text-slate-900 dark:text-white">
               {artifact.label}
@@ -169,7 +169,7 @@ export function ClientVerificationPanel({
           <div
             key={`${artifact.label}-${artifact.path ?? "unknown"}`}
             className={clsx(
-              "rounded-2xl border bg-white/80 p-3 text-xs text-slate-600 shadow-sm dark:bg-slate-950/30",
+              "rounded-2xl border bg-white/80 p-3 text-xs text-slate-600 shadow-xs dark:bg-slate-950/30",
               artifact.matches && !artifact.error
                 ? "border-white/50 dark:border-indigo-200/20"
                 : "border-amber-200 dark:border-amber-300/40",

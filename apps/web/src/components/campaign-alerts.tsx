@@ -51,7 +51,7 @@ export function CampaignAlerts({
                   {c.caseCount ?? 0} cases · {c.indicatorCount ?? 0} indicators
                 </p>
               </div>
-              <div className="flex flex-shrink-0 items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2">
                 <Badge
                   variant={c.status === "active" ? "danger" : "default"}
                   className="text-xs"

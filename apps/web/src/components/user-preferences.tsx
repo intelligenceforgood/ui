@@ -23,7 +23,7 @@ export function UserPreferences() {
   const activeTheme = theme ?? "system";
 
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white/80 p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+    <div className="rounded-2xl border border-slate-100 bg-white/80 p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900/70">
       {/* User identity */}
       {user && (
         <div className="flex items-center gap-2">
@@ -64,7 +64,7 @@ export function UserPreferences() {
                   className={
                     "rounded-md p-1.5 transition " +
                     (isActive
-                      ? "bg-white text-teal-600 shadow-sm dark:bg-slate-700 dark:text-teal-400"
+                      ? "bg-white text-teal-600 shadow-xs dark:bg-slate-700 dark:text-teal-400"
                       : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300")
                   }
                 >

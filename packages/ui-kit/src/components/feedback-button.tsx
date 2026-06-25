@@ -4,8 +4,10 @@ import { clsx } from "clsx";
 import { useCallback, useState, type ComponentPropsWithoutRef } from "react";
 import { useFeedback } from "./feedback-provider";
 
-export interface FeedbackButtonProps
-  extends Omit<ComponentPropsWithoutRef<"button">, "onClick"> {
+export interface FeedbackButtonProps extends Omit<
+  ComponentPropsWithoutRef<"button">,
+  "onClick"
+> {
   /**
    * Two-level feedback identifier: `page.section`.
    * Determines which Google Sheet tab and section column to write to.
@@ -123,7 +125,7 @@ export function FeedbackButton({
         "opacity-0 group-hover:opacity-100 focus:opacity-100",
         "sm:opacity-0 max-sm:opacity-60",
         "transition-all duration-200",
-        showCheck && "!text-emerald-500 !opacity-100",
+        showCheck && "text-emerald-500! opacity-100!",
         className,
       )}
       aria-label={`Send feedback about ${feedbackId}`}
@@ -152,8 +154,8 @@ export function flashFeedbackSuccess(feedbackId: string): void {
   ) as HTMLElement | null;
   if (!btn) return;
 
-  btn.classList.add("!text-emerald-500", "!opacity-100");
+  btn.classList.add("text-emerald-500!", "opacity-100!");
   setTimeout(() => {
-    btn.classList.remove("!text-emerald-500", "!opacity-100");
+    btn.classList.remove("text-emerald-500!", "opacity-100!");
   }, 2000);
 }

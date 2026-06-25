@@ -469,7 +469,7 @@ export default function NetworkGraph() {
         const baseColor = entityTypeColor(n.entityType);
         const color =
           showClusters && n.clusterId != null
-            ? CLUSTER_COLORS[n.clusterId % CLUSTER_COLORS.length] ?? baseColor
+            ? (CLUSTER_COLORS[n.clusterId % CLUSTER_COLORS.length] ?? baseColor)
             : baseColor;
 
         const isHighlighted =
@@ -754,7 +754,7 @@ export default function NetworkGraph() {
           <button
             type="button"
             onClick={() => setShowHelp(true)}
-            className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+            className="rounded-sm p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
             title="What am I looking at?"
           >
             <HelpCircle className="h-4 w-4" />
@@ -772,7 +772,7 @@ export default function NetworkGraph() {
               id="seed-entity-type"
               value={seedType}
               onChange={(e) => setSeedType(e.target.value)}
-              className="mt-1 w-full rounded border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800"
+              className="mt-1 w-full rounded-sm border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800"
             >
               {entityTypes.length === 0 && <option value="">Loading…</option>}
               {entityTypes.map((t) => (
@@ -811,7 +811,7 @@ export default function NetworkGraph() {
             <select
               value={hops}
               onChange={(e) => setHops(Number(e.target.value))}
-              className="mt-1 w-full rounded border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800"
+              className="mt-1 w-full rounded-sm border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800"
             >
               <option value={1}>1 hop</option>
               <option value={2}>2 hops</option>
@@ -854,7 +854,7 @@ export default function NetworkGraph() {
                   type="checkbox"
                   checked={showClusters}
                   onChange={(e) => setShowClusters(e.target.checked)}
-                  className="rounded border-slate-300"
+                  className="rounded-sm border-slate-300"
                 />
                 Show Communities
               </label>
@@ -870,7 +870,7 @@ export default function NetworkGraph() {
                     type="checkbox"
                     checked={showCampaigns}
                     onChange={(e) => setShowCampaigns(e.target.checked)}
-                    className="rounded border-slate-300"
+                    className="rounded-sm border-slate-300"
                   />
                   Show Campaign Membership
                 </label>
@@ -888,7 +888,7 @@ export default function NetworkGraph() {
                     fetchGraph();
                   }
                 }}
-                className="rounded border-slate-300"
+                className="rounded-sm border-slate-300"
               />
               Enable Temporal Analysis
             </label>
@@ -918,7 +918,7 @@ export default function NetworkGraph() {
                   <button
                     key={cluster.id}
                     type="button"
-                    className={`w-full text-left text-xs px-2 py-1 rounded ${selectedClusterId === cluster.id ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300" : "hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+                    className={`w-full text-left text-xs px-2 py-1 rounded-sm ${selectedClusterId === cluster.id ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300" : "hover:bg-slate-100 dark:hover:bg-slate-800"}`}
                     onClick={() =>
                       setSelectedClusterId((prev) =>
                         prev === cluster.id ? null : cluster.id,
@@ -958,7 +958,7 @@ export default function NetworkGraph() {
                     <button
                       key={t}
                       type="button"
-                      className={`flex w-full items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-slate-100 transition-opacity ${hidden ? "opacity-40 line-through" : ""}`}
+                      className={`flex w-full items-center gap-2 text-xs rounded-sm px-1 py-0.5 hover:bg-slate-100 transition-opacity ${hidden ? "opacity-40 line-through" : ""}`}
                       onClick={() =>
                         setHiddenEntityTypes((prev) => {
                           const next = new Set(prev);
@@ -1007,7 +1007,7 @@ export default function NetworkGraph() {
               <button
                 key={type}
                 type="button"
-                className={`flex w-full items-center gap-2 text-xs rounded px-1 py-0.5 hover:bg-slate-100 transition-opacity ${hidden ? "opacity-40 line-through" : ""}`}
+                className={`flex w-full items-center gap-2 text-xs rounded-sm px-1 py-0.5 hover:bg-slate-100 transition-opacity ${hidden ? "opacity-40 line-through" : ""}`}
                 onClick={() =>
                   setHiddenEdgeTypes((prev) => {
                     const next = new Set(prev);
@@ -1141,7 +1141,7 @@ export default function NetworkGraph() {
             <button
               type="button"
               onClick={() => setSelectedNode(null)}
-              className="rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="rounded-sm p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1212,7 +1212,7 @@ export default function NetworkGraph() {
             <button
               type="button"
               onClick={() => setSelectedEdge(null)}
-              className="rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="rounded-sm p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1266,7 +1266,7 @@ export default function NetworkGraph() {
               <button
                 type="button"
                 onClick={() => setShowHelp(false)}
-                className="rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="rounded-sm p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1414,7 +1414,7 @@ function MiniMap({
       ref={miniRef}
       width={W}
       height={H}
-      className="absolute bottom-2 right-2 rounded border border-slate-200 shadow-sm"
+      className="absolute bottom-2 right-2 rounded-sm border border-slate-200 shadow-xs"
     />
   );
 }

@@ -9,7 +9,7 @@ export function Card({ className, padded = true, ...props }: CardProps) {
   return (
     <div
       className={clsx(
-        "rounded-2xl border border-slate-100 bg-white/80 backdrop-blur shadow-sm transition hover:shadow-md",
+        "rounded-2xl border border-slate-100 bg-white/80 backdrop-blur-xs shadow-2xs transition hover:shadow-md",
         padded && "p-6",
         className,
       )}

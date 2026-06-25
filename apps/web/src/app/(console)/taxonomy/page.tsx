@@ -36,11 +36,11 @@ function TaxonomySection({ axis }: { axis: TaxonomyAxis }) {
           {items.map((item) => (
             <div
               key={item.code}
-              className="group rounded-lg border border-slate-200 bg-slate-50/50 p-4 shadow-sm hover:bg-white hover:border-teal-200 hover:shadow-md transition-all duration-200"
+              className="group rounded-lg border border-slate-200 bg-slate-50/50 p-4 shadow-xs hover:bg-white hover:border-teal-200 hover:shadow-md transition-all duration-200"
             >
               <div className="flex justify-between items-start mb-2 gap-2">
                 <h3 className="font-semibold text-slate-900">{item.label}</h3>
-                <code className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-600 font-mono tracking-tight shrink-0">
+                <code className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded-sm text-slate-600 font-mono tracking-tight shrink-0">
                   {item.code}
                 </code>
               </div>

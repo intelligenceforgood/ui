@@ -112,7 +112,7 @@ function mapResult(payload: RawResult, index: number): DiscoveryResult {
     label:
       typeof payload.label === "string"
         ? payload.label
-        : payload.struct?.ground_truth_label ?? null,
+        : (payload.struct?.ground_truth_label ?? null),
     tags,
     source:
       typeof payload.source === "string"

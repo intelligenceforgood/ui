@@ -142,7 +142,7 @@ export default function SearchExperience({
 
           <div className="relative space-y-4" aria-busy={isPending}>
             {isPending ? (
-              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-3xl bg-white/80 backdrop-blur-sm dark:bg-slate-900/60">
+              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-3xl bg-white/80 backdrop-blur-xs dark:bg-slate-900/60">
                 <div className="flex flex-col items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-200">
                   <Loader2 className="h-5 w-5 animate-spin text-teal-500" />
                   <span>Searching across structured + semantic signals…</span>

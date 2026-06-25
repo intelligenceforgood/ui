@@ -2,9 +2,9 @@ export default function AnalyticsLoading() {
   return (
     <div className="animate-pulse space-y-8">
       <header className="space-y-4">
-        <div className="h-4 w-32 rounded bg-slate-200" />
-        <div className="h-8 w-64 rounded bg-slate-200" />
-        <div className="h-4 w-96 rounded bg-slate-200" />
+        <div className="h-4 w-32 rounded-sm bg-slate-200" />
+        <div className="h-8 w-64 rounded-sm bg-slate-200" />
+        <div className="h-4 w-96 rounded-sm bg-slate-200" />
       </header>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

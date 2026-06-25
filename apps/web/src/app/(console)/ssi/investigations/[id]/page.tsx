@@ -214,7 +214,7 @@ function InfoRow({ label, value }: { label: string; value: unknown }) {
   if (value == null || value === "" || value === undefined) return null;
   return (
     <div className="flex gap-2">
-      <dt className="w-28 flex-shrink-0 text-slate-500 dark:text-slate-400 font-medium">
+      <dt className="w-28 shrink-0 text-slate-500 dark:text-slate-400 font-medium">
         {label}
       </dt>
       <dd className="text-slate-800 dark:text-slate-200 break-all">
@@ -343,7 +343,7 @@ function ReplayPanel({ scanId }: { scanId: string }) {
           <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
             Event Replay ({ssiEvents.length})
           </h4>
-          <div className="max-h-[30rem] overflow-y-auto space-y-1.5">
+          <div className="max-h-120 overflow-y-auto space-y-1.5">
             {ssiEvents.length === 0 && (
               <p className="text-xs text-slate-400 italic">
                 No events recorded for this scan.
@@ -575,7 +575,7 @@ function EventRow({ event }: { event: SSIEvent }) {
 
   return (
     <div className="flex items-start gap-2 text-xs">
-      <span className="text-slate-400 flex-shrink-0 w-14">
+      <span className="text-slate-400 shrink-0 w-14">
         {parseUTCDate(event.timestamp).toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
@@ -901,7 +901,7 @@ function EcxSubmissionsPanel({ scanId }: { scanId: string }) {
                     <td className="py-2 pr-3 font-medium text-slate-700 dark:text-slate-300">
                       {ECX_MODULE_LABEL[sub.ecx_module] ?? sub.ecx_module}
                     </td>
-                    <td className="py-2 pr-3 font-mono text-xs text-slate-600 dark:text-slate-400 break-all max-w-[14rem]">
+                    <td className="py-2 pr-3 font-mono text-xs text-slate-600 dark:text-slate-400 break-all max-w-56">
                       {sub.submitted_value}
                     </td>
                     <td className="py-2 pr-3 text-slate-600 dark:text-slate-400">
@@ -937,7 +937,7 @@ function EcxSubmissionsPanel({ scanId }: { scanId: string }) {
                               }))
                             }
                             placeholder="Analyst ID"
-                            className="w-28 rounded border border-slate-200 bg-white px-2 py-1 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                            className="w-28 rounded-sm border border-slate-200 bg-white px-2 py-1 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                           />
                           <div className="flex gap-1">
                             {isQueued && (
@@ -945,7 +945,7 @@ function EcxSubmissionsPanel({ scanId }: { scanId: string }) {
                                 <button
                                   onClick={() => void handleApprove(sub)}
                                   disabled={isBusy}
-                                  className="inline-flex items-center gap-1 rounded bg-emerald-600 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+                                  className="inline-flex items-center gap-1 rounded-sm bg-emerald-600 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
                                 >
                                   <CheckCircle className="w-3 h-3" />
                                   Approve
@@ -953,7 +953,7 @@ function EcxSubmissionsPanel({ scanId }: { scanId: string }) {
                                 <button
                                   onClick={() => void handleReject(sub)}
                                   disabled={isBusy}
-                                  className="inline-flex items-center gap-1 rounded bg-red-600 px-2 py-1 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+                                  className="inline-flex items-center gap-1 rounded-sm bg-red-600 px-2 py-1 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
                                 >
                                   <XCircle className="w-3 h-3" />
                                   Reject
@@ -964,7 +964,7 @@ function EcxSubmissionsPanel({ scanId }: { scanId: string }) {
                               <button
                                 onClick={() => void handleRetract(sub)}
                                 disabled={isBusy}
-                                className="inline-flex items-center gap-1 rounded bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-500 disabled:opacity-50"
+                                className="inline-flex items-center gap-1 rounded-sm bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-500 disabled:opacity-50"
                               >
                                 <XCircle className="w-3 h-3" />
                                 Retract
@@ -1206,8 +1206,8 @@ export default function InvestigationDetailPage() {
   if (loading) {
     return (
       <div className="animate-pulse space-y-6">
-        <div className="h-6 w-32 rounded bg-slate-200 dark:bg-slate-700" />
-        <div className="h-10 w-96 rounded bg-slate-200 dark:bg-slate-700" />
+        <div className="h-6 w-32 rounded-sm bg-slate-200 dark:bg-slate-700" />
+        <div className="h-10 w-96 rounded-sm bg-slate-200 dark:bg-slate-700" />
         <div className="flex gap-2">
           {[...Array(3)].map((_, i) => (
             <div

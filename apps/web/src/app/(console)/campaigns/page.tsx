@@ -53,7 +53,7 @@ export default async function CampaignsPage() {
                     {campaign.taxonomy_rollup.map((id) => (
                       <span
                         key={id}
-                        className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                        className="inline-flex items-center rounded-sm bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                       >
                         {id}
                       </span>

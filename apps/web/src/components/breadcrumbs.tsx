@@ -18,7 +18,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
       <ol className="flex items-center gap-1.5 text-sm text-slate-500">
         {items.map((item, idx) => (
           <li key={idx} className="flex items-center gap-1.5">
-            {idx > 0 && <ChevronRight className="h-3.5 w-3.5 flex-shrink-0" />}
+            {idx > 0 && <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
             {item.href && idx < items.length - 1 ? (
               <Link
                 href={item.href}

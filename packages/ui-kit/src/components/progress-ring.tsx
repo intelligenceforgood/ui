@@ -1,8 +1,7 @@
 import * as React from "react";
 import { clsx as cn } from "clsx";
 
-export interface ProgressRingProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface ProgressRingProps extends React.HTMLAttributes<HTMLDivElement> {
   value: number; // 0 to 100
   size?: number;
   strokeWidth?: number;

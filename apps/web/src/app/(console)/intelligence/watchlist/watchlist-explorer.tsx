@@ -177,7 +177,7 @@ export default function WatchlistExplorer() {
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="rounded border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
+          className="rounded-sm border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
         >
           <option value="">All Types</option>
           {entityTypes.map((t) => (

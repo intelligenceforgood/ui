@@ -310,7 +310,7 @@ export default function EntityExplorer({ initialParams }: EntityExplorerProps) {
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}>
                     <td colSpan={8} className="px-4 py-3">
-                      <div className="h-4 animate-pulse rounded bg-slate-100" />
+                      <div className="h-4 animate-pulse rounded-sm bg-slate-100" />
                     </td>
                   </tr>
                 ))
@@ -352,7 +352,7 @@ export default function EntityExplorer({ initialParams }: EntityExplorerProps) {
                           }
                           setSelectedEntities(newSet);
                         }}
-                        className="rounded border-slate-300 dark:border-slate-700"
+                        className="rounded-sm border-slate-300 dark:border-slate-700"
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -422,7 +422,7 @@ export default function EntityExplorer({ initialParams }: EntityExplorerProps) {
                         href={`/intelligence/graph?seed_type=${encodeURIComponent(entity.entityType)}&seed_value=${encodeURIComponent(entity.canonicalValue)}`}
                         onClick={(e) => e.stopPropagation()}
                         title="Explore in Graph"
-                        className="inline-flex items-center justify-center rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-teal-600 dark:hover:bg-slate-800 dark:hover:text-teal-400"
+                        className="inline-flex items-center justify-center rounded-sm p-1 text-slate-400 hover:bg-slate-100 hover:text-teal-600 dark:hover:bg-slate-800 dark:hover:text-teal-400"
                       >
                         <Network className="h-4 w-4" />
                       </Link>

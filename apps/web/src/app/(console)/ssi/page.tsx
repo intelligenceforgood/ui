@@ -94,7 +94,7 @@ interface StepProps {
 function Step({ label, state }: StepProps) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center">
+      <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center">
         {state === "done" && (
           <span className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center">
             <CheckCircle2 className="w-5 h-5 text-white" />
@@ -188,7 +188,7 @@ function LiveEventRow({ event }: { event: SSIEvent }) {
   const color = EVENT_COLORS[event.event_type] ?? "text-slate-500";
   return (
     <div className="flex items-start gap-2 text-xs">
-      <span className="text-slate-400 flex-shrink-0 w-14">
+      <span className="text-slate-400 shrink-0 w-14">
         {parseUTCDate(event.timestamp).toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
@@ -603,7 +603,7 @@ export default function SsiInvestigatePage() {
           <FeedbackButton feedbackId="ssi-investigate.form" />
           <Link
             href="/ssi/investigations"
-            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-blue-300 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 shadow-xs transition hover:border-blue-300 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
           >
             View past investigations
           </Link>
@@ -623,7 +623,7 @@ export default function SsiInvestigatePage() {
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="https://suspicious-site.example.com or suspicious-site.cc"
                   required
-                  className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500"
+                  className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500"
                 />
               </div>
               <button
@@ -701,7 +701,7 @@ export default function SsiInvestigatePage() {
       {(phase === "polling" || phase === "done" || phase === "failed") && (
         <div className="max-w-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 space-y-6">
           <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 text-sm">
-            <FileSearch className="w-4 h-4 text-blue-500 flex-shrink-0" />
+            <FileSearch className="w-4 h-4 text-blue-500 shrink-0" />
             <span className="font-medium text-slate-900 dark:text-white truncate">
               {url}
             </span>
@@ -898,7 +898,7 @@ export default function SsiInvestigatePage() {
 
           {phase === "failed" && errorMsg && (
             <div className="flex items-start gap-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3 text-sm text-red-700 dark:text-red-300">
-              <XCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              <XCircle className="w-5 h-5 shrink-0 mt-0.5" />
               <span>{errorMsg}</span>
             </div>
           )}
@@ -914,7 +914,7 @@ export default function SsiInvestigatePage() {
           />
           <div className="bg-slate-800 dark:bg-slate-900 px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-6 h-6 text-emerald-400 flex-shrink-0" />
+              <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
               <div>
                 <p className="text-white font-semibold text-sm">
                   Investigation complete
@@ -948,7 +948,7 @@ export default function SsiInvestigatePage() {
 
             {result.brand_impersonation && (
               <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3">
-                <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <p className="text-amber-800 dark:text-amber-300 text-sm">
                   {result.brand_impersonation}
                 </p>
@@ -987,7 +987,7 @@ export default function SsiInvestigatePage() {
                     key={i}
                     className="flex items-start gap-2 bg-yellow-50 dark:bg-yellow-950/50 border border-yellow-200 dark:border-yellow-800 rounded-lg px-3 py-2 text-xs text-yellow-800 dark:text-yellow-300"
                   >
-                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-yellow-500" />
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-yellow-500" />
                     {w}
                   </div>
                 ))}
@@ -997,7 +997,7 @@ export default function SsiInvestigatePage() {
             {/* Case link (evidence is attached to the case via direct DB writes) */}
             {resolvedCaseId && (
               <div className="flex items-start gap-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-3">
-                <Briefcase className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <Briefcase className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
                     Linked to core case

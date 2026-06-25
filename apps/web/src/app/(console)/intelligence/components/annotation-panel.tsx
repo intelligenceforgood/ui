@@ -75,7 +75,7 @@ export function AnnotationPanel({
       </div>
 
       {loading ? (
-        <div className="h-16 animate-pulse rounded bg-slate-100" />
+        <div className="h-16 animate-pulse rounded-sm bg-slate-100" />
       ) : annotations.length === 0 ? (
         <p className="text-xs text-slate-400">No annotations yet</p>
       ) : (
@@ -112,7 +112,7 @@ export function AnnotationPanel({
           value={newContent}
           onChange={(e) => setNewContent(e.target.value)}
           placeholder="Add annotation…"
-          className="flex-1 rounded border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800"
+          className="flex-1 rounded-sm border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800"
           onKeyDown={(e) => {
             if (e.key === "Enter") handleCreate();
           }}

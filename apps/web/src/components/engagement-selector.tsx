@@ -57,7 +57,7 @@ export function EngagementSelector() {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-xs transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
       >
         {engagement ? (
           <>
@@ -129,7 +129,7 @@ export function EngagementSelector() {
                   >
                     <span className="truncate">{eng.name}</span>
                     {engagement?.engagementId === eng.engagementId && (
-                      <Check className="ml-auto h-4 w-4 flex-shrink-0 text-teal-500" />
+                      <Check className="ml-auto h-4 w-4 shrink-0 text-teal-500" />
                     )}
                   </button>
                 ))}
@@ -162,7 +162,7 @@ export function EngagementSelector() {
                       {eng.status}
                     </Badge>
                     {engagement?.engagementId === eng.engagementId && (
-                      <Check className="h-4 w-4 flex-shrink-0 text-teal-500" />
+                      <Check className="h-4 w-4 shrink-0 text-teal-500" />
                     )}
                   </button>
                 ))}

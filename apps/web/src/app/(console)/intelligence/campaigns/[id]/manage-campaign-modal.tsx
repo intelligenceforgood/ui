@@ -52,7 +52,7 @@ export function ManageCampaignModal({
         Manage Campaign
       </Button>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs">
           <Card className="w-full max-w-md p-6 space-y-4 bg-white dark:bg-slate-950 shadow-xl">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
@@ -71,7 +71,7 @@ export function ManageCampaignModal({
                   Campaign Name
                 </label>
                 <input
-                  className="w-full mt-1 rounded border border-slate-200 p-2 text-sm dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white"
+                  className="w-full mt-1 rounded-sm border border-slate-200 p-2 text-sm dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
@@ -81,7 +81,7 @@ export function ManageCampaignModal({
                   Status
                 </label>
                 <select
-                  className="w-full mt-1 rounded border border-slate-200 p-2 text-sm dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white"
+                  className="w-full mt-1 rounded-sm border border-slate-200 p-2 text-sm dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                 >

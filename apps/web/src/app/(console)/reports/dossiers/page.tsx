@@ -79,7 +79,7 @@ export default async function EvidenceDossiersPage({
         <div className="flex flex-wrap gap-3">
           <Link
             href="/search"
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-transparent bg-gradient-to-r from-slate-900 to-slate-700 px-5 py-2.5 text-base font-semibold text-white shadow-lg transition hover:shadow-xl dark:from-slate-200 dark:to-slate-50 dark:text-slate-900"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-transparent bg-linear-to-r from-slate-900 to-slate-700 px-5 py-2.5 text-base font-semibold text-white shadow-lg transition hover:shadow-xl dark:from-slate-200 dark:to-slate-50 dark:text-slate-900"
           >
             Launch discovery
             <ArrowUpRight className="h-4 w-4" />
@@ -91,7 +91,7 @@ export default async function EvidenceDossiersPage({
         </div>
       </header>
 
-      <Card className="border-0 bg-gradient-to-r from-slate-900 to-indigo-900 p-6 text-white shadow-xl dark:from-slate-900 dark:to-slate-800">
+      <Card className="border-0 bg-linear-to-r from-slate-900 to-indigo-900 p-6 text-white shadow-xl dark:from-slate-900 dark:to-slate-800">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.4em] text-white/60">
@@ -121,7 +121,7 @@ export default async function EvidenceDossiersPage({
             Queue status
             <div className="rounded-2xl bg-white/10 p-0.5">
               <select
-                className="h-12 w-full rounded-2xl border border-white/10 bg-white/90 px-4 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-300"
+                className="h-12 w-full rounded-2xl border border-white/10 bg-white/90 px-4 text-sm font-semibold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-teal-300"
                 name="status"
                 defaultValue={filters.status}
               >
@@ -152,7 +152,7 @@ export default async function EvidenceDossiersPage({
                 name="manifest"
                 value="1"
                 defaultChecked={filters.includeManifest}
-                className="h-4 w-4 rounded border-white/40 text-teal-400 focus:ring-teal-200"
+                className="h-4 w-4 rounded-sm border-white/40 text-teal-400 focus:ring-teal-200"
               />
               <span className="text-sm font-medium text-white/90">
                 Include JSON

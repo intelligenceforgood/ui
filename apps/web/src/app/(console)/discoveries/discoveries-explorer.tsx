@@ -283,7 +283,7 @@ export default function DiscoveriesExplorer() {
                                         [row.discoveryId]: e.target.value,
                                       }))
                                     }
-                                    className="rounded border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800"
+                                    className="rounded-sm border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800"
                                     data-testid={`dismiss-reason-${row.discoveryId}`}
                                   />
                                   <div className="flex gap-1">

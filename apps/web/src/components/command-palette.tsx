@@ -137,7 +137,7 @@ export function CommandPalette() {
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40 backdrop-blur-xs"
         onClick={() => setOpen(false)}
         onKeyDown={() => {}}
         role="presentation"
@@ -157,9 +157,9 @@ export function CommandPalette() {
             }}
             onKeyDown={(e) => handleItemKeyDown(e)}
             placeholder="Search pages, entities, indicators…"
-            className="flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-white"
+            className="flex-1 bg-transparent text-sm text-slate-900 outline-hidden placeholder:text-slate-400 dark:text-white"
           />
-          <kbd className="hidden rounded border border-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 sm:inline dark:border-slate-700">
+          <kbd className="hidden rounded-sm border border-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 sm:inline dark:border-slate-700">
             ESC
           </kbd>
         </div>

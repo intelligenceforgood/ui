@@ -242,7 +242,7 @@ async function CaseDetailView({ id }: { id: string }) {
               {caseData.entities && caseData.entities.length > 0 && (
                 <Link
                   href={`/intelligence/graph?seed_type=case&seed=${encodeURIComponent(id)}`}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded px-2.5 py-1 bg-blue-50 hover:bg-blue-100 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded-sm px-2.5 py-1 bg-blue-50 hover:bg-blue-100 transition-colors"
                 >
                   <Network className="w-3.5 h-3.5" />
                   View Case Graph
@@ -270,7 +270,7 @@ async function CaseDetailView({ id }: { id: string }) {
                       {entities.map((entity) => (
                         <li
                           key={`${entity.entityType}:${entity.canonicalValue}`}
-                          className="flex items-center justify-between p-1.5 bg-slate-50 rounded text-sm hover:bg-slate-100 transition-colors"
+                          className="flex items-center justify-between p-1.5 bg-slate-50 rounded-sm text-sm hover:bg-slate-100 transition-colors"
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             <Link
@@ -300,7 +300,7 @@ async function CaseDetailView({ id }: { id: string }) {
                           </div>
                           <Link
                             href={`/intelligence/graph?seed_type=${encodeURIComponent(entity.entityType)}&seed_value=${encodeURIComponent(entity.canonicalValue)}`}
-                            className="text-slate-400 hover:text-blue-600 transition-colors flex-shrink-0"
+                            className="text-slate-400 hover:text-blue-600 transition-colors shrink-0"
                             title="View in graph"
                           >
                             <Network className="w-3.5 h-3.5" />
@@ -330,7 +330,7 @@ async function CaseDetailView({ id }: { id: string }) {
                 {caseData.artifacts.length > 0 && (
                   <a
                     href={`/api/cases/${id}/evidence/export`}
-                    className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded px-2.5 py-1 bg-blue-50 hover:bg-blue-100 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded-sm px-2.5 py-1 bg-blue-50 hover:bg-blue-100 transition-colors"
                   >
                     <Download className="w-3.5 h-3.5" />
                     Download Bundle
@@ -352,7 +352,7 @@ async function CaseDetailView({ id }: { id: string }) {
                 return (
                   <li
                     key={art.id}
-                    className="flex items-center justify-between p-2 bg-slate-50 rounded text-sm transition-colors hover:bg-slate-100"
+                    className="flex items-center justify-between p-2 bg-slate-50 rounded-sm text-sm transition-colors hover:bg-slate-100"
                   >
                     {href ? (
                       <a
@@ -406,7 +406,7 @@ async function CaseDetailView({ id }: { id: string }) {
                 {relatedCases.related.map((rel) => (
                   <li
                     key={rel.caseId}
-                    className="flex items-center justify-between p-2 bg-slate-50 rounded text-sm hover:bg-slate-100 transition-colors"
+                    className="flex items-center justify-between p-2 bg-slate-50 rounded-sm text-sm hover:bg-slate-100 transition-colors"
                   >
                     <Link
                       href={`/cases/${rel.caseId}`}

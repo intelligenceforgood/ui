@@ -47,7 +47,7 @@ export function InfoPopover({
         <button
           type="button"
           className={clsx(
-            "inline-flex items-center justify-center rounded-full text-slate-400 hover:text-teal-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-400 transition",
+            "inline-flex items-center justify-center rounded-full text-slate-400 hover:text-teal-500 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-teal-400 transition",
             className,
           )}
           aria-label={ariaLabel}
@@ -68,7 +68,7 @@ export function InfoPopover({
                 {title}
               </h4>
               <PopoverPrimitive.Close
-                className="rounded-full p-1 text-slate-400 hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-400 dark:hover:text-slate-200"
+                className="rounded-full p-1 text-slate-400 hover:text-slate-600 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-teal-400 dark:hover:text-slate-200"
                 aria-label="Close"
               >
                 <svg

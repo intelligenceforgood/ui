@@ -41,7 +41,7 @@ export function HelpTooltip({
           <button
             type="button"
             className={clsx(
-              "inline-flex items-center justify-center rounded-full text-slate-400 hover:text-teal-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-400 transition",
+              "inline-flex items-center justify-center rounded-full text-slate-400 hover:text-teal-500 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-teal-400 transition",
               className,
             )}
             aria-label={ariaLabel}

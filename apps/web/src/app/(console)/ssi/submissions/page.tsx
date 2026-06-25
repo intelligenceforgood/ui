@@ -276,7 +276,7 @@ export default function SubmissionsQueuePage() {
             value={bulkAnalyst}
             onChange={(e) => setBulkAnalyst(e.target.value)}
             placeholder="Your analyst identifier"
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
           />
           <button
             onClick={() => void handleBulkApprove()}
@@ -345,7 +345,7 @@ export default function SubmissionsQueuePage() {
                         submissions.length > 0
                       }
                       onChange={toggleAll}
-                      className="rounded"
+                      className="rounded-sm"
                     />
                   </th>
                   <th className="py-3 pr-3">Module</th>
@@ -379,7 +379,7 @@ export default function SubmissionsQueuePage() {
                           checked={selected.has(sub.submission_id)}
                           onChange={() => toggleOne(sub.submission_id)}
                           disabled={!isQueued}
-                          className="rounded disabled:opacity-40"
+                          className="rounded-sm disabled:opacity-40"
                         />
                       </td>
                       <td className="py-3 pr-3 font-medium text-slate-700 dark:text-slate-300">
@@ -431,7 +431,7 @@ export default function SubmissionsQueuePage() {
                                 onClick={() => void handleSingleApprove(sub)}
                                 disabled={isBusy}
                                 title="Approve"
-                                className="rounded bg-emerald-100 p-1 text-emerald-700 hover:bg-emerald-200 disabled:opacity-50 dark:bg-emerald-900 dark:text-emerald-300"
+                                className="rounded-sm bg-emerald-100 p-1 text-emerald-700 hover:bg-emerald-200 disabled:opacity-50 dark:bg-emerald-900 dark:text-emerald-300"
                               >
                                 <CheckCircle className="w-4 h-4" />
                               </button>
@@ -439,7 +439,7 @@ export default function SubmissionsQueuePage() {
                                 onClick={() => void handleSingleReject(sub)}
                                 disabled={isBusy}
                                 title="Reject"
-                                className="rounded bg-red-100 p-1 text-red-700 hover:bg-red-200 disabled:opacity-50 dark:bg-red-900 dark:text-red-300"
+                                className="rounded-sm bg-red-100 p-1 text-red-700 hover:bg-red-200 disabled:opacity-50 dark:bg-red-900 dark:text-red-300"
                               >
                                 <XCircle className="w-4 h-4" />
                               </button>
@@ -450,7 +450,7 @@ export default function SubmissionsQueuePage() {
                               onClick={() => void handleSingleRetract(sub)}
                               disabled={isBusy}
                               title="Retract"
-                              className="rounded bg-slate-100 p-1 text-slate-600 hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:text-slate-400"
+                              className="rounded-sm bg-slate-100 p-1 text-slate-600 hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:text-slate-400"
                             >
                               <XCircle className="w-4 h-4" />
                             </button>

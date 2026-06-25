@@ -63,7 +63,7 @@ export const DiscoverySearchForm = memo(function DiscoverySearchForm({
           optional overrides for cross-project testing.
         </p>
         {showProgress ? (
-          <div className="flex items-center gap-2 rounded-full border border-teal-200 bg-white/90 px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-teal-600 shadow-sm">
+          <div className="flex items-center gap-2 rounded-full border border-teal-200 bg-white/90 px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-teal-600 shadow-xs">
             <Loader2 className="h-4 w-4 animate-spin" />
             {isLoadingMore ? "Loading more…" : "Running search…"}
           </div>

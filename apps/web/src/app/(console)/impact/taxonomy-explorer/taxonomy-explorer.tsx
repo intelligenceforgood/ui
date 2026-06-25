@@ -227,7 +227,7 @@ function HeatmapView({ data }: { data: HeatmapCell[] }) {
                 if (!active || !payload || !payload.length) return null;
                 const cellData = payload[0].payload;
                 return (
-                  <div className="rounded border border-slate-200 bg-white p-2 shadow dark:border-slate-700 dark:bg-slate-900">
+                  <div className="rounded-sm border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                     <p className="text-sm font-semibold text-slate-900 dark:text-white">
                       {cellData.category}
                     </p>

@@ -62,7 +62,7 @@ function buildSavedSearchRunParams(
       ? (payload["saved_search_owner"] as string)
       : typeof payload["savedSearchOwner"] === "string"
         ? (payload["savedSearchOwner"] as string)
-        : item.owner ?? null;
+        : (item.owner ?? null);
   if (ownerCandidate) {
     payload["saved_search_owner"] = ownerCandidate;
   }

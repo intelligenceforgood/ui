@@ -67,7 +67,7 @@ export default function ActorsExplorer() {
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
               placeholder="e.g. admin"
-              className="rounded border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
+              className="rounded-sm border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -79,7 +79,7 @@ export default function ActorsExplorer() {
               value={campaignFilter}
               onChange={(e) => setCampaignFilter(e.target.value)}
               placeholder="e.g. c-123"
-              className="rounded border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
+              className="rounded-sm border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -91,7 +91,7 @@ export default function ActorsExplorer() {
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Required for real names"
-              className="rounded border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
+              className="rounded-sm border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
             />
           </div>
           <Button

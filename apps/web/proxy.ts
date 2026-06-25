@@ -39,7 +39,7 @@ function isLocalEnvironment(): boolean {
   return false;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // Local development — bypass all auth checks.
   if (isLocalEnvironment()) {
     return NextResponse.next();

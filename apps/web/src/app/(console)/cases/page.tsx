@@ -83,7 +83,7 @@ export default async function CasesPage(props: {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/cases/intake"
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-transparent bg-gradient-to-r from-sky-500 to-teal-400 px-5 py-2.5 text-base font-semibold text-white shadow-lg transition hover:shadow-xl"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-transparent bg-linear-to-r from-sky-500 to-teal-400 px-5 py-2.5 text-base font-semibold text-white shadow-lg transition hover:shadow-xl"
           >
             New case intake
           </Link>
@@ -200,7 +200,7 @@ export default async function CasesPage(props: {
                     <SectionLabel>Progress</SectionLabel>
                     <div className="mt-2 h-2 w-full rounded-full bg-slate-100">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-sky-500 to-teal-400"
+                        className="h-full rounded-full bg-linear-to-r from-sky-500 to-teal-400"
                         style={{ width: `${caseItem.progress}%` }}
                       />
                     </div>

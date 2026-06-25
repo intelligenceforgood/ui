@@ -73,7 +73,7 @@ export function CampaignForm({
             <span className="text-xs text-blue-500 underline decoration-dotted">
               Why do I need to pick this?
             </span>
-            <div className="absolute bottom-full right-0 mb-2 hidden w-64 rounded bg-slate-800 p-3 text-xs text-white shadow-lg group-hover:block z-10">
+            <div className="absolute bottom-full right-0 mb-2 hidden w-64 rounded-sm bg-slate-800 p-3 text-xs text-white shadow-lg group-hover:block z-10">
               This selection links your tactical work to organizational risk
               categories (e.g., Scam Intent, Delivery Channel). It drives
               executive reporting and ensures your campaign is counted in the

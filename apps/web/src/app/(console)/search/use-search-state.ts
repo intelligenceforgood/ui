@@ -146,7 +146,7 @@ export function useSearchState({
       const nextTimePreset =
         overrides &&
         Object.prototype.hasOwnProperty.call(overrides, "timePreset")
-          ? overrides.timePreset ?? null
+          ? (overrides.timePreset ?? null)
           : effectiveSelection.timePreset;
       const nextEntities =
         overrides?.entities ?? appliedEntities ?? entityFilters;

@@ -3,12 +3,12 @@ import { clsx } from "clsx";
 import type { ComponentPropsWithoutRef } from "react";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-full border transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed",
+  "inline-flex items-center justify-center gap-2 rounded-full border transition-all focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed",
   {
     variants: {
       variant: {
         primary:
-          "bg-gradient-to-r from-sky-500 to-teal-400 text-white shadow-lg hover:shadow-xl",
+          "bg-linear-to-r from-sky-500 to-teal-400 text-white shadow-lg hover:shadow-xl",
         secondary:
           "bg-white text-slate-900 border-slate-200 hover:border-teal-300 hover:text-teal-600",
         ghost:

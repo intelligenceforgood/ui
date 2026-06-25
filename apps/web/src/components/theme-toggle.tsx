@@ -30,7 +30,7 @@ export function ThemeToggle() {
   const resolvedSystemTheme = systemTheme ?? "light";
 
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+    <div className="rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/70">
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
         Appearance
       </p>
@@ -51,7 +51,7 @@ export function ThemeToggle() {
               className={
                 "flex items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm transition " +
                 (isActive
-                  ? "border-teal-400 bg-white text-teal-700 shadow"
+                  ? "border-teal-400 bg-white text-teal-700 shadow-sm"
                   : "border-slate-200 bg-white/70 text-slate-500 hover:border-teal-200 dark:border-slate-800 dark:bg-slate-900/80")
               }
             >

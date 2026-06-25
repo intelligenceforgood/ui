@@ -89,7 +89,7 @@ export const SearchResultCard = memo(function SearchResultCard({
             </p>
 
             {result.classification?.explanation ? (
-              <div className="mt-4 rounded-md bg-white p-3 shadow-sm ring-1 ring-slate-900/5">
+              <div className="mt-4 rounded-md bg-white p-3 shadow-xs ring-1 ring-slate-900/5">
                 <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
                   Classification Analysis
                 </h4>
@@ -109,7 +109,7 @@ export const SearchResultCard = memo(function SearchResultCard({
                   {result.classification.few_shot_examples.map((ex, idx) => (
                     <div
                       key={idx}
-                      className="rounded border border-slate-200 bg-white p-2 text-xs"
+                      className="rounded-sm border border-slate-200 bg-white p-2 text-xs"
                     >
                       <pre className="whitespace-pre-wrap break-all font-mono text-[10px] text-slate-500">
                         <PreWithTokens text={JSON.stringify(ex, null, 2)} />

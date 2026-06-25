@@ -174,9 +174,8 @@ describe("reviews-service", () => {
         entity_examples: { phone: ["555-1234"] },
       });
 
-      const { getHybridSearchSchema } = await import(
-        "@/lib/server/reviews-service"
-      );
+      const { getHybridSearchSchema } =
+        await import("@/lib/server/reviews-service");
       const schema = await getHybridSearchSchema();
 
       expect(schema.indicatorTypes).toContain("phone");
@@ -187,9 +186,8 @@ describe("reviews-service", () => {
     it("falls back to snapshot on error", async () => {
       apiFetchMock.mockRejectedValueOnce(new Error("timeout"));
 
-      const { getHybridSearchSchema } = await import(
-        "@/lib/server/reviews-service"
-      );
+      const { getHybridSearchSchema } =
+        await import("@/lib/server/reviews-service");
       const schema = await getHybridSearchSchema();
 
       // Should match the mocked HYBRID_SEARCH_SCHEMA_SNAPSHOT
@@ -212,9 +210,8 @@ describe("reviews-service", () => {
         ],
       });
 
-      const { listSavedSearches } = await import(
-        "@/lib/server/reviews-service"
-      );
+      const { listSavedSearches } =
+        await import("@/lib/server/reviews-service");
       const result = await listSavedSearches({ limit: 5 });
 
       expect(apiFetchMock).toHaveBeenCalledWith("/reviews/search/saved", {
@@ -227,9 +224,8 @@ describe("reviews-service", () => {
     it("returns empty array on error", async () => {
       apiFetchMock.mockRejectedValueOnce(new Error("not found"));
 
-      const { listSavedSearches } = await import(
-        "@/lib/server/reviews-service"
-      );
+      const { listSavedSearches } =
+        await import("@/lib/server/reviews-service");
       const result = await listSavedSearches();
 
       expect(result).toEqual([]);
@@ -238,9 +234,8 @@ describe("reviews-service", () => {
     it("passes owner_only param when requested", async () => {
       apiFetchMock.mockResolvedValueOnce({ items: [] });
 
-      const { listSavedSearches } = await import(
-        "@/lib/server/reviews-service"
-      );
+      const { listSavedSearches } =
+        await import("@/lib/server/reviews-service");
       await listSavedSearches({ ownerOnly: true });
 
       expect(apiFetchMock).toHaveBeenCalledWith("/reviews/search/saved", {

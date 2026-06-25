@@ -117,7 +117,7 @@ export function ActivityBar({
             className={clsx(
               "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
               pillClasses[activity.status] ?? pillClasses.pending,
-              isClickable && "cursor-pointer hover:shadow-sm",
+              isClickable && "cursor-pointer hover:shadow-xs",
             )}
             role={isClickable ? "button" : undefined}
             tabIndex={isClickable ? 0 : undefined}

@@ -124,7 +124,7 @@ export default function TimelineView() {
                         }}
                       />
                       {/* Tooltip */}
-                      <div className="pointer-events-none absolute -top-10 hidden whitespace-nowrap rounded bg-slate-800 px-2 py-1 text-xs text-white group-hover:block">
+                      <div className="pointer-events-none absolute -top-10 hidden whitespace-nowrap rounded-sm bg-slate-800 px-2 py-1 text-xs text-white group-hover:block">
                         {String(rec.period ?? "")}: {count}
                       </div>
                     </div>

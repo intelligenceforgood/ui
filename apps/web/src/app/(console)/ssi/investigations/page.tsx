@@ -76,7 +76,7 @@ function InvestigationRow({ scan }: { scan: ScanSummary }) {
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <Globe className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <Globe className="w-4 h-4 text-slate-400 shrink-0" />
               <span className="text-sm font-semibold text-slate-900 dark:text-white truncate">
                 {domain}
               </span>
@@ -109,7 +109,7 @@ function InvestigationRow({ scan }: { scan: ScanSummary }) {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
             {scan.risk_score != null && (
               <Badge variant={riskBadgeVariant(scan.risk_score)}>
                 {Math.round(scan.risk_score)}
@@ -170,7 +170,7 @@ export default async function InvestigationsPage(props: {
           </Link>
           <Link
             href="/ssi"
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl"
+            className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-blue-600 to-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl"
           >
             <Search className="w-4 h-4" />
             New investigation

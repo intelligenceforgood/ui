@@ -21,7 +21,7 @@ export function ErrorFallback({
 
   return (
     <div className="flex min-h-[50vh] items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-6 rounded-2xl border border-rose-100 bg-white/80 p-8 text-center shadow-sm backdrop-blur dark:border-rose-900 dark:bg-slate-900/80">
+      <div className="w-full max-w-md space-y-6 rounded-2xl border border-rose-100 bg-white/80 p-8 text-center shadow-2xs backdrop-blur-xs dark:border-rose-900 dark:bg-slate-900/80">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -55,7 +55,7 @@ export function ErrorFallback({
         <button
           type="button"
           onClick={reset}
-          className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:border-teal-300 hover:text-teal-600 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:border-teal-500 dark:hover:text-teal-400"
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-2xs transition hover:border-teal-300 hover:text-teal-600 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:border-teal-500 dark:hover:text-teal-400"
         >
           Try again
         </button>

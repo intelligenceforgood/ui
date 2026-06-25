@@ -2,9 +2,9 @@ export default function DossiersLoading() {
   return (
     <div className="animate-pulse space-y-8">
       <header className="space-y-3">
-        <div className="h-4 w-32 rounded bg-slate-200" />
-        <div className="h-8 w-56 rounded bg-slate-200" />
-        <div className="h-4 w-96 rounded bg-slate-200" />
+        <div className="h-4 w-32 rounded-sm bg-slate-200" />
+        <div className="h-8 w-56 rounded-sm bg-slate-200" />
+        <div className="h-4 w-96 rounded-sm bg-slate-200" />
       </header>
 
       <div className="flex flex-wrap gap-3">
@@ -21,9 +21,9 @@ export default function DossiersLoading() {
           >
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div className="space-y-2">
-                <div className="h-3 w-12 rounded bg-slate-200" />
-                <div className="h-7 w-48 rounded bg-slate-200" />
-                <div className="h-4 w-64 rounded bg-slate-100" />
+                <div className="h-3 w-12 rounded-sm bg-slate-200" />
+                <div className="h-7 w-48 rounded-sm bg-slate-200" />
+                <div className="h-4 w-64 rounded-sm bg-slate-100" />
               </div>
               <div className="h-6 w-20 rounded-full bg-slate-200" />
             </div>
@@ -34,8 +34,8 @@ export default function DossiersLoading() {
                   key={j}
                   className="rounded-2xl border border-slate-100 bg-white/70 px-4 py-3"
                 >
-                  <div className="h-3 w-16 rounded bg-slate-200" />
-                  <div className="mt-2 h-5 w-12 rounded bg-slate-200" />
+                  <div className="h-3 w-16 rounded-sm bg-slate-200" />
+                  <div className="mt-2 h-5 w-12 rounded-sm bg-slate-200" />
                 </div>
               ))}
             </div>

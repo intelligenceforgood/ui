@@ -17,7 +17,7 @@ import { PreWithTokens } from "@/components/pre-with-tokens";
 
 export function StatsRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-100/60 bg-white/70 px-4 py-3 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200">
+    <div className="rounded-2xl border border-slate-100/60 bg-white/70 px-4 py-3 text-sm text-slate-600 shadow-xs dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200">
       <p className="text-[0.65rem] uppercase tracking-[0.35em] text-slate-400 dark:text-slate-500">
         {label}
       </p>
@@ -70,7 +70,7 @@ export function SignaturePreview({
   }
 
   return (
-    <details className="rounded-2xl border border-slate-100 bg-white/80 p-4 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200">
+    <details className="rounded-2xl border border-slate-100 bg-white/80 p-4 text-sm text-slate-600 shadow-xs dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200">
       <summary className="cursor-pointer text-sm font-semibold text-slate-800 dark:text-white">
         Signature manifest ({artifacts.length} artifact
         {artifacts.length === 1 ? "" : "s"})
@@ -131,7 +131,7 @@ export function DownloadChip({
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noreferrer" : undefined}
-      className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-teal-400 hover:text-teal-700 dark:border-teal-400/30 dark:bg-slate-900/50 dark:text-teal-100"
+      className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-xs transition hover:border-teal-400 hover:text-teal-700 dark:border-teal-400/30 dark:bg-slate-900/50 dark:text-teal-100"
     >
       <DownloadCloud className="h-3.5 w-3.5" />
       {label}
@@ -262,7 +262,7 @@ export function HandoffBanner({ downloads }: { downloads: DossierDownloads }) {
   }
 
   return (
-    <div className="rounded-2xl border border-teal-200 bg-teal-50/60 p-4 text-sm text-teal-900 shadow-sm dark:border-teal-400/30 dark:bg-teal-500/10 dark:text-teal-50">
+    <div className="rounded-2xl border border-teal-200 bg-teal-50/60 p-4 text-sm text-teal-900 shadow-xs dark:border-teal-400/30 dark:bg-teal-500/10 dark:text-teal-50">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 font-semibold">
           <Link2 className="h-4 w-4" />

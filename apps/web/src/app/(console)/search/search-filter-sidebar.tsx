@@ -99,7 +99,7 @@ export const SearchFilterSidebar = memo(function SearchFilterSidebar({
                   className={
                     "w-full rounded-xl border px-3 py-2 text-left transition " +
                     (isSelected
-                      ? "border-teal-400 bg-white text-teal-700 shadow-sm"
+                      ? "border-teal-400 bg-white text-teal-700 shadow-xs"
                       : "border-slate-200 bg-white text-slate-600 hover:border-teal-200")
                   }
                 >
@@ -299,7 +299,7 @@ export const SearchFilterSidebar = memo(function SearchFilterSidebar({
                             type: event.target.value,
                           })
                         }
-                        className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 focus:border-teal-400 focus:outline-none"
+                        className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 focus:border-teal-400 focus:outline-hidden"
                       >
                         {indicatorOptions.map((option) => (
                           <option key={option} value={option}>
@@ -314,7 +314,7 @@ export const SearchFilterSidebar = memo(function SearchFilterSidebar({
                             matchMode: event.target.value as MatchMode,
                           })
                         }
-                        className="w-32 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 focus:border-teal-400 focus:outline-none"
+                        className="w-32 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 focus:border-teal-400 focus:outline-hidden"
                       >
                         {MATCH_MODE_OPTIONS.map((mode) => (
                           <option key={mode} value={mode}>

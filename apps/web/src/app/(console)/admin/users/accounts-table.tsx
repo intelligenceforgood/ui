@@ -133,7 +133,7 @@ export function AccountsTable({ accounts: initial }: AccountsTableProps) {
   };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-700 dark:bg-slate-900">
       {isPending && (
         <div className="border-b border-sky-200 bg-sky-50 px-4 py-2 text-xs text-sky-700 dark:border-sky-800 dark:bg-sky-950 dark:text-sky-300">
           Saving changes…
@@ -199,7 +199,7 @@ export function AccountsTable({ accounts: initial }: AccountsTableProps) {
                       onChange={(e) =>
                         handleRoleChange(account.email, e.target.value)
                       }
-                      className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 transition-colors hover:border-slate-300 focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                      className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 transition-colors hover:border-slate-300 focus:border-sky-400 focus:outline-hidden focus:ring-1 focus:ring-sky-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
                     >
                       {ROLES.map((r) => (
                         <option key={r} value={r}>
@@ -237,7 +237,7 @@ export function AccountsTable({ accounts: initial }: AccountsTableProps) {
                             actionMenu === account.email ? null : account.email,
                           )
                         }
-                        className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                        className="rounded-sm p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
                         aria-label={`Actions for ${account.email}`}
                       >
                         <MoreVertical className="h-4 w-4" />
