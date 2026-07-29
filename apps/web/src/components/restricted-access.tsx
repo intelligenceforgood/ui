@@ -6,7 +6,7 @@ interface RestrictedAccessProps {
   title?: string;
   /** Explanation of why access is denied. */
   description?: string;
-  /** Path for the "Go back" link. Defaults to `/` (dashboard). */
+  /** Path for the "Go back" link. Defaults to `/` (console dashboard). */
   backHref?: string;
   /** Label for the back link. */
   backLabel?: string;
