@@ -34,6 +34,7 @@ import {
   GitBranch,
   Eye,
   Briefcase,
+  Key,
 } from "lucide-react";
 import { UserPreferences } from "@/components/user-preferences";
 import { FeedbackButton } from "@i4g/ui-kit";
@@ -54,6 +55,11 @@ const navItems: NavItem[] = [
   { href: "/search", label: "Search", icon: Search },
   { href: "/discovery", label: "Discovery", icon: Globe },
   { href: "/cases", label: "Cases & Tasks", icon: CaseSensitive },
+  {
+    href: "/settings/api-keys",
+    label: "API Keys",
+    icon: Key,
+  },
   {
     href: "/reports",
     label: "Reports",
